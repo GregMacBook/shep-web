@@ -26,8 +26,8 @@
     .text-row-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #f0f0f0; }
     .text-row-item:last-child { border-bottom: none; }
     .donate-btn { display: inline-block; margin-top: 20px; padding: 18px 45px; background: #84a59d; color: white; border-radius: 35px; font-weight: bold; cursor: pointer; text-decoration: none; border: none; text-transform: uppercase; font-size: 1.1em; }
-    .location-pin { cursor: pointer; font-size: 1.4em; margin-left: 15px; transition: transform 0.2s; }
-    .location-pin:hover { transform: scale(1.2); }
+    .location-pin, .web-link-icon { cursor: pointer; font-size: 1.4em; margin-left: 15px; transition: transform 0.2s; text-decoration: none; }
+    .location-pin:hover, .web-link-icon:hover { transform: scale(1.2); }
     
     .testimonial-card { background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; gap: 25px; max-width: 900px; align-items: flex-start; border-left: 6px solid #ac8ad4; }
     .testimonial-media { width: 220px; min-width: 220px; height: 150px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: #fafafa; position: relative; }
@@ -243,14 +243,25 @@
                 textSpan.innerHTML = formatBold(l);
                 itemRow.appendChild(textSpan);
                 
-                // MAP PIN RESOLUTION: Links map pin seamlessly to text lines within this row block
-                if(rawCell && rawCell.toLowerCase().includes('maps') && urlPattern.test(rawCell)) {
-                   var mapUrl = rawCell;
-                   var pin = document.createElement('div');
-                   pin.className = 'location-pin';
-                   pin.innerHTML = '📍';
-                   pin.onclick = function(event) { window.open(mapUrl, '_blank'); event.stopPropagation(); };
-                   itemRow.appendChild(pin);
+                // COLUMN C ACTION RESOLUTION
+                if(rawCell && urlPattern.test(rawCell)) {
+                   if (rawCell.toLowerCase().includes('maps')) {
+                     // Google Maps Pin link
+                     var pin = document.createElement('div');
+                     pin.className = 'location-pin';
+                     pin.innerHTML = '📍';
+                     pin.onclick = function(event) { window.open(rawCell, '_blank'); event.stopPropagation(); };
+                     itemRow.appendChild(pin);
+                   } else if (!rawCell.toLowerCase().includes('.jpg') && !rawCell.toLowerCase().includes('.jpeg') && !rawCell.toLowerCase().includes('.png') && !rawCell.toLowerCase().includes('imgur') && !rawCell.toLowerCase().includes('drive.google')) {
+                     // Standard website URL link (e.g. for Who We Help organizations)
+                     var webIcon = document.createElement('a');
+                     webIcon.className = 'web-link-icon';
+                     webIcon.innerHTML = '🌐';
+                     webIcon.href = rawCell;
+                     webIcon.target = '_blank';
+                     webIcon.onclick = function(event) { event.stopPropagation(); };
+                     itemRow.appendChild(webIcon);
+                   }
                 }
                 rowDiv.appendChild(itemRow);
               });
@@ -284,8 +295,6 @@
                       img.style.objectFit = 'cover';
                       img.style.borderRadius = '8px';
                       img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                      
-                      // Safety handling to hide broken or bad image assets gracefully
                       img.onerror = function() { this.style.display = 'none'; };
                       imgContainer.appendChild(img);
                     }
