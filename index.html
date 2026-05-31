@@ -89,6 +89,20 @@
       return '';
     }
 
+    // HELPER TO EXTRACT THE CURRENT LIVE FORM LINK FROM SPREADSHEET DATA
+    function getLiveFormUrl() {
+      let foundUrl = "https://tinyurl.com/SHEPDonation"; // Safety fallback
+      for (let i = 0; i < allData.length; i++) {
+        if (allData[i][0] && allData[i][0].toString().toUpperCase().trim() === "DONATIONFORMURL") {
+          if (allData[i][1] && allData[i][1].toString().trim() !== "") {
+            foundUrl = allData[i][1].toString().trim();
+            break;
+          }
+        }
+      }
+      return foundUrl;
+    }
+
     function renderMenu(data) {
       var tabContainer = document.getElementById('tabs');
       tabContainer.innerHTML = "";
@@ -216,7 +230,13 @@
               }).catch(err => { console.error(err); });
 
           } else if (name === "MONETARY DONATIONS") {
-             display.innerHTML = `<div class="commentary-box"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div><div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div><center><button class="donate-btn" onclick="window.open('https://tinyurl.com/SHEPDonation', '_blank')">Complete Donation & Get Receipt</button></center>`;
+             // EXTRACT THE REAL FORM LINK DYNAMICALLY WHEN LOADING THIS TAB
+             var currentFormUrl = getLiveFormUrl();
+             display.innerHTML = `<div class="commentary-box"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div><div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div><center><button class="donate-btn" id="dynamic-donate-btn">Complete Donation & Get Receipt</button></center>`;
+             
+             document.getElementById('dynamic-donate-btn').onclick = function() {
+               window.open(currentFormUrl, '_blank');
+             };
           
           } else {
             var contentRows = [];
@@ -243,17 +263,14 @@
                 textSpan.innerHTML = formatBold(l);
                 itemRow.appendChild(textSpan);
                 
-                // COLUMN C ACTION RESOLUTION (Runs for valid URLs)
                 if(rawCell && urlPattern.test(rawCell)) {
                    if (rawCell.toLowerCase().includes('maps')) {
-                     // Maps Pin Links up to lines cleanly
                      var pin = document.createElement('div');
                      pin.className = 'location-pin';
                      pin.innerHTML = '📍';
                      pin.onclick = function(event) { window.open(rawCell, '_blank'); event.stopPropagation(); };
                      itemRow.appendChild(pin);
                    } else if (lineIdx === 0 && !rawCell.toLowerCase().includes('.jpg') && !rawCell.toLowerCase().includes('.jpeg') && !rawCell.toLowerCase().includes('.png') && !rawCell.toLowerCase().includes('imgur') && !rawCell.toLowerCase().includes('drive.google')) {
-                     // Web Link URL mapping (Shows global link on item row header)
                      var webIcon = document.createElement('a');
                      webIcon.className = 'web-link-icon';
                      webIcon.innerHTML = '🌐 Website';
@@ -269,7 +286,6 @@
                 rowDiv.appendChild(itemRow);
               });
               
-              // IMAGE RENDERING CONTAINER
               if(rawCell && !rawCell.toLowerCase().includes('maps') && (rawCell.toLowerCase().includes('.jpg') || rawCell.toLowerCase().includes('.jpeg') || rawCell.toLowerCase().includes('.png') || rawCell.toLowerCase().includes('imgur') || rawCell.toLowerCase().includes('drive.google'))) {
                 var urls = rawCell.split(',');
                 var validUrls = [];
