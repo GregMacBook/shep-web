@@ -89,20 +89,6 @@
       return '';
     }
 
-    // HELPER TO EXTRACT THE CURRENT LIVE FORM LINK FROM SPREADSHEET DATA
-    function getLiveFormUrl() {
-      let foundUrl = "https://tinyurl.com/SHEPDonation"; // Safety fallback
-      for (let i = 0; i < allData.length; i++) {
-        if (allData[i][0] && allData[i][0].toString().toUpperCase().trim() === "DONATIONFORMURL") {
-          if (allData[i][1] && allData[i][1].toString().trim() !== "") {
-            foundUrl = allData[i][1].toString().trim();
-            break;
-          }
-        }
-      }
-      return foundUrl;
-    }
-
     function renderMenu(data) {
       var tabContainer = document.getElementById('tabs');
       tabContainer.innerHTML = "";
@@ -230,8 +216,8 @@
               }).catch(err => { console.error(err); });
 
           } else if (name === "MONETARY DONATIONS") {
-             // EXTRACT THE REAL FORM LINK DYNAMICALLY WHEN LOADING THIS TAB
-             var currentFormUrl = getLiveFormUrl();
+             // EXPLICIT PUBLIC FORM URL REPLACEMENT HERE
+             var currentFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLScuk3Pg3a4wVbkR60Pe6ni3EUNsMdLySbCuNF-mzXvXy8JwpQ/viewform?usp=header";
              display.innerHTML = `<div class="commentary-box"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div><div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div><center><button class="donate-btn" id="dynamic-donate-btn">Complete Donation & Get Receipt</button></center>`;
              
              document.getElementById('dynamic-donate-btn').onclick = function() {
@@ -311,25 +297,3 @@
                       img.src = finalSrc;
                       img.style.width = '140px';
                       img.style.height = '140px';
-                      img.style.objectFit = 'cover';
-                      img.style.borderRadius = '8px';
-                      img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                      img.onerror = function() { this.style.display = 'none'; };
-                      imgContainer.appendChild(img);
-                    }
-                  });
-                  rowDiv.appendChild(imgContainer);
-                }
-              }
-              
-              display.appendChild(rowDiv);
-            });
-          }
-        };
-        tabContainer.appendChild(btn);
-        if(index === 0) btn.click();
-      });
-    }
-  </script>
-</body>
-</html>
