@@ -57,18 +57,14 @@
     let allData = [];
     var scriptUrlBase = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
 
-    // Standard public fallback fetch to clear authorization stalls in incognito
-    fetch(scriptUrlBase, { method: "GET", redirect: "follow" })
-      .then(response => {
-        if (!response.ok) throw new Error('Network error');
-        return response.json();
-      })
+    fetch(scriptUrlBase)
+      .then(response => response.json())
       .then(data => { 
         allData = data; 
         renderMenu(data); 
       })
       .catch(err => {
-        document.getElementById('content').innerHTML = "Style synchronization running. If processing halts, please verify that your Google Script Deployment is configured for public access ('Anyone').";
+        document.getElementById('content').innerHTML = "Stuck syncing data. Please check that your Google Script Deployment settings are set to Access: <strong>'Anyone'</strong>.";
         console.error(err);
       });
 
@@ -251,7 +247,7 @@
                 textSpan.innerHTML = formatBold(l);
                 itemRow.appendChild(textSpan);
                 
-                // Map coordinates handling
+                // Process Google Maps pins
                 if(rawCell && urlPattern.test(rawCell) && rawCell.toLowerCase().includes('maps')) {
                    var pin = document.createElement('div');
                    pin.className = 'location-pin';
@@ -262,7 +258,7 @@
                 rowDiv.appendChild(itemRow);
               });
               
-              // Handle non-image traditional website rows cleanly (e.g. WHO WE HELP)
+              // Process standard organization webpages cleanly (e.g. WHO WE HELP)
               if(rawCell && urlPattern.test(rawCell) && !isImageLink(rawCell) && !rawCell.toLowerCase().includes('maps')) {
                 var webBtn = document.createElement('a');
                 webBtn.className = 'outbound-web-btn';
@@ -272,7 +268,7 @@
                 rowDiv.appendChild(webBtn);
               }
               
-              // Image container logic blocks
+              // Process validated images inside custom rows
               if(rawCell && isImageLink(rawCell) && !rawCell.toLowerCase().includes('maps')) {
                 var urls = rawCell.split(',');
                 var validUrls = [];
