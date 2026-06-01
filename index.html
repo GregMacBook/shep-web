@@ -22,9 +22,17 @@
     .pictures-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
     .gallery-card { background: white; padding: 12px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; }
     .gallery-img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
+    
+    /* Standard Content Rows */
     .info-line { margin-bottom: 12px; padding: 18px 22px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; word-wrap: break-word; }
     .text-row-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #f0f0f0; }
     .text-row-item:last-child { border-bottom: none; }
+    
+    /* Special Showcase Layout for Mission / About Us */
+    .hero-showcase-card { background: white; border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; gap: 30px; max-width: 950px; align-items: center; border-left: 8px solid #916bbf; }
+    .hero-text-side { flex-grow: 1; color: #4a4e69; font-size: 1.15em; line-height: 1.7; }
+    .hero-img-side { max-width: 450px; width: 100%; height: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); background: #fafafa; }
+
     .donate-btn { display: inline-block; margin-top: 20px; padding: 18px 45px; background: #84a59d; color: white; border-radius: 35px; font-weight: bold; cursor: pointer; text-decoration: none; border: none; text-transform: uppercase; font-size: 1.1em; transition: 0.2s; }
     .donate-btn:hover { background: #6b8f87; transform: scale(1.02); }
     .location-pin, .web-link-icon { cursor: pointer; font-size: 1.4em; margin-left: 15px; transition: transform 0.2s; text-decoration: none; display: inline-block; }
@@ -40,7 +48,11 @@
     .outbound-web-btn { display: inline-flex; align-items: center; margin-top: 10px; padding: 8px 16px; background: #f0e6f7; color: #916bbf; font-weight: bold; border-radius: 20px; text-decoration: none; font-size: 0.85em; transition: 0.2s; border: 1px solid #ac8ad4; width: fit-content; }
     .outbound-web-btn:hover { background: #916bbf; color: white; }
 
-    @media (max-width: 768px) { .testimonial-card { flex-direction: column; } .testimonial-media { width: 100%; min-width: 100%; } }
+    @media (max-width: 768px) { 
+      .testimonial-card, .hero-showcase-card { flex-direction: column; align-items: stretch; } 
+      .testimonial-media { width: 100%; min-width: 100%; } 
+      .hero-img-side { max-width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -78,7 +90,7 @@
       
       var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/|usercontent\.com\/dev\/)([a-zA-Z0-9_-]{25,50})/);
       if (match && match[1]) { 
-        var size = isSmallThumbnail ? 'sz=w120' : 'sz=w500';
+        var size = isSmallThumbnail ? 'sz=w120' : 'sz=w800'; // Bumped up processing resolution for larger frames
         return 'https://drive.google.com/thumbnail?id=' + match[1] + '&' + size; 
       }
       return str;
@@ -222,6 +234,38 @@
                window.open(currentFormUrl, '_blank');
              };
           
+          } else if (name === "OUR MISSION" || name === "ABOUT US") {
+            // High impact feature block layout execution
+            display.innerHTML = "";
+            
+            for(var i=0; i<allData.length; i++) {
+              if(allData[i][0] && allData[i][0].toString().toUpperCase().trim() === name) {
+                var r = allData[i];
+                if(!r[1]) continue;
+                
+                var showcaseCard = document.createElement('div');
+                showcaseCard.className = 'hero-showcase-card';
+                
+                var textSide = document.createElement('div');
+                textSide.className = 'hero-text-side';
+                textSide.innerHTML = formatBold(r[1]).replace(/\n/g, '<br>');
+                showcaseCard.appendChild(textSide);
+                
+                var rawCell = r[2] ? r[2].toString().trim() : "";
+                if(rawCell && isImageLink(rawCell)) {
+                  var imgUrl = getImgUrl(rawCell.split(',')[0].trim(), false);
+                  if(imgUrl) {
+                    var imgSide = document.createElement('img');
+                    imgSide.className = 'hero-img-side';
+                    imgSide.src = imgUrl;
+                    imgSide.onerror = function() { this.style.display = 'none'; };
+                    showcaseCard.appendChild(imgSide);
+                  }
+                }
+                display.appendChild(showcaseCard);
+              }
+            }
+            
           } else {
             var contentRows = [];
             for(var i=0; i<allData.length; i++) {
@@ -247,7 +291,6 @@
                 textSpan.innerHTML = formatBold(l);
                 itemRow.appendChild(textSpan);
                 
-                // Process Google Maps pins
                 if(rawCell && urlPattern.test(rawCell) && rawCell.toLowerCase().includes('maps')) {
                    var pin = document.createElement('div');
                    pin.className = 'location-pin';
@@ -258,7 +301,6 @@
                 rowDiv.appendChild(itemRow);
               });
               
-              // Process standard organization webpages cleanly (e.g. WHO WE HELP)
               if(rawCell && urlPattern.test(rawCell) && !isImageLink(rawCell) && !rawCell.toLowerCase().includes('maps')) {
                 var webBtn = document.createElement('a');
                 webBtn.className = 'outbound-web-btn';
@@ -268,7 +310,6 @@
                 rowDiv.appendChild(webBtn);
               }
               
-              // Process validated images inside custom rows
               if(rawCell && isImageLink(rawCell) && !rawCell.toLowerCase().includes('maps')) {
                 var urls = rawCell.split(',');
                 var validUrls = [];
@@ -301,7 +342,7 @@
                       imgContainer.appendChild(img);
                     }
                   });
-                  rowDiv.appendChild(imgContainer);
+                  imgContainer.appendChild(img);
                 }
               }
               
