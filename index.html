@@ -9,7 +9,7 @@
     .sidebar { width: 280px; min-width: 280px; background: #916bbf; display: flex; flex-direction: column; height: 100vh; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 20; overflow-y: auto; }
     .logo-header { padding: 15px; text-align: center; background: white; border-bottom: 3px solid #ac8ad4; position: sticky; top: 0; }
     .tab { padding: 16px 20px; margin: 6px 0 6px 15px; background: #ac8ad4; border-radius: 25px 0 0 25px; cursor: pointer; transition: 0.3s; font-weight: 600; color: #fff; text-transform: uppercase; font-size: 0.72em; letter-spacing: 1px; }
-   a .tab.active { background: #fcfaff; color: #4a4e69; margin-right: -1px; }
+    .tab.active { background: #fcfaff; color: #4a4e69; margin-right: -1px; }
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; min-width: 0; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     .commentary-box { background: #fff; padding: 25px; border-radius: 15px; border-left: 10px solid #916bbf; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; color: #4a4e69; line-height: 1.7; max-width: 900px; word-wrap: break-word; }
@@ -47,6 +47,7 @@
     
     .outbound-web-btn { display: inline-flex; align-items: center; margin-top: 10px; padding: 8px 16px; background: #f0e6f7; color: #916bbf; font-weight: bold; border-radius: 20px; text-decoration: none; font-size: 0.85em; transition: 0.2s; border: 1px solid #ac8ad4; width: fit-content; }
     .outbound-web-btn:hover { background: #916bbf; color: white; }
+    .contact-link-active { color: #916bbf; text-decoration: underline; font-weight: bold; word-break: break-all; }
 
     @media (max-width: 768px) { 
       .testimonial-card, .hero-showcase-card { flex-direction: column; align-items: stretch; } 
@@ -67,7 +68,7 @@
   </div>
   <script>
     let allData = [];
-    var scriptUrlBase = "https://script.google.com/macros/s/AKfycbzHPe8a9sJWxNEGgHYgd8fFeeIFW48UEQk7fUYJBe8IBRnGSL9y2wgjSSZSIs-PdO_W/exec";
+    var scriptUrlBase = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
 
     fetch(scriptUrlBase)
       .then(response => response.json())
@@ -80,7 +81,16 @@
         console.error(err);
       });
 
-    function formatBold(text) { return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); }
+    function formatBoldAndLinks(text) { 
+      if(!text) return "";
+      let formatted = text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // Auto mailto generator for text row fields
+      const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+      formatted = formatted.replace(emailRegex, '<a href="mailto:$1" class="contact-link-active">$1</a>');
+      
+      return formatted;
+    }
     
     function getImgUrl(url, isSmallThumbnail) {
       if (!url) return '';
@@ -90,7 +100,7 @@
       
       var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/|usercontent\.com\/dev\/)([a-zA-Z0-9_-]{25,50})/);
       if (match && match[1]) { 
-        var size = isSmallThumbnail ? 'sz=w120' : 'sz=w800'; // Bumped up processing resolution for larger frames
+        var size = isSmallThumbnail ? 'sz=w120' : 'sz=w800';
         return 'https://drive.google.com/thumbnail?id=' + match[1] + '&' + size; 
       }
       return str;
@@ -220,24 +230,33 @@
                   card.innerHTML = mediaHtml + 
                                    '<div class="testimonial-body">' +
                                      '<div class="testimonial-sender">' + senderName + '</div>' +
-                                     '<div>' + formatBold(storyText).replace(/\n/g, '<br>') + '</div>' +
+                                     '<div>' + formatBoldAndLinks(storyText).replace(/\n/g, '<br>') + '</div>' +
                                    '</div>';
                   box.appendChild(card);
                 });
               }).catch(err => { console.error(err); });
 
           } else if (name === "MONETARY DONATIONS") {
+             // Look for descriptions directly from your sheet row dynamically
+             var customDesc = "At SHEP, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.";
+             for(var i=0; i<allData.length; i++) {
+               if(allData[i][0] && allData[i][0].toString().toUpperCase().trim() === "MONETARY DONATIONS") {
+                 if(allData[i][1] && !allData[i][1].toString().includes("Account:")) {
+                   customDesc = allData[i][1].toString().replace(/\n/g, '<br>');
+                   break;
+                 }
+               }
+             }
+
              var currentFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLScuk3Pg3a4wVbkR60Pe6ni3EUNsMdLySbCuNF-mzXvXy8JwpQ/viewform?usp=header";
-             display.innerHTML = `<div class="commentary-box"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div><div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div><center><button class="donate-btn" id="dynamic-donate-btn">Complete Donation & Get Receipt</button></center>`;
+             display.innerHTML = `<div class="commentary-box"><h3>Your Impact Matters</h3><p>${formatBoldAndLinks(customDesc)}</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div><div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div><center><button class="donate-btn" id="dynamic-donate-btn">Complete Donation & Get Receipt</button></center>`;
              
              document.getElementById('dynamic-donate-btn').onclick = function() {
                window.open(currentFormUrl, '_blank');
              };
           
           } else if (name === "OUR MISSION" || name === "ABOUT US") {
-            // High impact feature block layout execution
             display.innerHTML = "";
-            
             for(var i=0; i<allData.length; i++) {
               if(allData[i][0] && allData[i][0].toString().toUpperCase().trim() === name) {
                 var r = allData[i];
@@ -248,7 +267,7 @@
                 
                 var textSide = document.createElement('div');
                 textSide.className = 'hero-text-side';
-                textSide.innerHTML = formatBold(r[1]).replace(/\n/g, '<br>');
+                textSide.innerHTML = formatBoldAndLinks(r[1]).replace(/\n/g, '<br>');
                 showcaseCard.appendChild(textSide);
                 
                 var rawCell = r[2] ? r[2].toString().trim() : "";
@@ -288,7 +307,13 @@
                 
                 var itemRow = document.createElement('div'); itemRow.className = 'text-row-item';
                 var textSpan = document.createElement('span');
-                textSpan.innerHTML = formatBold(l);
+                
+                // Fallback: If raw text cells contain stray web links, switch them into active web text links automatically
+                if(l.trim().toLowerCase().startsWith("http")) {
+                  textSpan.innerHTML = `<a href="${l.trim()}" target="_blank" class="contact-link-active">${l.trim()}</a>`;
+                } else {
+                  textSpan.innerHTML = formatBoldAndLinks(l);
+                }
                 itemRow.appendChild(textSpan);
                 
                 if(rawCell && urlPattern.test(rawCell) && rawCell.toLowerCase().includes('maps')) {
@@ -306,7 +331,7 @@
                 webBtn.className = 'outbound-web-btn';
                 webBtn.href = rawCell;
                 webBtn.target = '_blank';
-                webBtn.innerHTML = '🌐 Visit Website';
+                webBtn.innerHTML = '🌐 View Link';
                 rowDiv.appendChild(webBtn);
               }
               
@@ -342,7 +367,7 @@
                       imgContainer.appendChild(img);
                     }
                   });
-                  imgContainer.appendChild(img);
+                  rowDiv.appendChild(imgContainer);
                 }
               }
               
