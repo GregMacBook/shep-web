@@ -83,7 +83,13 @@
 
     function formatBoldAndLinks(text) { 
       if(!text) return "";
-      let formatted = text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      let formatted = text.toString();
+      
+      // Smart SHEP Purple Tag Scanner
+      formatted = formatted.replace(/\[purple\](.*?)\[\/purple\]/gi, '<span style="color: #916bbf; font-weight: bold; font-size: 1.05em;">$1</span>');
+      
+      // Standard markdown bolding
+      formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       
       // Auto mailto generator for text row fields
       const emailRegex = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
@@ -237,7 +243,6 @@
               }).catch(err => { console.error(err); });
 
           } else if (name === "MONETARY DONATIONS") {
-             // Look for descriptions directly from your sheet row dynamically
              var customDesc = "At SHEP, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.";
              for(var i=0; i<allData.length; i++) {
                if(allData[i][0] && allData[i][0].toString().toUpperCase().trim() === "MONETARY DONATIONS") {
@@ -308,7 +313,6 @@
                 var itemRow = document.createElement('div'); itemRow.className = 'text-row-item';
                 var textSpan = document.createElement('span');
                 
-                // Fallback: If raw text cells contain stray web links, switch them into active web text links automatically
                 if(l.trim().toLowerCase().startsWith("http")) {
                   textSpan.innerHTML = `<a href="${l.trim()}" target="_blank" class="contact-link-active">${l.trim()}</a>`;
                 } else {
