@@ -33,24 +33,38 @@
     <div id="content">Syncing data...</div>
   </div>
   <script>
-// STARTUP LOGIC
     function init() {
-      // 1. Check if we are inside Google's environment
-      if (typeof google !== 'undefined' && google.script) {
-        google.script.run.withSuccessHandler(function(status) {
-          if (status === "OFF") {
-            document.body.innerHTML = `<div style="text-align:center; padding:100px; font-family:sans-serif; color:#4a4e69;">
-                                         <h1 style="color:#916bbf;">SHEP</h1>
-                                         <p style="font-size:20px;">The site is currently down for maintenance.</p>
-                                       </div>`;
+      // 1. First, check GitHub's status.json
+      fetch("status.json")
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === "OFF") {
+            showMaintenance();
           } else {
+            // If GitHub is ON, check Apps Script just in case
             loadData();
           }
-        }).getSiteStatus();
-      } else {
-        // 2. We are on GitHub - bypass maintenance check and just load
-        loadData();
-      }
+        })
+        .catch(() => {
+          // If status.json is missing (e.g. running in Apps Script), 
+          // fall back to the old Google Status check
+          if (typeof google !== 'undefined' && google.script) {
+            google.script.run.withSuccessHandler(function(status) {
+              if (status === "OFF") showMaintenance();
+              else loadData();
+            }).getSiteStatus();
+          } else {
+            loadData(); // Default load if neither check works
+          }
+        });
+    }
+
+    function showMaintenance() {
+      document.body.innerHTML = `<div style="text-align:center; padding:100px; font-family:sans-serif; color:#4a4e69;">
+                                   <h1 style="color:#916bbf;">SHEP</h1>
+                                   <p style="font-size:20px;">The site is currently down for maintenance.</p>
+                                   <p>Please check back shortly!</p>
+                                 </div>`;
     }
 
     function loadData() {
