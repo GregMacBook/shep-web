@@ -184,7 +184,7 @@
           var display = document.getElementById('content');
           var name = sectionName.toUpperCase().trim();
           
-        if (name === "ANNUAL APPEALS") {
+     if (name === "ANNUAL APPEALS") {
             display.innerHTML = "";
             
             data.forEach(function(r) {
@@ -192,32 +192,26 @@
               var rowHeader = r[0].toString().toUpperCase().trim();
               if (annualAppealItems.includes(rowHeader)) {
                 var posterUrl = r[3] ? r[3].toString().trim() : '';
-                // Transform to preview mode
-                var finalUrl = posterUrl ? posterUrl.replace('/view?usp=sharing', '/preview') : '';
+                // Ensure we use the /preview link
+                var finalUrl = posterUrl.replace('/view?usp=sharing', '/preview');
 
                 var card = document.createElement('div');
                 card.className = 'appeal-card';
 
-                // The most basic, "unblockable" structure possible
-                var cardHTML = `
+                // Use a standard div for content
+                card.innerHTML = `
                   <div class="appeal-left">
                     <img src="${r[2] ? getImgUrl(r[2], true) : 'https://i.imgur.com/oAWTWfg.png'}" class="appeal-thumb">
                     <div class="appeal-details">
                       <h3>${r[0].toString().trim()}</h3>
                       <p>${r[1] ? r[1].toString().trim() : ''}</p>
+                      <button class="inline-action-btn" onclick="openPoster('${finalUrl}')">📄 View Poster</button>
                     </div>
                   </div>`;
-
-                if (finalUrl) {
-                  // Direct anchor wrap
-                  card.innerHTML = `<a href="${finalUrl}" target="_top" style="text-decoration:none; color:inherit; width:100%; display:block;">${cardHTML}</a>`;
-                } else {
-                  card.innerHTML = cardHTML;
-                }
                 
                 display.appendChild(card);
               }
-            });
+            });   
             
           } else if (name === "WHAT DO WE COLLECT") {
             display.innerHTML = '<div class="collection-grid" id="coll-box">Loading...</div>';
