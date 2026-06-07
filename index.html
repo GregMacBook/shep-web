@@ -105,20 +105,17 @@
             
             if (currentKey === sName) {
               var card = document.createElement('div'); card.className = 'appeal-card';
-              var thumb = getImgUrl(r[2], true);
-              var content = `<div class="appeal-left"><img src="${thumb}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
               
               if (isAppeal && r[3]) {
                 var url = r[3].toString().trim().replace(/\/view\?usp=.*$/, '/preview');
-                card.innerHTML = `<a href="${url}" target="_top" style="text-decoration:none; color:inherit; display:flex; justify-content:space-between; align-items:center; width:100%;">${content}<span style="background:#916bbf; color:white; padding:8px 16px; border-radius:18px; font-weight:bold; font-size:0.8em;">📄 View Poster</span></a>`;
+                // Standard, clean anchor tag:
+                card.innerHTML = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>
+                                  <a href="${url}" target="_top" style="background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em;">View Poster</a>`;
               } else {
-                card.innerHTML = content;
+                card.innerHTML = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
                 if(r[2] && !isAppeal) {
                   var imgCont = document.createElement('div'); imgCont.className = 'row-images-container';
-                  r[2].toString().split(',').forEach(u => {
-                    var img = document.createElement('img'); img.src = getImgUrl(u.trim(), false); img.className = 'row-attached-img';
-                    imgCont.appendChild(img);
-                  });
+                  r[2].toString().split(',').forEach(u => imgCont.innerHTML += `<img src="${getImgUrl(u.trim(), false)}" class="row-attached-img">`);
                   card.appendChild(imgCont);
                 }
               }
