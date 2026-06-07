@@ -34,6 +34,16 @@
   </div>
   <script>
     const annualAppealItems = ["MOTHERS' DAY", "MOTHER'S DAY", "FATHERS' DAY", "FATHER'S DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
+    
+    // 1. HELPER FUNCTIONS AT THE TOP
+    function getImgUrl(url, isSmall) {
+      if (!url) return 'https://i.imgur.com/oAWTWfg.png';
+      var str = url.toString().trim();
+      var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
+      return match ? 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=' + (isSmall ? 'w120' : 'w800') : str;
+    }
+
+    // 2. MAIN APP LOGIC
     fetch("https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec")
       .then(r => r.json()).then(data => renderMenu(data));
 
@@ -45,6 +55,7 @@
           if(!uniqueSections.includes(r[0].toString().trim())) uniqueSections.push(r[0].toString().trim());
         }
       });
+      
       uniqueSections.forEach(sName => {
         var btn = document.createElement('div'); btn.className = 'tab'; btn.innerText = sName;
         btn.onclick = function() {
@@ -56,16 +67,17 @@
             var isAppeal = annualAppealItems.includes(r[0] ? r[0].toString().toUpperCase().trim() : "");
             if((sName === "Annual Appeals" && isAppeal) || (sName === (r[0] ? r[0].toString().trim() : "") && !isAppeal)) {
               var card = document.createElement('div'); card.className = 'appeal-card';
-              var thumb = r[2] || 'https://i.imgur.com/oAWTWfg.png';
+              var thumb = getImgUrl(r[2], true);
               var content = `<div class="appeal-left"><img src="${thumb}" class="appeal-thumb"><div><h3>${r[0]}</h3><p>${r[1]||''}</p></div></div>`;
+              
               if (isAppeal && r[3]) {
                 var url = r[3].toString().trim().replace('/view?usp=sharing', '/preview');
-                card.innerHTML = `${content}<button class="inline-action-btn" onclick="window.open('${url}', '_blank')">📄 View Poster</button>`;
+                card.innerHTML = `${content}<a href="${url}" target="_top" style="background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em;">📄 View Poster</a>`;
               } else {
                 card.innerHTML = content;
                 if(r[2] && !isAppeal) {
                   var imgCont = document.createElement('div'); imgCont.className = 'row-images-container';
-                  r[2].toString().split(',').forEach(u => imgCont.innerHTML += `<img src="${u.trim()}" class="row-attached-img">`);
+                  r[2].toString().split(',').forEach(u => imgCont.innerHTML += `<img src="${getImgUrl(u.trim(), false)}" class="row-attached-img">`);
                   card.appendChild(imgCont);
                 }
               }
