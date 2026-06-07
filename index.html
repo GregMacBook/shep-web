@@ -190,46 +190,33 @@
           var name = sectionName.toUpperCase().trim();
           
 if (name === "ANNUAL APPEALS") {
-            display.innerHTML = "";
+            display.innerHTML = '<div class="pictures-grid"></div>'; // Reusing the clean grid layout
+            var grid = display.querySelector('.pictures-grid');
             
             data.forEach(function(r) {
               if(!r[0]) return;
               var rowHeader = r[0].toString().toUpperCase().trim();
               if (annualAppealItems.includes(rowHeader)) {
-                var card = document.createElement('div');
-                card.className = 'appeal-card';
-                
-                var thumbSrc = r[2] ? getImgUrl(r[2], true) : 'https://i.imgur.com/oAWTWfg.png';
                 var posterUrl = r[3] ? extractRawUrl(r[3]) : '';
-
-                var leftSide = document.createElement('div');
-                leftSide.className = 'appeal-left';
+                var thumbSrc = r[2] ? getImgUrl(r[2], true) : 'https://i.imgur.com/oAWTWfg.png';
                 
-                // If a poster URL exists, make the header text a clear, underlined clickable breakout link
+                var card = document.createElement('div');
+                card.className = 'gallery-card'; // Using the same reliable card class as Pictures
+                
+                // If there's a poster link, wrap the image in a clean anchor
                 if (posterUrl) {
-                  leftSide.innerHTML = `
-                    <img src="${thumbSrc}" class="appeal-thumb">
-                    <div class="appeal-details">
-                      <h3>
-                        <a href="${posterUrl}" target="_top" onclick="if(window.top){window.top.location.href='${posterUrl}'; return false;}" style="color: #916bbf; text-decoration: underline; cursor: pointer;">
-                          ${r[0].toString().trim()}
-                        </a>
-                        <span style="font-size: 0.75em; color: #84a59d; font-weight: normal; margin-left: 8px; font-style: italic;">(Click to view poster)</span>
-                      </h3>
-                      <p>${r[1] ? r[1].toString().trim() : ''}</p>
-                    </div>`;
+                  card.innerHTML = `
+                    <a href="${posterUrl}" target="_top" style="text-decoration:none;">
+                      <img src="${thumbSrc}" class="gallery-img">
+                      <div style="margin-top:10px; font-weight:bold; color:#916bbf;">${r[0].toString().trim()}</div>
+                      <div style="font-size:0.8em; color:#84a59d;">Click image to view poster</div>
+                    </a>`;
                 } else {
-                  // Fallback if there is no poster link in column D
-                  leftSide.innerHTML = `
-                    <img src="${thumbSrc}" class="appeal-thumb">
-                    <div class="appeal-details">
-                      <h3>${r[0].toString().trim()}</h3>
-                      <p>${r[1] ? r[1].toString().trim() : ''}</p>
-                    </div>`;
+                  card.innerHTML = `
+                    <img src="${thumbSrc}" class="gallery-img">
+                    <div style="margin-top:10px; font-weight:bold; color:#4a4e69;">${r[0].toString().trim()}</div>`;
                 }
-                
-                card.appendChild(leftSide);
-                display.appendChild(card);
+                grid.appendChild(card);
               }
             });
             
