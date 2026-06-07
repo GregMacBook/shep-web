@@ -16,7 +16,7 @@
     
     /* Standard Content Rows */
     .info-line { margin-bottom: 12px; padding: 18px 22px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; word-wrap: break-word; }
-    .text-row-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #f0f0f0; }
+    .text-row-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #f0f0f0; gap: 20px; }
     .text-row-item:last-child { border-bottom: none; }
     
     /* Annual Appeals Specific Formatting */
@@ -26,9 +26,9 @@
     .appeal-details h3 { margin: 0 0 5px 0; color: #4a4e69; font-size: 1.15em; font-weight: 700; }
     .appeal-details p { margin: 0; color: #84a59d; font-size: 0.9em; font-weight: 600; }
     
-    /* Interactive Buttons */
-    .outbound-web-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; background: #f0e6f7; color: #916bbf; font-weight: bold; border-radius: 20px; text-decoration: none; font-size: 0.85em; transition: 0.2s; border: 1px solid #ac8ad4; cursor: pointer; margin-top: 8px; align-self: flex-start; }
-    .outbound-web-btn:hover { background: #916bbf; color: white; }
+    /* Action Buttons */
+    .inline-action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: #f0e6f7; color: #916bbf; font-weight: bold; border-radius: 20px; text-decoration: none; font-size: 0.85em; transition: 0.2s; border: 1px solid #ac8ad4; cursor: pointer; white-space: nowrap; }
+    .inline-action-btn:hover { background: #916bbf; color: white; }
     .contact-link-active { color: #916bbf; text-decoration: underline; font-weight: bold; word-break: break-all; }
 
     /* Custom Layout Components */
@@ -47,7 +47,7 @@
     .hero-img-side { max-width: 450px; width: 100%; height: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); background: #fafafa; }
     .donate-btn { display: inline-block; margin-top: 20px; padding: 18px 45px; background: #84a59d; color: white; border-radius: 35px; font-weight: bold; cursor: pointer; text-decoration: none; border: none; text-transform: uppercase; font-size: 1.1em; transition: 0.2s; }
     .donate-btn:hover { background: #6b8f87; transform: scale(1.02); }
-    .location-pin { cursor: pointer; font-size: 1.4em; margin-left: 15px; transition: transform 0.2s; display: inline-block; }
+    .location-pin { cursor: pointer; font-size: 1.4em; transition: transform 0.2s; display: inline-block; }
     .location-pin:hover { transform: scale(1.2); }
     .testimonial-card { background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; gap: 25px; max-width: 900px; align-items: flex-start; border-left: 6px solid #ac8ad4; }
     .testimonial-media { width: 220px; min-width: 220px; height: 150px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: #fafafa; }
@@ -60,6 +60,7 @@
       .testimonial-media { width: 100%; min-width: 100%; } 
       .hero-img-side { max-width: 100%; }
       .appeal-card { flex-direction: column; align-items: flex-start; gap: 15px; }
+      .text-row-item { flex-direction: column; align-items: flex-start; gap: 8px; }
     }
   </style>
 </head>
@@ -99,7 +100,6 @@
       if(!text) return "";
       let formatted = text.toString();
       
-      // Clear out spreadsheet Markdown configurations safely
       if(formatted.includes('[') && formatted.includes('](')) {
         formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
       }
@@ -206,11 +206,19 @@
                 if (posterUrl) {
                   var btnContainer = document.createElement('div');
                   var posterBtn = document.createElement('a');
-                  posterBtn.className = 'outbound-web-btn';
+                  posterBtn.className = 'inline-action-btn';
                   posterBtn.href = posterUrl;
-                  posterBtn.setAttribute('target', '_blank');
+                  // Explicitly break frame to force external window opening
+                  posterBtn.target = "_blank";
                   posterBtn.setAttribute('rel', 'noopener noreferrer');
                   posterBtn.innerHTML = '📄 View Poster';
+                  
+                  // Double enforcement: Handle fallback manual window triggers if target="_blank" is frame-blocked
+                  posterBtn.onclick = function(e) {
+                    window.open(posterUrl, '_blank');
+                    e.preventDefault();
+                  };
+
                   btnContainer.appendChild(posterBtn);
                   card.appendChild(btnContainer);
                 }
@@ -368,7 +376,6 @@
               if(!r[1]) return;
               
               var rowDiv = document.createElement('div'); rowDiv.className = 'info-line';
-              var rawCell = r[2] ? extractRawUrl(r[2]) : "";
               var urlPattern = /^(https?:\/\/[^\s]+)/i;
               
               var lines = r[1].toString().split('\n');
@@ -386,33 +393,40 @@
                 }
                 itemRow.appendChild(textSpan);
                 
-                if(rawCell && urlPattern.test(rawCell) && rawCell.toLowerCase().includes('maps')) {
-                   var pin = document.createElement('div');
-                   pin.className = 'location-pin';
-                   pin.innerHTML = '📍';
-                   pin.onclick = function(event) { window.open(rawCell, '_blank'); event.stopPropagation(); };
-                   itemRow.appendChild(pin);
+                var rawCell = r[2] ? extractRawUrl(r[2]) : "";
+                
+                if (rawCell && urlPattern.test(rawCell)) {
+                  if (rawCell.toLowerCase().includes('maps')) {
+                    var pin = document.createElement('div');
+                    pin.className = 'location-pin';
+                    pin.innerHTML = '📍';
+                    pin.onclick = function(event) { window.open(rawCell, '_blank'); event.stopPropagation(); };
+                    itemRow.appendChild(pin);
+                  } else if (!isImageLink(rawCell)) {
+                    var inlineBtn = document.createElement('a');
+                    inlineBtn.className = 'inline-action-btn';
+                    inlineBtn.href = rawCell;
+                    inlineBtn.setAttribute('target', '_blank');
+                    inlineBtn.setAttribute('rel', 'noopener noreferrer');
+                    
+                    if (rawCell.toLowerCase().includes('facebook.com')) {
+                      inlineBtn.innerHTML = '🌐 Facebook';
+                    } else if (rawCell.toLowerCase().includes('instagram.com')) {
+                      inlineBtn.innerHTML = '📸 Instagram';
+                    } else {
+                      inlineBtn.innerHTML = '🌐 View Link';
+                    }
+                    
+                    inlineBtn.onclick = function(e) {
+                      window.open(rawCell, '_blank');
+                      e.preventDefault();
+                    };
+
+                    itemRow.appendChild(inlineBtn);
+                  }
                 }
                 rowDiv.appendChild(itemRow);
               });
-              
-              // New Enhanced Multi-Link Button Generator
-              if(rawCell && urlPattern.test(rawCell) && !isImageLink(rawCell) && !rawCell.toLowerCase().includes('maps')) {
-                var webBtn = document.createElement('a');
-                webBtn.className = 'outbound-web-btn';
-                webBtn.href = rawCell;
-                webBtn.setAttribute('target', '_blank');
-                webBtn.setAttribute('rel', 'noopener noreferrer');
-                
-                if (rawCell.toLowerCase().includes('facebook.com')) {
-                  webBtn.innerHTML = '🌐 View Facebook Page';
-                } else if (rawCell.toLowerCase().includes('instagram.com')) {
-                  webBtn.innerHTML = '📸 View Instagram';
-                } else {
-                  webBtn.innerHTML = '🌐 View Link';
-                }
-                rowDiv.appendChild(webBtn);
-              }
               display.appendChild(rowDiv);
             });
           }
