@@ -176,3 +176,123 @@
       
       uniqueSections.forEach(function(sectionName, index) {
         var btn = document.createElement('div');
+        btn.className = 'tab'; btn.innerText = sectionName;
+        
+        btn.onclick = function() {
+          var tabs = document.getElementsByClassName('tab');
+          for(var t=0; t<tabs.length; t++) { tabs[t].classList.remove('active'); }
+          btn.classList.add('active');
+
+          document.getElementById('tab-title').innerText = sectionName;
+          var display = document.getElementById('content');
+          var name = sectionName.toUpperCase().trim();
+          
+          if (name === "ANNUAL APPEALS") {
+            display.innerHTML = "";
+            
+            data.forEach(function(r) {
+              if(!r[0]) return;
+              var rowHeader = r[0].toString().toUpperCase().trim();
+              if (annualAppealItems.includes(rowHeader)) {
+                var card = document.createElement('div');
+                card.className = 'appeal-card';
+                
+                var thumbSrc = r[2] ? getImgUrl(r[2], true) : 'https://i.imgur.com/oAWTWfg.png';
+                var posterUrl = r[3] ? extractRawUrl(r[3]) : '';
+
+                var leftSide = document.createElement('div');
+                leftSide.className = 'appeal-left';
+                leftSide.innerHTML = `<img src="${thumbSrc}" class="appeal-thumb">
+                                      <div class="appeal-details">
+                                        <h3>${r[0].toString().trim()}</h3>
+                                        <p>${r[1] ? r[1].toString().trim() : ''}</p>
+                                      </div>`;
+                card.appendChild(leftSide);
+
+                if (posterUrl) {
+                  var btnContainer = document.createElement('div');
+                  var posterBtn = document.createElement('button');
+                  posterBtn.className = 'inline-action-btn';
+                  posterBtn.innerHTML = '📄 View Poster';
+                  
+                  // Clean click tracking execution natively on GitHub Pages
+                  posterBtn.onclick = function() {
+                    window.open(posterUrl, '_blank');
+                  };
+
+                  btnContainer.appendChild(posterBtn);
+                  card.appendChild(btnContainer);
+                }
+                display.appendChild(card);
+              }
+            });
+            
+          } else if (name === "WHAT DO WE COLLECT") {
+            display.innerHTML = '<div class="collection-grid" id="coll-box">Loading...</div>';
+            fetch(scriptUrlBase + "?action=collections")
+              .then(response => response.json())
+              .then(items => {
+                var box = document.getElementById('coll-box'); box.innerHTML = "";
+                var groups = {};
+                items.slice(1).forEach(function(it) { 
+                  if(!it[0] || it[0].trim() === "" || !it[1]) return;
+                  if(!groups[it[0]]) groups[it[0]] = []; 
+                  groups[it[0]].push(it); 
+                });
+                Object.keys(groups).forEach(function(g) {
+                  var col = document.createElement('div'); col.className = 'category-column';
+                  col.innerHTML = '<div class="category-header">' + g + '</div>';
+                  groups[g].forEach(function(it) {
+                    var r = document.createElement('div'); r.className = 'item-row';
+                    r.innerHTML = '<div><img src="' + getImgUrl(it[2], true) + '" class="donation-img-small"></div><div class="item-name">' + it[1] + '</div>';
+                    col.appendChild(r);
+                  });
+                  box.appendChild(col);
+                });
+              }).catch(err => { document.getElementById('coll-box').innerText = "Error loading elements."; });
+            
+          } else if (name === "WHAT WE CAN'T ACCEPT" || name === "WHAT WE CAN’T ACCEPT") {
+            display.innerHTML = '<div class="collection-grid" id="unacceptable-box">Loading...</div>';
+            fetch(scriptUrlBase + "?action=unacceptable")
+              .then(response => response.json())
+              .then(items => {
+                var box = document.getElementById('unacceptable-box'); box.innerHTML = "";
+                var groups = {};
+                items.slice(1).forEach(function(it) { 
+                  if(!it[0] || it[0].trim() === "" || !it[1]) return;
+                  if(!groups[it[0]]) groups[it[0]] = []; 
+                  groups[it[0]].push(it); 
+                });
+                Object.keys(groups).forEach(function(g) {
+                  var col = document.createElement('div'); col.className = 'category-column';
+                  col.innerHTML = '<div class="category-header" style="color: #d9534f; border-bottom: 2px solid #d9534f;">' + g + '</div>';
+                  groups[g].forEach(function(it) {
+                    var r = document.createElement('div'); r.className = 'item-row';
+                    r.innerHTML = '<div><img src="' + getImgUrl(it[2], true) + '" class="donation-img-small"></div><div class="item-name">' + it[1] + '</div>';
+                    col.appendChild(r);
+                  });
+                  box.appendChild(col);
+                });
+              }).catch(err => { document.getElementById('unacceptable-box').innerText = "Error loading elements."; });
+            
+          } else if (name === "PICTURES") {
+            display.innerHTML = '<div class="pictures-grid" id="pic-box">Loading...</div>';
+            fetch(scriptUrlBase + "?action=pictures")
+              .then(response => response.json())
+              .then(pics => {
+                var box = document.getElementById('pic-box'); box.innerHTML = "";
+                pics.slice(1).forEach(function(p) {
+                  if(!p[1]) return;
+                  var card = document.createElement('div'); card.className = 'gallery-card';
+                  card.innerHTML = '<img src="' + getImgUrl(p[1], false) + '" class="gallery-img"><div style="margin-top:10px;font-weight:bold;color:#4a4e69;">' + p[0] + '</div>';
+                  box.appendChild(card);
+                });
+              }).catch(err => { document.getElementById('pic-box').innerText = "Error loading pictures."; });
+
+          } else if (name === "TESTIMONIALS") {
+            display.innerHTML = '<div id="testimonial-box">Loading...</div>';
+            fetch(scriptUrlBase + "?action=testimonials")
+              .then(res => res.json())
+              .then(rows => {
+                var box = document.getElementById('testimonial-box'); box.innerHTML = "";
+                rows.
