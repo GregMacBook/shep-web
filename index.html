@@ -33,26 +33,41 @@
     <div id="content">Syncing data...</div>
   </div>
   <script>
-    // STARTUP LOGIC
+// STARTUP LOGIC
     function init() {
-      // For GitHub pages, we skip the google.script.run (it won't exist there)
+      // 1. Check if we are inside Google's environment
       if (typeof google !== 'undefined' && google.script) {
         google.script.run.withSuccessHandler(function(status) {
           if (status === "OFF") {
             document.body.innerHTML = `<div style="text-align:center; padding:100px; font-family:sans-serif; color:#4a4e69;">
                                          <h1 style="color:#916bbf;">SHEP</h1>
                                          <p style="font-size:20px;">The site is currently down for maintenance.</p>
-                                         <p>Please check back shortly!</p>
                                        </div>`;
           } else {
             loadData();
           }
         }).getSiteStatus();
       } else {
-        // If on GitHub, just load the site (no maintenance check available)
+        // 2. We are on GitHub - bypass maintenance check and just load
         loadData();
       }
     }
+
+    function loadData() {
+      fetch("https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec")
+        .then(r => r.json())
+        .then(data => { 
+          allData = data; 
+          renderMenu(data); 
+        })
+        .catch(err => {
+          document.getElementById('content').innerText = "Sync failed. Please check connection.";
+          console.error(err);
+        });
+    }
+
+    // Run it
+    init();
 
     function loadData() {
       fetch(scriptUrlBase)
