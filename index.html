@@ -33,28 +33,34 @@
     <div id="content">Syncing data...</div>
   </div>
   <script>
+    const annualAppealItems = ["MOTHERS' DAY", "MOTHER'S DAY", "FATHERS' DAY", "FATHER'S DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
+    const scriptUrlBase = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
+
+    // 1. UTILITY: IMAGE HANDLER
+    function getImgUrl(url, isSmall) {
+      if (!url) return 'https://i.imgur.com/oAWTWfg.png';
+      var str = url.toString().trim();
+      var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
+      return match ? 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=' + (isSmall ? 'w120' : 'w800') : str;
+    }
+
+    // 2. MAINTENANCE CHECK
     function init() {
-      // 1. First, check GitHub's status.json
       fetch("status.json")
         .then(response => response.json())
         .then(data => {
-          if (data.status === "OFF") {
-            showMaintenance();
-          } else {
-            // If GitHub is ON, check Apps Script just in case
-            loadData();
-          }
+          if (data.status === "OFF") showMaintenance();
+          else loadAndRender();
         })
         .catch(() => {
-          // If status.json is missing (e.g. running in Apps Script), 
-          // fall back to the old Google Status check
+          // If status.json fails, check Google Script
           if (typeof google !== 'undefined' && google.script) {
             google.script.run.withSuccessHandler(function(status) {
               if (status === "OFF") showMaintenance();
-              else loadData();
+              else loadAndRender();
             }).getSiteStatus();
           } else {
-            loadData(); // Default load if neither check works
+            loadAndRender();
           }
         });
     }
@@ -67,44 +73,12 @@
                                  </div>`;
     }
 
-    function loadData() {
-      fetch("https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec")
-        .then(r => r.json())
-        .then(data => { 
-          allData = data; 
-          renderMenu(data); 
-        })
-        .catch(err => {
-          document.getElementById('content').innerText = "Sync failed. Please check connection.";
-          console.error(err);
-        });
-    }
-
-    // Run it
-    init();
-
-    function loadData() {
+    // 3. DATA RENDERING
+    function loadAndRender() {
       fetch(scriptUrlBase)
         .then(r => r.json())
-        .then(data => { allData = data; renderMenu(data); });
+        .then(data => renderMenu(data));
     }
-
-    // Call init instead of fetch
-    init();
-    
-    const annualAppealItems = ["MOTHERS' DAY", "MOTHER'S DAY", "FATHERS' DAY", "FATHER'S DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
-    
-    // 1. HELPER FUNCTIONS AT THE TOP
-    function getImgUrl(url, isSmall) {
-      if (!url) return 'https://i.imgur.com/oAWTWfg.png';
-      var str = url.toString().trim();
-      var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
-      return match ? 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=' + (isSmall ? 'w120' : 'w800') : str;
-    }
-
-    // 2. MAIN APP LOGIC
-    fetch("https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec")
-      .then(r => r.json()).then(data => renderMenu(data));
 
     function renderMenu(data) {
       var tabContainer = document.getElementById('tabs');
@@ -148,6 +122,9 @@
       });
       tabContainer.firstChild.click();
     }
+
+    // FIRE IT UP
+    init();
   </script>
 </body>
 </html>
