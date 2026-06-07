@@ -37,29 +37,59 @@
 
     function renderMenu(data) {
       var tabContainer = document.getElementById('tabs');
-      var uniqueSections = ["Annual Appeals"];
+      tabContainer.innerHTML = "";
+      
+      // Get unique sections, ensuring "Annual Appeals" is included if appeals exist
+      var uniqueSections = [];
       data.forEach(r => {
-        if(r[0] && !annualAppealItems.includes(r[0].toUpperCase().trim()) && r[0].toString().trim() !== "DONATIONFORMURL") {
-          if(!uniqueSections.includes(r[0].toString().trim())) uniqueSections.push(r[0].toString().trim());
+        if(!r[0]) return;
+        var sName = r[0].toString().trim();
+        var isAppeal = annualAppealItems.includes(sName.toUpperCase().trim());
+        var sectionKey = isAppeal ? "Annual Appeals" : sName;
+        if (sName !== "DONATIONFORMURL" && sName !== "INSTAGRAM" && sName !== "FACEBOOK" && !uniqueSections.includes(sectionKey)) {
+          uniqueSections.push(sectionKey);
         }
       });
-      uniqueSections.forEach(sName => {
-        var btn = document.createElement('div'); btn.className = 'tab'; btn.innerText = sName;
+      
+      uniqueSections.forEach(sectionName => {
+        var btn = document.createElement('div');
+        btn.className = 'tab'; btn.innerText = sectionName;
         btn.onclick = function() {
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           btn.classList.add('active');
-          document.getElementById('tab-title').innerText = sName;
-          var display = document.getElementById('content'); display.innerHTML = "";
+          document.getElementById('tab-title').innerText = sectionName;
+          var display = document.getElementById('content');
+          display.innerHTML = "";
+          
           data.forEach(r => {
-            var isAppeal = annualAppealItems.includes(r[0].toString().toUpperCase().trim());
-            if((sName === "Annual Appeals" && isAppeal) || (sName === r[0].toString().trim() && !isAppeal)) {
-              var posterUrl = r[3] ? r[3].toString().trim().replace('/view?usp=sharing', '/preview') : '';
-              var card = document.createElement('div'); card.className = 'appeal-card';
-              var content = `<div class="appeal-left"><img src="${r[2] || 'https://i.imgur.com/oAWTWfg.png'}" class="appeal-thumb"><div><h3>${r[0]} ${posterUrl?'📄':''}</h3><p>${r[1]||''}</p></div></div>`;
-              if(posterUrl) {
-                card.innerHTML = `<a href="${posterUrl}" target="_top" style="text-decoration:none; color:inherit; width:100%; display:flex; justify-content:space-between; align-items:center;">${content}</a>`;
-              } else { card.innerHTML = content; }
-              display.appendChild(card);
+            if(!r[0]) return;
+            var rName = r[0].toString().trim();
+            var isAppeal = annualAppealItems.includes(rName.toUpperCase().trim());
+            var currentKey = isAppeal ? "Annual Appeals" : rName;
+            
+            if (currentKey === sectionName) {
+              if (isAppeal) {
+                // RENDER APPEAL CARD WITH LINK
+                var posterUrl = r[3] ? r[3].toString().trim().replace('/view?usp=sharing', '/preview') : '';
+                var card = document.createElement('div');
+                card.className = 'appeal-card';
+                var content = `<div class="appeal-left"><img src="${r[2] || 'https://i.imgur.com/oAWTWfg.png'}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
+                card.innerHTML = posterUrl ? `<a href="${posterUrl}" target="_top" style="text-decoration:none; color:inherit; width:100%; display:flex; justify-content:space-between; align-items:center;">${content}<span class="inline-action-btn">📄 View Poster</span></a>` : content;
+                display.appendChild(card);
+              } else {
+                // RENDER STANDARD PAGE WITH IMAGES
+                var rowDiv = document.createElement('div'); rowDiv.className = 'info-line';
+                rowDiv.innerHTML = `<div class="text-container-block">${(r[1]||'').toString().replace(/\n/g, '<br>')}</div>`;
+                if(r[2]) {
+                  var imgCont = document.createElement('div'); imgCont.className = 'row-images-container';
+                  r[2].toString().split(',').forEach(u => {
+                    var img = document.createElement('img'); img.src = getImgUrl(u.trim(), false); img.className = 'row-attached-img';
+                    imgCont.appendChild(img);
+                  });
+                  rowDiv.appendChild(imgCont);
+                }
+                display.appendChild(rowDiv);
+              }
             }
           });
         };
