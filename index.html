@@ -189,7 +189,7 @@
           var display = document.getElementById('content');
           var name = sectionName.toUpperCase().trim();
           
-          if (name === "ANNUAL APPEALS") {
+ if (name === "ANNUAL APPEALS") {
             display.innerHTML = "";
             
             data.forEach(function(r) {
@@ -213,8 +213,10 @@
 
                 if (posterUrl) {
                   var btnContainer = document.createElement('div');
-                  // CRITICAL CHANGE: Swapped target="_blank" to target="_top" to prevent the sandboxed iframe from silently dropping click execution loops
-                  btnContainer.innerHTML = `<a href="${posterUrl}" target="_top" class="inline-action-btn">📄 View Poster</a>`;
+                  
+                  // HARDENED FOR CHROME: Uses an explicit inline top breakout rule on click to crush iframe popup blocking rules
+                  btnContainer.innerHTML = `<a href="${posterUrl}" target="_top" onclick="if(window.top){window.top.location.href='${posterUrl}'; return false;}" class="inline-action-btn">📄 View Poster</a>`;
+                  
                   card.appendChild(btnContainer);
                 }
                 display.appendChild(card);
