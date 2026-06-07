@@ -184,7 +184,7 @@
           var display = document.getElementById('content');
           var name = sectionName.toUpperCase().trim();
           
-          if (name === "ANNUAL APPEALS") {
+         if (name === "ANNUAL APPEALS") {
             display.innerHTML = "";
             
             data.forEach(function(r) {
@@ -195,7 +195,8 @@
                 card.className = 'appeal-card';
                 
                 var thumbSrc = r[2] ? getImgUrl(r[2], true) : 'https://i.imgur.com/oAWTWfg.png';
-                var posterUrl = r[3] ? extractRawUrl(r[3]) : '';
+                // USE COLUMN D (index 3) DIRECTLY:
+                var posterUrl = r[3] ? r[3].toString().trim() : '';
 
                 var leftSide = document.createElement('div');
                 leftSide.className = 'appeal-left';
@@ -208,7 +209,9 @@
 
                 if (posterUrl) {
                   var btnContainer = document.createElement('div');
-                  btnContainer.innerHTML = `<a href="${posterUrl}" target="_top" rel="noopener noreferrer" class="inline-action-btn">📄 View Poster</a>`;
+                  // Transform /view?usp=sharing TO /preview AND force breakout with target="_top"
+                  var finalUrl = posterUrl.replace(/\/view\?usp=sharing$/, '/preview');
+                  btnContainer.innerHTML = `<a href="${finalUrl}" target="_top" rel="noopener noreferrer" class="inline-action-btn">📄 View Poster</a>`;
                   card.appendChild(btnContainer);
                 }
                 display.appendChild(card);
