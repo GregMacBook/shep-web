@@ -190,7 +190,7 @@
           var name = sectionName.toUpperCase().trim();
           
 if (name === "ANNUAL APPEALS") {
-            display.innerHTML = '<div class="pictures-grid"></div>'; // Reusing the clean grid layout
+            display.innerHTML = '<div class="pictures-grid"></div>'; // Reusing the proven Gallery grid
             var grid = display.querySelector('.pictures-grid');
             
             data.forEach(function(r) {
@@ -201,15 +201,15 @@ if (name === "ANNUAL APPEALS") {
                 var thumbSrc = r[2] ? getImgUrl(r[2], true) : 'https://i.imgur.com/oAWTWfg.png';
                 
                 var card = document.createElement('div');
-                card.className = 'gallery-card'; // Using the same reliable card class as Pictures
+                card.className = 'gallery-card'; // Styling from your proven Pictures tab
                 
-                // If there's a poster link, wrap the image in a clean anchor
+                // If there's a poster link, wrap everything in a direct anchor link
                 if (posterUrl) {
                   card.innerHTML = `
-                    <a href="${posterUrl}" target="_top" style="text-decoration:none;">
+                    <a href="${posterUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
                       <img src="${thumbSrc}" class="gallery-img">
                       <div style="margin-top:10px; font-weight:bold; color:#916bbf;">${r[0].toString().trim()}</div>
-                      <div style="font-size:0.8em; color:#84a59d;">Click image to view poster</div>
+                      <div style="font-size:0.8em; color:#84a59d;">Click to view poster</div>
                     </a>`;
                 } else {
                   card.innerHTML = `
