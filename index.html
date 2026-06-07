@@ -95,8 +95,13 @@
               var card = document.createElement('div'); card.className = 'appeal-card';
               if (isAppeal && r[3]) {
                 var url = r[3].toString().trim().replace(/\/view\?usp=.*$/, '/preview');
+                // We use a pure <a> tag styled to look like a button
+                // target="_blank" is the instruction to open in a new tab
                 card.innerHTML = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>
-                                  <button onclick="window.open('${url}', '_blank', 'noopener,noreferrer')" style="background:#916bbf; color:white; padding:8px 16px; border-radius:18px; border:none; cursor:pointer; font-weight:bold;">📄 View Poster</button>`;
+                                  <a href="${url}" target="_blank" rel="noopener" 
+                                     style="background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em; cursor:pointer; display:inline-block;">
+                                     View Poster
+                                  </a>`;
               } else {
                 card.innerHTML = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
                 if(r[2] && !isAppeal) {
