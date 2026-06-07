@@ -16,7 +16,7 @@
     
     /* Standard Content Rows */
     .info-line { margin-bottom: 12px; padding: 18px 22px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; word-wrap: break-word; }
-    .text-row-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #f0f0f0; gap: 20px; }
+    .text-row-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #f0f0f0; gap: 20px; }
     .text-row-item:last-child { border-bottom: none; }
     
     /* Row Embedded Images Layout */
@@ -221,7 +221,6 @@
                   btnContainer.appendChild(posterBtn);
                   card.appendChild(btnContainer);
                 }
-                
                 display.appendChild(card);
               }
             });
@@ -358,94 +357,4 @@
                     showcaseCard.appendChild(imgSide);
                   }
                 }
-                display.appendChild(showcaseCard);
-              }
-            }
-            
-          } else {
-            var contentRows = [];
-            for(var i=0; i<allData.length; i++) {
-              if(allData[i][0] && allData[i][0].toString().toUpperCase().trim() === name) {
-                contentRows.push(allData[i]);
-              }
-            }
-            
-            display.innerHTML = "";
-            contentRows.forEach(function(r) {
-              if(!r[1]) return;
-              
-              var rowDiv = document.createElement('div'); rowDiv.className = 'info-line';
-              var urlPattern = /^(https?:\/\/[^\s]+)/i;
-              
-              var lines = r[1].toString().split('\n');
-              lines.forEach(function(l, lineIdx) {
-                if(!l.trim()) return;
-                
-                var itemRow = document.createElement('div'); itemRow.className = 'text-row-item';
-                var textSpan = document.createElement('span');
-                
-                if(l.trim().toLowerCase().startsWith("http")) {
-                  let cleanedUrl = extractRawUrl(l);
-                  textSpan.innerHTML = `<a href="${cleanedUrl}" target="_blank" rel="noopener noreferrer" class="contact-link-active">${cleanedUrl}</a>`;
-                } else {
-                  textSpan.innerHTML = formatBoldAndLinks(l);
-                }
-                itemRow.appendChild(textSpan);
-                
-                var rawLinkCell = r[2] ? r[2].toString().trim() : "";
-                
-                if (rawLinkCell) {
-                  if (isImageLink(rawLinkCell)) {
-                    var imgContainer = document.createElement('div');
-                    imgContainer.className = 'row-images-container';
-                    
-                    var individualUrls = rawLinkCell.split(',');
-                    individualUrls.forEach(function(singleUrl) {
-                      var cleanUrl = extractRawUrl(singleUrl);
-                      if (cleanUrl) {
-                        var inlineImg = document.createElement('img');
-                        inlineImg.className = 'row-attached-img';
-                        inlineImg.src = getImgUrl(cleanUrl, false);
-                        inlineImg.onclick = function() { window.open(cleanUrl, '_blank'); };
-                        imgContainer.appendChild(inlineImg);
-                      }
-                    });
-                    rowDiv.appendChild(imgContainer);
-                    
-                  } else if (urlPattern.test(rawLinkCell)) {
-                    if (rawLinkCell.toLowerCase().includes('maps')) {
-                      var pin = document.createElement('div');
-                      pin.className = 'location-pin';
-                      pin.innerHTML = '📍';
-                      pin.onclick = function(event) { window.open(rawLinkCell, '_blank'); event.stopPropagation(); };
-                      itemRow.appendChild(pin);
-                    } else {
-                      var inlineBtn = document.createElement('a');
-                      inlineBtn.className = 'inline-action-btn';
-                      inlineBtn.href = rawLinkCell;
-                      inlineBtn.setAttribute('target', '_blank');
-                      inlineBtn.setAttribute('rel', 'noopener noreferrer');
-                      
-                      if (rawLinkCell.toLowerCase().includes('facebook.com')) {
-                        inlineBtn.innerHTML = '🌐 Facebook';
-                      } else if (rawLinkCell.toLowerCase().includes('instagram.com')) {
-                        inlineBtn.innerHTML = '📸 Instagram';
-                      } else {
-                        inlineBtn.innerHTML = '🌐 View Link';
-                      }
-                      itemRow.appendChild(inlineBtn);
-                    }
-                  }
-                }
-              });
-              display.appendChild(rowDiv);
-            });
-          }
-        };
-        tabContainer.appendChild(btn);
-        if(index === 0) btn.click();
-      });
-    }
-  </script>
-</body>
-</html>
+                display.appendChild(showcase
