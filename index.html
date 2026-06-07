@@ -22,7 +22,7 @@
     
     /* Row Embedded Images Layout */
     .row-images-container { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; padding-top: 12px; border-top: 1px solid #f5effa; }
-    .row-attached-img { max-width: 220px; max-height: 160px; object-fit: cover; border-radius: 8px; border: 1px solid #e1d5f2; box-shadow: 0 2px 6px rgba(0,0,0,0.04); cursor: pointer; transition: transform 0.2s; }
+    .row-attached-img { max-width: 220px; max-height: 160px; object-fit: cover; border-radius: 8px; border: 1px solid #e1d5f2; box-shadow: 0 2px 6px rgba(0,0,0,0.04); cursor: pointer; transition: transform 0.2s; display: block; }
     .row-attached-img:hover { transform: scale(1.04); }
 
     /* Annual Appeals Formatting */
@@ -32,7 +32,7 @@
     .appeal-details h3 { margin: 0 0 5px 0; color: #4a4e69; font-size: 1.15em; font-weight: 700; }
     .appeal-details p { margin: 0; color: #84a59d; font-size: 0.9em; font-weight: 600; }
     
-    /* Action Link Elements (Styled as clear clickable buttons) */
+    /* Action Link Buttons - Explicitly styled to be clickable block anchors */
     .inline-action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f0e6f7; color: #916bbf; font-weight: bold; border-radius: 18px; text-decoration: none; font-size: 0.82em; transition: 0.2s; border: 1px solid #ac8ad4; cursor: pointer; white-space: nowrap; margin-top: 12px; max-width: max-content; }
     .inline-action-btn:hover { background: #916bbf; color: white; text-decoration: none; }
     .contact-link-active { color: #916bbf; text-decoration: underline; font-weight: bold; word-break: break-all; cursor: pointer; }
@@ -213,8 +213,8 @@
 
                 if (posterUrl) {
                   var btnContainer = document.createElement('div');
-                  // Fixed to handle both environments: Native link syntax with clear click attributes
-                  btnContainer.innerHTML = `<a href="${posterUrl}" target="_blank" rel="noopener noreferrer" class="inline-action-btn">📄 View Poster</a>`;
+                  // CRITICAL CHANGE: Swapped target="_blank" to target="_top" to prevent the sandboxed iframe from silently dropping click execution loops
+                  btnContainer.innerHTML = `<a href="${posterUrl}" target="_top" class="inline-action-btn">📄 View Poster</a>`;
                   card.appendChild(btnContainer);
                 }
                 display.appendChild(card);
@@ -321,7 +321,8 @@
              }
 
              var currentFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLScuk3Pg3a4wVbkR60Pe6ni3EUNsMdLySbCuNF-mzXvXy8JwpQ/viewform?usp=header";
-             display.innerHTML = `<div class="commentary-box"><h3>Your Impact Matters</h3><p>${formatBoldAndLinks(customDesc)}</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div><div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div><center><a class="donate-btn" href="${currentFormUrl}" target="_blank" rel="noopener noreferrer">Complete Donation & Get Receipt</a></center>`;
+             // Target set to top ensures seamless breakouts when nested inside Apps Script
+             display.innerHTML = `<div class="commentary-box"><h3>Your Impact Matters</h3><p>${formatBoldAndLinks(customDesc)}</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div><div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div><center><a class="donate-btn" href="${currentFormUrl}" target="_top">Complete Donation & Get Receipt</a></center>`;
           
           } else if (name === "OUR MISSION" || name === "ABOUT US") {
             display.innerHTML = "";
@@ -377,7 +378,7 @@
                 
                 if(l.trim().toLowerCase().startsWith("http")) {
                   let cleanedUrl = extractRawUrl(l);
-                  lineDiv.innerHTML = `<a href="${cleanedUrl}" class="contact-link-active" target="_blank" rel="noopener noreferrer">${cleanedUrl}</a>`;
+                  lineDiv.innerHTML = `<a href="${cleanedUrl}" class="contact-link-active" target="_top">${cleanedUrl}</a>`;
                 } else {
                   lineDiv.innerHTML = formatBoldAndLinks(l);
                   
@@ -387,8 +388,7 @@
                     var pin = document.createElement('a');
                     pin.className = 'location-pin';
                     pin.href = checkMapLink;
-                    pin.target = '_blank';
-                    pin.rel = 'noopener noreferrer';
+                    pin.target = '_top';
                     pin.innerHTML = '📍';
                     lineDiv.appendChild(pin);
                   }
@@ -413,11 +413,9 @@
                       inlineImg.className = 'row-attached-img';
                       inlineImg.src = getImgUrl(cleanUrl, false);
                       
-                      // Wrap image inside links compatible with both servers
                       var imgAnchor = document.createElement('a');
                       imgAnchor.href = cleanUrl;
-                      imgAnchor.target = '_blank';
-                      imgAnchor.rel = 'noopener noreferrer';
+                      imgAnchor.target = '_top';
                       imgAnchor.appendChild(inlineImg);
                       
                       imgContainer.appendChild(imgAnchor);
@@ -429,8 +427,7 @@
                   var btnAnchor = document.createElement('a');
                   btnAnchor.className = 'inline-action-btn';
                   btnAnchor.href = rawLinkCell;
-                  btnAnchor.target = '_blank';
-                  btnAnchor.rel = 'noopener noreferrer';
+                  btnAnchor.target = '_top';
                   
                   if (rawLinkCell.toLowerCase().includes('facebook.com')) {
                     btnAnchor.innerHTML = '🌐 Facebook';
