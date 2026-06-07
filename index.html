@@ -13,11 +13,10 @@
     .tab.active { background: #fcfaff; color: #4a4e69; margin-right: -1px; }
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; min-width: 0; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
-    .info-line { margin-bottom: 15px; padding: 22px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; }
-    .appeal-card { display: flex; align-items: center; justify-content: space-between; background: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 8px solid #ac8ad4; max-width: 900px; }
+    .info-line { margin-bottom: 15px; padding: 22px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; display: flex; flex-direction: column; }
+    .appeal-card { display: flex; align-items: center; justify-content: space-between; background: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 15px; border-left: 8px solid #ac8ad4; }
     .appeal-left { display: flex; align-items: center; gap: 20px; }
-    .appeal-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #e1d5f2; }
-    .inline-action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f0e6f7; color: #916bbf; font-weight: bold; border-radius: 18px; text-decoration: none; font-size: 0.82em; border: 1px solid #ac8ad4; cursor: pointer; margin-top: 12px; }
+    .appeal-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -32,40 +31,41 @@
   </div>
   <script>
     let allData = [];
-    var scriptUrlBase = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
-
-    fetch(scriptUrlBase).then(r => r.json()).then(data => { allData = data; renderMenu(data); });
+    const annualAppealItems = ["MOTHERS' DAY", "MOTHER'S DAY", "FATHERS' DAY", "FATHER'S DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
+    fetch("https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec")
+      .then(r => r.json()).then(data => { allData = data; renderMenu(data); });
 
     function renderMenu(data) {
       var tabContainer = document.getElementById('tabs');
-      var sections = [...new Set(data.filter(r => r[0]).map(r => r[0].toString().trim()))];
-      sections.forEach((sName, index) => {
-        var btn = document.createElement('div');
-        btn.className = 'tab'; btn.innerText = sName;
+      var uniqueSections = ["Annual Appeals"];
+      data.forEach(r => {
+        if(r[0] && !annualAppealItems.includes(r[0].toUpperCase().trim()) && r[0].toString().trim() !== "DONATIONFORMURL") {
+          if(!uniqueSections.includes(r[0].toString().trim())) uniqueSections.push(r[0].toString().trim());
+        }
+      });
+      uniqueSections.forEach(sName => {
+        var btn = document.createElement('div'); btn.className = 'tab'; btn.innerText = sName;
         btn.onclick = function() {
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           btn.classList.add('active');
           document.getElementById('tab-title').innerText = sName;
-          var display = document.getElementById('content');
-          display.innerHTML = "";
-          
-          data.filter(r => r[0] && r[0].toString().trim() === sName).forEach(r => {
-            var card = document.createElement('div');
-            card.className = 'appeal-card';
-            var thumb = r[2] || 'https://i.imgur.com/oAWTWfg.png';
-            var poster = r[3] ? r[3].toString().trim() : '';
-            
-            card.innerHTML = `<div class="appeal-left">
-                                <img src="${thumb}" class="appeal-thumb">
-                                <div><h3>${r[0]}</h3><p>${r[1] || ''}</p></div>
-                              </div>
-                              ${poster ? `<a href="${poster.replace('/view?usp=sharing', '/preview')}" target="_top" class="inline-action-btn">📄 View Poster</a>` : ''}`;
-            display.appendChild(card);
+          var display = document.getElementById('content'); display.innerHTML = "";
+          data.forEach(r => {
+            var isAppeal = annualAppealItems.includes(r[0].toString().toUpperCase().trim());
+            if((sName === "Annual Appeals" && isAppeal) || (sName === r[0].toString().trim() && !isAppeal)) {
+              var posterUrl = r[3] ? r[3].toString().trim().replace('/view?usp=sharing', '/preview') : '';
+              var card = document.createElement('div'); card.className = 'appeal-card';
+              var content = `<div class="appeal-left"><img src="${r[2] || 'https://i.imgur.com/oAWTWfg.png'}" class="appeal-thumb"><div><h3>${r[0]} ${posterUrl?'📄':''}</h3><p>${r[1]||''}</p></div></div>`;
+              if(posterUrl) {
+                card.innerHTML = `<a href="${posterUrl}" target="_top" style="text-decoration:none; color:inherit; width:100%; display:flex; justify-content:space-between; align-items:center;">${content}</a>`;
+              } else { card.innerHTML = content; }
+              display.appendChild(card);
+            }
           });
         };
         tabContainer.appendChild(btn);
-        if(index === 0) btn.click();
       });
+      tabContainer.firstChild.click();
     }
   </script>
 </body>
