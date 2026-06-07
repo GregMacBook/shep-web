@@ -184,7 +184,7 @@
           var display = document.getElementById('content');
           var name = sectionName.toUpperCase().trim();
           
-         if (name === "ANNUAL APPEALS") {
+        if (name === "ANNUAL APPEALS") {
             display.innerHTML = "";
             
             data.forEach(function(r) {
@@ -197,24 +197,32 @@
                 var card = document.createElement('div');
                 card.className = 'appeal-card';
 
-                // The inner content structure
-                var innerHTMLContent = `
-                  <div class="appeal-left">
-                    <img src="${thumbSrc}" class="appeal-thumb">
-                    <div class="appeal-details">
-                      <h3>${r[0].toString().trim()} ${posterUrl ? '📄' : ''}</h3>
-                      <p>${r[1] ? r[1].toString().trim() : ''}</p>
-                      ${posterUrl ? '<p style="color:#916bbf; font-size: 0.8em; font-style: italic;">Click to view poster</p>' : ''}
-                    </div>
+                // 1. Create the content div first
+                var contentDiv = document.createElement('div');
+                contentDiv.className = 'appeal-left';
+                contentDiv.innerHTML = `
+                  <img src="${thumbSrc}" class="appeal-thumb">
+                  <div class="appeal-details">
+                    <h3>${r[0].toString().trim()} ${posterUrl ? '📄' : ''}</h3>
+                    <p>${r[1] ? r[1].toString().trim() : ''}</p>
+                    ${posterUrl ? '<p style="color:#916bbf; font-size: 0.8em; font-style: italic;">Click to view poster</p>' : ''}
                   </div>`;
 
+                // 2. If a link exists, wrap the contentDiv in an anchor tag
                 if (posterUrl) {
-                  // Wrap the inner content in the link tag
-                  card.innerHTML = `<a href="${posterUrl.replace('/view?usp=sharing', '/preview')}" target="_top" style="text-decoration:none; color:inherit; width:100%; display:block;">
-                                      ${innerHTMLContent}
-                                    </a>`;
+                  var anchor = document.createElement('a');
+                  anchor.href = posterUrl.replace('/view?usp=sharing', '/preview');
+                  anchor.target = '_top';
+                  anchor.style.textDecoration = 'none';
+                  anchor.style.color = 'inherit';
+                  anchor.style.width = '100%';
+                  anchor.style.display = 'flex';
+                  anchor.style.alignItems = 'center';
+                  anchor.style.justifyContent = 'space-between';
+                  anchor.appendChild(contentDiv);
+                  card.appendChild(anchor);
                 } else {
-                  card.innerHTML = innerHTMLContent;
+                  card.appendChild(contentDiv);
                 }
                 
                 display.appendChild(card);
