@@ -189,7 +189,7 @@
           var display = document.getElementById('content');
           var name = sectionName.toUpperCase().trim();
           
- if (name === "ANNUAL APPEALS") {
+if (name === "ANNUAL APPEALS") {
             display.innerHTML = "";
             
             data.forEach(function(r) {
@@ -204,21 +204,31 @@
 
                 var leftSide = document.createElement('div');
                 leftSide.className = 'appeal-left';
-                leftSide.innerHTML = `<img src="${thumbSrc}" class="appeal-thumb">
-                                      <div class="appeal-details">
-                                        <h3>${r[0].toString().trim()}</h3>
-                                        <p>${r[1] ? r[1].toString().trim() : ''}</p>
-                                      </div>`;
-                card.appendChild(leftSide);
-
+                
+                // If a poster URL exists, make the header text a clear, underlined clickable breakout link
                 if (posterUrl) {
-                  var btnContainer = document.createElement('div');
-                  
-                  // HARDENED FOR CHROME: Uses an explicit inline top breakout rule on click to crush iframe popup blocking rules
-                  btnContainer.innerHTML = `<a href="${posterUrl}" target="_top" onclick="if(window.top){window.top.location.href='${posterUrl}'; return false;}" class="inline-action-btn">📄 View Poster</a>`;
-                  
-                  card.appendChild(btnContainer);
+                  leftSide.innerHTML = `
+                    <img src="${thumbSrc}" class="appeal-thumb">
+                    <div class="appeal-details">
+                      <h3>
+                        <a href="${posterUrl}" target="_top" onclick="if(window.top){window.top.location.href='${posterUrl}'; return false;}" style="color: #916bbf; text-decoration: underline; cursor: pointer;">
+                          ${r[0].toString().trim()}
+                        </a>
+                        <span style="font-size: 0.75em; color: #84a59d; font-weight: normal; margin-left: 8px; font-style: italic;">(Click to view poster)</span>
+                      </h3>
+                      <p>${r[1] ? r[1].toString().trim() : ''}</p>
+                    </div>`;
+                } else {
+                  // Fallback if there is no poster link in column D
+                  leftSide.innerHTML = `
+                    <img src="${thumbSrc}" class="appeal-thumb">
+                    <div class="appeal-details">
+                      <h3>${r[0].toString().trim()}</h3>
+                      <p>${r[1] ? r[1].toString().trim() : ''}</p>
+                    </div>`;
                 }
+                
+                card.appendChild(leftSide);
                 display.appendChild(card);
               }
             });
