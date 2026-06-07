@@ -191,35 +191,30 @@
               if(!r[0]) return;
               var rowHeader = r[0].toString().toUpperCase().trim();
               if (annualAppealItems.includes(rowHeader)) {
-                var card = document.createElement('div');
-                card.className = 'appeal-card';
-                
                 var thumbSrc = r[2] ? getImgUrl(r[2], true) : 'https://i.imgur.com/oAWTWfg.png';
-                // Get Column D (index 3) directly without any regex filtering
                 var posterUrl = r[3] ? r[3].toString().trim() : '';
 
-                var leftSide = document.createElement('div');
-                leftSide.className = 'appeal-left';
-                
-                // Construct the HTML. If posterUrl exists, wrap the card content in an <a> tag
-                var cardContent = `
-                  <img src="${thumbSrc}" class="appeal-thumb">
-                  <div class="appeal-details">
-                    <h3>${r[0].toString().trim()}</h3>
-                    <p>${r[1] ? r[1].toString().trim() : ''}</p>
+                var card = document.createElement('div');
+                card.className = 'appeal-card';
+
+                // The inner content structure
+                var innerHTMLContent = `
+                  <div class="appeal-left">
+                    <img src="${thumbSrc}" class="appeal-thumb">
+                    <div class="appeal-details">
+                      <h3>${r[0].toString().trim()} ${posterUrl ? '📄' : ''}</h3>
+                      <p>${r[1] ? r[1].toString().trim() : ''}</p>
+                      ${posterUrl ? '<p style="color:#916bbf; font-size: 0.8em; font-style: italic;">Click to view poster</p>' : ''}
+                    </div>
                   </div>`;
 
                 if (posterUrl) {
-                  // Make the entire card a clickable link
-                  card.innerHTML = `<a href="${posterUrl.replace('/view?usp=sharing', '/preview')}" target="_top" style="text-decoration:none; color:inherit; display:flex; align-items:center; width:100%;">
-                                      ${leftSide.innerHTML = `<img src="${thumbSrc}" class="appeal-thumb">
-                                      <div class="appeal-details">
-                                        <h3>${r[0].toString().trim()} 📄</h3>
-                                        <p style="color:#916bbf;">Click to view poster</p>
-                                      </div>`}
+                  // Wrap the inner content in the link tag
+                  card.innerHTML = `<a href="${posterUrl.replace('/view?usp=sharing', '/preview')}" target="_top" style="text-decoration:none; color:inherit; width:100%; display:block;">
+                                      ${innerHTMLContent}
                                     </a>`;
                 } else {
-                  card.innerHTML = leftSide.innerHTML;
+                  card.innerHTML = innerHTMLContent;
                 }
                 
                 display.appendChild(card);
