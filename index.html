@@ -77,8 +77,12 @@
     let allData = [];
     var scriptUrlBase = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
 
-    // Standard list of items in column A that should combine into ANNUAL APPEALS
-    const annualAppealItems = ["MOTHERS' DAY", "FATHERS' DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
+    const annualAppealItems = [
+      "MOTHERS' DAY", "MOTHER'S DAY", 
+      "FATHERS' DAY", "FATHER'S DAY", 
+      "EASTER", "CHRISTMAS", "WINTER", "HAMPER",
+      "WINTER APPEAL", "HAMPER APPEAL"
+    ];
 
     fetch(scriptUrlBase)
       .then(response => response.json())
@@ -134,7 +138,6 @@
         var upper = sName.toUpperCase();
         
         if (sName !== "" && upper !== "DONATIONFORMURL" && upper !== "INSTAGRAM" && upper !== "FACEBOOK") {
-          // Check if it belongs under Annual Appeals group
           if (annualAppealItems.includes(upper)) {
             if (!hasAnnualAppeals) {
               uniqueSections.push("Annual Appeals");
@@ -165,7 +168,6 @@
           if (name === "ANNUAL APPEALS") {
             display.innerHTML = "";
             
-            // Loop data to draw cards for each match
             data.forEach(function(r) {
               if(!r[0]) return;
               var rowHeader = r[0].toString().toUpperCase().trim();
@@ -189,8 +191,10 @@
                   var btnContainer = document.createElement('div');
                   var posterBtn = document.createElement('a');
                   posterBtn.className = 'outbound-web-btn';
+                  // Force link to open directly in top window to bypass iframe restriction
                   posterBtn.href = posterUrl;
-                  posterBtn.target = '_blank';
+                  posterBtn.setAttribute('target', '_blank');
+                  posterBtn.setAttribute('rel', 'noopener noreferrer');
                   posterBtn.innerHTML = '📄 View Poster';
                   btnContainer.appendChild(posterBtn);
                   card.appendChild(btnContainer);
