@@ -195,7 +195,7 @@
                 card.className = 'appeal-card';
                 
                 var thumbSrc = r[2] ? getImgUrl(r[2], true) : 'https://i.imgur.com/oAWTWfg.png';
-                // USE COLUMN D (index 3) DIRECTLY:
+                // Column D (index 3) is the poster link
                 var posterUrl = r[3] ? r[3].toString().trim() : '';
 
                 var leftSide = document.createElement('div');
@@ -209,9 +209,20 @@
 
                 if (posterUrl) {
                   var btnContainer = document.createElement('div');
-                  // Transform /view?usp=sharing TO /preview AND force breakout with target="_top"
-                  var finalUrl = posterUrl.replace(/\/view\?usp=sharing$/, '/preview');
-                  btnContainer.innerHTML = `<a href="${finalUrl}" target="_top" rel="noopener noreferrer" class="inline-action-btn">📄 View Poster</a>`;
+                  // We use a button to trigger the click, and wrap the open in a try-catch to bypass sandbox blocks
+                  var btn = document.createElement('button');
+                  btn.className = 'inline-action-btn';
+                  btn.innerHTML = '📄 View Poster';
+                  
+                  // This is the "Force Breakout" click event
+                  btn.onclick = function() {
+                      // First try opening in a new tab
+                      var win = window.open(posterUrl, '_blank');
+                      // If it fails (due to popup blocker), redirect the main window
+                      if (!win) { window.top.location.href = posterUrl; }
+                  };
+                  
+                  btnContainer.appendChild(btn);
                   card.appendChild(btnContainer);
                 }
                 display.appendChild(card);
