@@ -33,6 +33,36 @@
     <div id="content">Syncing data...</div>
   </div>
   <script>
+    // STARTUP LOGIC
+    function init() {
+      // For GitHub pages, we skip the google.script.run (it won't exist there)
+      if (typeof google !== 'undefined' && google.script) {
+        google.script.run.withSuccessHandler(function(status) {
+          if (status === "OFF") {
+            document.body.innerHTML = `<div style="text-align:center; padding:100px; font-family:sans-serif; color:#4a4e69;">
+                                         <h1 style="color:#916bbf;">SHEP</h1>
+                                         <p style="font-size:20px;">The site is currently down for maintenance.</p>
+                                         <p>Please check back shortly!</p>
+                                       </div>`;
+          } else {
+            loadData();
+          }
+        }).getSiteStatus();
+      } else {
+        // If on GitHub, just load the site (no maintenance check available)
+        loadData();
+      }
+    }
+
+    function loadData() {
+      fetch(scriptUrlBase)
+        .then(r => r.json())
+        .then(data => { allData = data; renderMenu(data); });
+    }
+
+    // Call init instead of fetch
+    init();
+    
     const annualAppealItems = ["MOTHERS' DAY", "MOTHER'S DAY", "FATHERS' DAY", "FATHER'S DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
     
     // 1. HELPER FUNCTIONS AT THE TOP
