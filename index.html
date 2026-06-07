@@ -36,15 +36,17 @@
     const annualAppealItems = ["MOTHERS' DAY", "MOTHER'S DAY", "FATHERS' DAY", "FATHER'S DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
     const scriptUrlBase = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
 
-    // 1. UTILITY: IMAGE HANDLER
+    // 1. UTILITY
     function getImgUrl(url, isSmall) {
       if (!url) return 'https://i.imgur.com/oAWTWfg.png';
-      var str = url.toString().trim();
-      var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
-      return match ? 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=' + (isSmall ? 'w120' : 'w800') : str;
+      try {
+        var str = url.toString().trim();
+        var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
+        return match ? 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=' + (isSmall ? 'w120' : 'w800') : str;
+      } catch(e) { return 'https://i.imgur.com/oAWTWfg.png'; }
     }
 
-    // 2. MAINTENANCE CHECK
+    // 2. MAINTENANCE & DATA
     function init() {
       fetch("status.json?nocache=" + new Date().getTime())
         .then(response => response.json())
@@ -53,7 +55,6 @@
           else loadAndRender();
         })
         .catch(() => {
-          // If status.json fails, check Google Script
           if (typeof google !== 'undefined' && google.script) {
             google.script.run.withSuccessHandler(function(status) {
               if (status === "OFF") showMaintenance();
@@ -73,7 +74,6 @@
                                  </div>`;
     }
 
-    // 3. DATA RENDERING
     function loadAndRender() {
       fetch(scriptUrlBase)
         .then(r => r.json())
@@ -82,6 +82,7 @@
 
     function renderMenu(data) {
       var tabContainer = document.getElementById('tabs');
+      tabContainer.innerHTML = "";
       var uniqueSections = ["Annual Appeals"];
       data.forEach(r => {
         if(r[0] && !annualAppealItems.includes(r[0].toUpperCase().trim()) && r[0].toString().trim() !== "DONATIONFORMURL") {
@@ -96,34 +97,41 @@
           btn.classList.add('active');
           document.getElementById('tab-title').innerText = sName;
           var display = document.getElementById('content'); display.innerHTML = "";
+          
           data.forEach(r => {
-     
-if((sName === "Annual Appeals" && isAppeal) || (sName === (r[0] ? r[0].toString().trim() : "") && !isAppeal)) {
-              var card = document.createElement('div');
-              card.className = 'appeal-card';
+            var rName = r[0] ? r[0].toString().trim() : "";
+            var isAppeal = annualAppealItems.includes(rName.toUpperCase());
+            var currentKey = isAppeal ? "Annual Appeals" : rName;
+            
+            if (currentKey === sName) {
+              var card = document.createElement('div'); card.className = 'appeal-card';
               var thumb = getImgUrl(r[2], true);
-              var content = `<div class="appeal-left"><img src="${thumb}" class="appeal-thumb"><div><h3>${r[0]}</h3><p>${r[1]||''}</p></div></div>`;
+              var content = `<div class="appeal-left"><img src="${thumb}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
               
               if (isAppeal && r[3]) {
                 var url = r[3].toString().trim().replace(/\/view\?usp=.*$/, '/preview');
-                // The ENTIRE card becomes the link
-                card.innerHTML = `<a href="${url}" target="_top" style="text-decoration:none; color:inherit; width:100%; display:flex; justify-content:space-between; align-items:center;">
-                                    ${content}
-                                    <span class="inline-action-btn">📄 View Poster</span>
-                                  </a>`;
+                card.innerHTML = `<a href="${url}" target="_top" style="text-decoration:none; color:inherit; display:flex; justify-content:space-between; align-items:center; width:100%;">${content}<span style="background:#916bbf; color:white; padding:8px 16px; border-radius:18px; font-weight:bold; font-size:0.8em;">📄 View Poster</span></a>`;
               } else {
                 card.innerHTML = content;
                 if(r[2] && !isAppeal) {
                   var imgCont = document.createElement('div'); imgCont.className = 'row-images-container';
-                  r[2].toString().split(',').forEach(u => imgCont.innerHTML += `<img src="${getImgUrl(u.trim(), false)}" class="row-attached-img">`);
+                  r[2].toString().split(',').forEach(u => {
+                    var img = document.createElement('img'); img.src = getImgUrl(u.trim(), false); img.className = 'row-attached-img';
+                    imgCont.appendChild(img);
+                  });
                   card.appendChild(imgCont);
                 }
               }
               display.appendChild(card);
             }
-            
-    // FIRE IT UP
+          });
+        };
+        tabContainer.appendChild(btn);
+      });
+      tabContainer.firstChild.click();
+    }
+    
     init();
-  </script>
+</script>
 </body>
 </html>
