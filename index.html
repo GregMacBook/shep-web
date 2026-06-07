@@ -32,11 +32,11 @@
     .appeal-details h3 { margin: 0 0 5px 0; color: #4a4e69; font-size: 1.15em; font-weight: 700; }
     .appeal-details p { margin: 0; color: #84a59d; font-size: 0.9em; font-weight: 600; }
     
-    /* Action Buttons & Links */
+    /* Action Link Elements (Styled as clear clickable buttons) */
     .inline-action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f0e6f7; color: #916bbf; font-weight: bold; border-radius: 18px; text-decoration: none; font-size: 0.82em; transition: 0.2s; border: 1px solid #ac8ad4; cursor: pointer; white-space: nowrap; margin-top: 12px; max-width: max-content; }
-    .inline-action-btn:hover { background: #916bbf; color: white; }
+    .inline-action-btn:hover { background: #916bbf; color: white; text-decoration: none; }
     .contact-link-active { color: #916bbf; text-decoration: underline; font-weight: bold; word-break: break-all; cursor: pointer; }
-    .location-pin { cursor: pointer; font-size: 1.4em; transition: transform 0.2s; display: inline-block; margin-left: 10px; vertical-align: middle; }
+    .location-pin { cursor: pointer; font-size: 1.4em; transition: transform 0.2s; display: inline-block; margin-left: 10px; vertical-align: middle; text-decoration: none; }
     .location-pin:hover { transform: scale(1.2); }
 
     /* Extra Page Views Styling */
@@ -53,8 +53,10 @@
     .hero-showcase-card { background: white; border-radius: 16px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; gap: 30px; max-width: 950px; align-items: center; border-left: 8px solid #916bbf; }
     .hero-text-side { flex-grow: 1; color: #4a4e69; font-size: 1.15em; line-height: 1.7; }
     .hero-img-side { max-width: 450px; width: 100%; height: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); background: #fafafa; }
-    .donate-btn { display: inline-block; margin-top: 20px; padding: 18px 45px; background: #84a59d; color: white; border-radius: 35px; font-weight: bold; cursor: pointer; text-decoration: none; border: none; text-transform: uppercase; font-size: 1.1em; transition: 0.2s; }
-    .donate-btn:hover { background: #6b8f87; transform: scale(1.02); }
+    
+    .donate-btn { display: inline-block; margin-top: 20px; padding: 18px 45px; background: #84a59d; color: white; border-radius: 35px; font-weight: bold; text-decoration: none; text-transform: uppercase; font-size: 1.1em; transition: 0.2s; text-align: center; border: none; }
+    .donate-btn:hover { background: #6b8f87; transform: scale(1.02); color: white; text-decoration: none; }
+    
     .testimonial-card { background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; gap: 25px; max-width: 900px; align-items: flex-start; border-left: 6px solid #ac8ad4; }
     .testimonial-media { width: 220px; min-width: 220px; height: 150px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: #fafafa; }
     .testimonial-img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: top center; }
@@ -211,16 +213,8 @@
 
                 if (posterUrl) {
                   var btnContainer = document.createElement('div');
-                  var posterBtn = document.createElement('button');
-                  posterBtn.className = 'inline-action-btn';
-                  posterBtn.innerHTML = '📄 View Poster';
-                  
-                  // Clean click tracking execution natively on GitHub Pages
-                  posterBtn.onclick = function() {
-                    window.open(posterUrl, '_blank');
-                  };
-
-                  btnContainer.appendChild(posterBtn);
+                  // Fixed to handle both environments: Native link syntax with clear click attributes
+                  btnContainer.innerHTML = `<a href="${posterUrl}" target="_blank" rel="noopener noreferrer" class="inline-action-btn">📄 View Poster</a>`;
                   card.appendChild(btnContainer);
                 }
                 display.appendChild(card);
@@ -295,4 +289,168 @@
               .then(res => res.json())
               .then(rows => {
                 var box = document.getElementById('testimonial-box'); box.innerHTML = "";
-                rows.
+                rows.slice(1).forEach(function(cols) {
+                  var senderName = cols[0] ? cols[0].trim() : "";
+                  var mediaLink = cols[1] ? cols[1].trim() : "";
+                  var storyText = cols[2] ? cols[2].trim() : "";
+                  if (!senderName && !storyText) return; 
+                  
+                  var card = document.createElement('div'); card.className = 'testimonial-card';
+                  var mediaHtml = '<div class="testimonial-media"><img src="https://i.imgur.com/oAWTWfg.png" class="testimonial-img"></div>';
+                  if (mediaLink) {
+                    mediaHtml = '<div class="testimonial-media"><img src="' + getImgUrl(mediaLink, false) + '" class="testimonial-img"></div>';
+                  }
+                  card.innerHTML = mediaHtml + 
+                                   '<div class="testimonial-body">' +
+                                     '<div class="testimonial-sender">' + senderName + '</div>' +
+                                     '<div>' + formatBoldAndLinks(storyText).replace(/\n/g, '<br>') + '</div>' +
+                                   '</div>';
+                  box.appendChild(card);
+                });
+              }).catch(err => { console.error(err); });
+
+          } else if (name === "MONETARY DONATIONS") {
+             var customDesc = "At SHEP, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.";
+             for(var i=0; i<allData.length; i++) {
+               if(allData[i][0] && allData[i][0].toString().toUpperCase().trim() === "MONETARY DONATIONS") {
+                 if(allData[i][1] && !allData[i][1].toString().includes("Account:")) {
+                   customDesc = allData[i][1].toString().replace(/\n/g, '<br>');
+                   break;
+                 }
+               }
+             }
+
+             var currentFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLScuk3Pg3a4wVbkR60Pe6ni3EUNsMdLySbCuNF-mzXvXy8JwpQ/viewform?usp=header";
+             display.innerHTML = `<div class="commentary-box"><h3>Your Impact Matters</h3><p>${formatBoldAndLinks(customDesc)}</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div><div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div><center><a class="donate-btn" href="${currentFormUrl}" target="_blank" rel="noopener noreferrer">Complete Donation & Get Receipt</a></center>`;
+          
+          } else if (name === "OUR MISSION" || name === "ABOUT US") {
+            display.innerHTML = "";
+            for(var i=0; i<allData.length; i++) {
+              if(allData[i][0] && allData[i][0].toString().toUpperCase().trim() === name) {
+                var r = allData[i];
+                if(!r[1]) continue;
+                
+                var showcaseCard = document.createElement('div');
+                showcaseCard.className = 'hero-showcase-card';
+                
+                var textSide = document.createElement('div');
+                textSide.className = 'hero-text-side';
+                textSide.innerHTML = formatBoldAndLinks(r[1]).replace(/\n/g, '<br>');
+                showcaseCard.appendChild(textSide);
+                
+                var rawCell = r[2] ? r[2].toString().trim() : "";
+                if(rawCell && isImageLink(rawCell)) {
+                  var imgUrl = getImgUrl(rawCell.split(',')[0].trim(), false);
+                  if(imgUrl) {
+                    var imgSide = document.createElement('img');
+                    imgSide.className = 'hero-img-side';
+                    imgSide.src = imgUrl;
+                    imgSide.onerror = function() { this.style.display = 'none'; };
+                    showcaseCard.appendChild(imgSide);
+                  }
+                }
+                display.appendChild(showcaseCard);
+              }
+            }
+            
+          } else {
+            // General Rows Processing (Contact, Ways You Can Help, etc.)
+            var contentRows = [];
+            for(var i=0; i<allData.length; i++) {
+              if(allData[i][0] && allData[i][0].toString().toUpperCase().trim() === name) {
+                contentRows.push(allData[i]);
+              }
+            }
+            
+            display.innerHTML = "";
+            contentRows.forEach(function(r) {
+              if(!r[1]) return;
+              
+              var rowDiv = document.createElement('div'); rowDiv.className = 'info-line';
+              var textBlock = document.createElement('div'); textBlock.className = 'text-container-block';
+              
+              var lines = r[1].toString().split('\n');
+              lines.forEach(function(l) {
+                if(!l.trim()) return;
+                
+                var lineDiv = document.createElement('div'); lineDiv.className = 'text-line-item';
+                
+                if(l.trim().toLowerCase().startsWith("http")) {
+                  let cleanedUrl = extractRawUrl(l);
+                  lineDiv.innerHTML = `<a href="${cleanedUrl}" class="contact-link-active" target="_blank" rel="noopener noreferrer">${cleanedUrl}</a>`;
+                } else {
+                  lineDiv.innerHTML = formatBoldAndLinks(l);
+                  
+                  // Check if a map pin belongs next to this card
+                  var checkMapLink = r[2] ? r[2].toString().trim() : "";
+                  if(checkMapLink && checkMapLink.toLowerCase().includes('maps') && /^(https?:\/\/[^\s]+)/i.test(checkMapLink)) {
+                    var pin = document.createElement('a');
+                    pin.className = 'location-pin';
+                    pin.href = checkMapLink;
+                    pin.target = '_blank';
+                    pin.rel = 'noopener noreferrer';
+                    pin.innerHTML = '📍';
+                    lineDiv.appendChild(pin);
+                  }
+                }
+                textBlock.appendChild(lineDiv);
+              });
+              
+              rowDiv.appendChild(textBlock);
+              
+              // Process attachments (Column C) ONCE per card row block
+              var rawLinkCell = r[2] ? r[2].toString().trim() : "";
+              if (rawLinkCell) {
+                if (isImageLink(rawLinkCell)) {
+                  var imgContainer = document.createElement('div');
+                  imgContainer.className = 'row-images-container';
+                  
+                  var individualUrls = rawLinkCell.split(',');
+                  individualUrls.forEach(function(singleUrl) {
+                    var cleanUrl = extractRawUrl(singleUrl);
+                    if (cleanUrl) {
+                      var inlineImg = document.createElement('img');
+                      inlineImg.className = 'row-attached-img';
+                      inlineImg.src = getImgUrl(cleanUrl, false);
+                      
+                      // Wrap image inside links compatible with both servers
+                      var imgAnchor = document.createElement('a');
+                      imgAnchor.href = cleanUrl;
+                      imgAnchor.target = '_blank';
+                      imgAnchor.rel = 'noopener noreferrer';
+                      imgAnchor.appendChild(inlineImg);
+                      
+                      imgContainer.appendChild(imgAnchor);
+                    }
+                  });
+                  rowDiv.appendChild(imgContainer);
+                  
+                } else if (/^(https?:\/\/[^\s]+)/i.test(rawLinkCell) && !rawLinkCell.toLowerCase().includes('maps')) {
+                  var btnAnchor = document.createElement('a');
+                  btnAnchor.className = 'inline-action-btn';
+                  btnAnchor.href = rawLinkCell;
+                  btnAnchor.target = '_blank';
+                  btnAnchor.rel = 'noopener noreferrer';
+                  
+                  if (rawLinkCell.toLowerCase().includes('facebook.com')) {
+                    btnAnchor.innerHTML = '🌐 Facebook';
+                  } else if (rawLinkCell.toLowerCase().includes('instagram.com')) {
+                    btnAnchor.innerHTML = '📸 Instagram';
+                  } else {
+                    btnAnchor.innerHTML = '🌐 View Link';
+                  }
+                  
+                  rowDiv.appendChild(btnAnchor);
+                }
+              }
+              display.appendChild(rowDiv);
+            });
+          }
+        };
+        tabContainer.appendChild(btn);
+        if(index === 0) btn.click();
+      });
+    }
+  </script>
+</body>
+</html>
