@@ -14,29 +14,32 @@
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; min-width: 0; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     
-    /* Standard Content Rows */
-    .info-line { margin-bottom: 12px; padding: 18px 22px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; word-wrap: break-word; }
-    .text-row-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px dashed #f0f0f0; gap: 20px; }
-    .text-row-item:last-child { border-bottom: none; }
+    /* Content Rows & Cards */
+    .info-line { margin-bottom: 15px; padding: 22px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; word-wrap: break-word; }
+    .text-container-block { line-height: 1.6; font-size: 0.98em; }
+    .text-line-item { margin-bottom: 8px; }
+    .text-line-item:last-child { margin-bottom: 0; }
     
     /* Row Embedded Images Layout */
-    .row-images-container { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid #f5effa; }
-    .row-attached-img { max-width: 200px; max-height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #e1d5f2; box-shadow: 0 2px 6px rgba(0,0,0,0.04); cursor: pointer; transition: transform 0.2s; }
+    .row-images-container { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; padding-top: 12px; border-top: 1px solid #f5effa; }
+    .row-attached-img { max-width: 220px; max-height: 160px; object-fit: cover; border-radius: 8px; border: 1px solid #e1d5f2; box-shadow: 0 2px 6px rgba(0,0,0,0.04); cursor: pointer; transition: transform 0.2s; }
     .row-attached-img:hover { transform: scale(1.04); }
 
-    /* Annual Appeals Specific Formatting */
+    /* Annual Appeals Formatting */
     .appeal-card { display: flex; align-items: center; justify-content: space-between; background: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 8px solid #ac8ad4; max-width: 900px; }
     .appeal-left { display: flex; align-items: center; gap: 20px; }
     .appeal-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #e1d5f2; background: #fafafa; }
     .appeal-details h3 { margin: 0 0 5px 0; color: #4a4e69; font-size: 1.15em; font-weight: 700; }
     .appeal-details p { margin: 0; color: #84a59d; font-size: 0.9em; font-weight: 600; }
     
-    /* Interactive Inline Action Buttons */
-    .inline-action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f0e6f7; color: #916bbf; font-weight: bold; border-radius: 18px; text-decoration: none; font-size: 0.82em; transition: 0.2s; border: 1px solid #ac8ad4; cursor: pointer; white-space: nowrap; }
+    /* Action Buttons & Links */
+    .inline-action-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: #f0e6f7; color: #916bbf; font-weight: bold; border-radius: 18px; text-decoration: none; font-size: 0.82em; transition: 0.2s; border: 1px solid #ac8ad4; cursor: pointer; white-space: nowrap; margin-top: 12px; max-width: max-content; }
     .inline-action-btn:hover { background: #916bbf; color: white; }
     .contact-link-active { color: #916bbf; text-decoration: underline; font-weight: bold; word-break: break-all; cursor: pointer; }
+    .location-pin { cursor: pointer; font-size: 1.4em; transition: transform 0.2s; display: inline-block; margin-left: 10px; vertical-align: middle; }
+    .location-pin:hover { transform: scale(1.2); }
 
-    /* Layout Extra Styling */
+    /* Extra Page Views Styling */
     .commentary-box { background: #fff; padding: 25px; border-radius: 15px; border-left: 10px solid #916bbf; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; color: #4a4e69; line-height: 1.7; max-width: 900px; word-wrap: break-word; }
     .collection-grid { display: flex; gap: 20px; flex-wrap: wrap; }
     .category-column { flex: 1; min-width: 300px; background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
@@ -52,8 +55,6 @@
     .hero-img-side { max-width: 450px; width: 100%; height: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); background: #fafafa; }
     .donate-btn { display: inline-block; margin-top: 20px; padding: 18px 45px; background: #84a59d; color: white; border-radius: 35px; font-weight: bold; cursor: pointer; text-decoration: none; border: none; text-transform: uppercase; font-size: 1.1em; transition: 0.2s; }
     .donate-btn:hover { background: #6b8f87; transform: scale(1.02); }
-    .location-pin { cursor: pointer; font-size: 1.4em; transition: transform 0.2s; display: inline-block; }
-    .location-pin:hover { transform: scale(1.2); }
     .testimonial-card { background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; gap: 25px; max-width: 900px; align-items: flex-start; border-left: 6px solid #ac8ad4; }
     .testimonial-media { width: 220px; min-width: 220px; height: 150px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: #fafafa; }
     .testimonial-img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: top center; }
@@ -65,7 +66,6 @@
       .testimonial-media { width: 100%; min-width: 100%; } 
       .hero-img-side { max-width: 100%; }
       .appeal-card { flex-direction: column; align-items: flex-start; gap: 15px; }
-      .text-row-item { flex-direction: column; align-items: flex-start; gap: 8px; }
     }
   </style>
 </head>
@@ -217,7 +217,6 @@
                   posterBtn.target = "_blank";
                   posterBtn.setAttribute('rel', 'noopener noreferrer');
                   posterBtn.innerHTML = '📄 View Poster';
-
                   btnContainer.appendChild(posterBtn);
                   card.appendChild(btnContainer);
                 }
@@ -357,4 +356,98 @@
                     showcaseCard.appendChild(imgSide);
                   }
                 }
-                display.appendChild(showcase
+                display.appendChild(showcaseCard);
+              }
+            }
+            
+          } else {
+            // General Rows Processing (Contact, Ways You Can Help, etc.)
+            var contentRows = [];
+            for(var i=0; i<allData.length; i++) {
+              if(allData[i][0] && allData[i][0].toString().toUpperCase().trim() === name) {
+                contentRows.push(allData[i]);
+              }
+            }
+            
+            display.innerHTML = "";
+            contentRows.forEach(function(r) {
+              if(!r[1]) return;
+              
+              var rowDiv = document.createElement('div'); rowDiv.className = 'info-line';
+              var textBlock = document.createElement('div'); textBlock.className = 'text-container-block';
+              
+              var lines = r[1].toString().split('\n');
+              lines.forEach(function(l) {
+                if(!l.trim()) return;
+                
+                var lineDiv = document.createElement('div'); lineDiv.className = 'text-line-item';
+                
+                if(l.trim().toLowerCase().startsWith("http")) {
+                  let cleanedUrl = extractRawUrl(l);
+                  lineDiv.innerHTML = `<a href="${cleanedUrl}" target="_blank" rel="noopener noreferrer" class="contact-link-active">${cleanedUrl}</a>`;
+                } else {
+                  lineDiv.innerHTML = formatBoldAndLinks(l);
+                  
+                  // Check if a map pin belongs next to this card
+                  var checkMapLink = r[2] ? r[2].toString().trim() : "";
+                  if(checkMapLink && checkMapLink.toLowerCase().includes('maps') && /^(https?:\/\/[^\s]+)/i.test(checkMapLink)) {
+                    var pin = document.createElement('div');
+                    pin.className = 'location-pin';
+                    pin.innerHTML = '📍';
+                    pin.onclick = function(event) { window.open(checkMapLink, '_blank'); event.stopPropagation(); };
+                    lineDiv.appendChild(pin);
+                  }
+                }
+                textBlock.appendChild(lineDiv);
+              });
+              
+              rowDiv.appendChild(textBlock);
+              
+              // Process attachments (Column C) ONCE per card row block
+              var rawLinkCell = r[2] ? r[2].toString().trim() : "";
+              if (rawLinkCell) {
+                if (isImageLink(rawLinkCell)) {
+                  var imgContainer = document.createElement('div');
+                  imgContainer.className = 'row-images-container';
+                  
+                  var individualUrls = rawLinkCell.split(',');
+                  individualUrls.forEach(function(singleUrl) {
+                    var cleanUrl = extractRawUrl(singleUrl);
+                    if (cleanUrl) {
+                      var inlineImg = document.createElement('img');
+                      inlineImg.className = 'row-attached-img';
+                      inlineImg.src = getImgUrl(cleanUrl, false);
+                      inlineImg.onclick = function() { window.open(cleanUrl, '_blank'); };
+                      imgContainer.appendChild(inlineImg);
+                    }
+                  });
+                  rowDiv.appendChild(imgContainer);
+                  
+                } else if (/^(https?:\/\/[^\s]+)/i.test(rawLinkCell) && !rawLinkCell.toLowerCase().includes('maps')) {
+                  var inlineBtn = document.createElement('a');
+                  inlineBtn.className = 'inline-action-btn';
+                  inlineBtn.href = rawLinkCell;
+                  inlineBtn.setAttribute('target', '_blank');
+                  inlineBtn.setAttribute('rel', 'noopener noreferrer');
+                  
+                  if (rawLinkCell.toLowerCase().includes('facebook.com')) {
+                    inlineBtn.innerHTML = '🌐 Facebook';
+                  } else if (rawLinkCell.toLowerCase().includes('instagram.com')) {
+                    inlineBtn.innerHTML = '📸 Instagram';
+                  } else {
+                    inlineBtn.innerHTML = '🌐 View Link';
+                  }
+                  rowDiv.appendChild(inlineBtn);
+                }
+              }
+              display.appendChild(rowDiv);
+            });
+          }
+        };
+        tabContainer.appendChild(btn);
+        if(index === 0) btn.click();
+      });
+    }
+  </script>
+</body>
+</html>
