@@ -191,39 +191,28 @@
               if(!r[0]) return;
               var rowHeader = r[0].toString().toUpperCase().trim();
               if (annualAppealItems.includes(rowHeader)) {
-                var thumbSrc = r[2] ? getImgUrl(r[2], true) : 'https://i.imgur.com/oAWTWfg.png';
                 var posterUrl = r[3] ? r[3].toString().trim() : '';
+                // Transform to preview mode
+                var finalUrl = posterUrl ? posterUrl.replace('/view?usp=sharing', '/preview') : '';
 
                 var card = document.createElement('div');
                 card.className = 'appeal-card';
 
-                // 1. Create the content div first
-                var contentDiv = document.createElement('div');
-                contentDiv.className = 'appeal-left';
-                // REPLACED: Removed the nested assignment
-                contentDiv.innerHTML = `
-                  <img src="${thumbSrc}" class="appeal-thumb">
-                  <div class="appeal-details">
-                    <h3>${r[0].toString().trim()} ${posterUrl ? '📄' : ''}</h3>
-                    <p>${r[1] ? r[1].toString().trim() : ''}</p>
-                    ${posterUrl ? '<p style="color:#916bbf; font-size: 0.8em; font-style: italic;">Click to view poster</p>' : ''}
+                // The most basic, "unblockable" structure possible
+                var cardHTML = `
+                  <div class="appeal-left">
+                    <img src="${r[2] ? getImgUrl(r[2], true) : 'https://i.imgur.com/oAWTWfg.png'}" class="appeal-thumb">
+                    <div class="appeal-details">
+                      <h3>${r[0].toString().trim()}</h3>
+                      <p>${r[1] ? r[1].toString().trim() : ''}</p>
+                    </div>
                   </div>`;
 
-                // 2. If a link exists, wrap the contentDiv in an anchor tag
-                if (posterUrl) {
-                  var anchor = document.createElement('a');
-                  anchor.href = posterUrl.replace('/view?usp=sharing', '/preview');
-                  anchor.target = '_top';
-                  anchor.style.textDecoration = 'none';
-                  anchor.style.color = 'inherit';
-                  anchor.style.width = '100%';
-                  anchor.style.display = 'flex';
-                  anchor.style.alignItems = 'center';
-                  anchor.style.justifyContent = 'space-between';
-                  anchor.appendChild(contentDiv);
-                  card.appendChild(anchor);
+                if (finalUrl) {
+                  // Direct anchor wrap
+                  card.innerHTML = `<a href="${finalUrl}" target="_top" style="text-decoration:none; color:inherit; width:100%; display:block;">${cardHTML}</a>`;
                 } else {
-                  card.appendChild(contentDiv);
+                  card.innerHTML = cardHTML;
                 }
                 
                 display.appendChild(card);
