@@ -439,6 +439,15 @@
         if(index === 0) btn.click();
       });
     }
+    // Global function to force browser breakout
+    function openPoster(url) {
+        // Try opening in new tab
+        var win = window.open(url, '_blank');
+        // If the browser blocked the new tab, force the main window to navigate
+        if (!win || win.closed || typeof win.closed == 'undefined') {
+            window.top.location.href = url;
+        }
+    }
   </script>
 </body>
 </html>
