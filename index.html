@@ -195,36 +195,33 @@
                 card.className = 'appeal-card';
                 
                 var thumbSrc = r[2] ? getImgUrl(r[2], true) : 'https://i.imgur.com/oAWTWfg.png';
-                // Column D (index 3) is the poster link
+                // Get Column D (index 3) directly without any regex filtering
                 var posterUrl = r[3] ? r[3].toString().trim() : '';
 
                 var leftSide = document.createElement('div');
                 leftSide.className = 'appeal-left';
-                leftSide.innerHTML = `<img src="${thumbSrc}" class="appeal-thumb">
-                                      <div class="appeal-details">
-                                        <h3>${r[0].toString().trim()}</h3>
-                                        <p>${r[1] ? r[1].toString().trim() : ''}</p>
-                                      </div>`;
-                card.appendChild(leftSide);
+                
+                // Construct the HTML. If posterUrl exists, wrap the card content in an <a> tag
+                var cardContent = `
+                  <img src="${thumbSrc}" class="appeal-thumb">
+                  <div class="appeal-details">
+                    <h3>${r[0].toString().trim()}</h3>
+                    <p>${r[1] ? r[1].toString().trim() : ''}</p>
+                  </div>`;
 
                 if (posterUrl) {
-                  var btnContainer = document.createElement('div');
-                  // We use a button to trigger the click, and wrap the open in a try-catch to bypass sandbox blocks
-                  var btn = document.createElement('button');
-                  btn.className = 'inline-action-btn';
-                  btn.innerHTML = '📄 View Poster';
-                  
-                  // This is the "Force Breakout" click event
-                  btn.onclick = function() {
-                      // First try opening in a new tab
-                      var win = window.open(posterUrl, '_blank');
-                      // If it fails (due to popup blocker), redirect the main window
-                      if (!win) { window.top.location.href = posterUrl; }
-                  };
-                  
-                  btnContainer.appendChild(btn);
-                  card.appendChild(btnContainer);
+                  // Make the entire card a clickable link
+                  card.innerHTML = `<a href="${posterUrl.replace('/view?usp=sharing', '/preview')}" target="_top" style="text-decoration:none; color:inherit; display:flex; align-items:center; width:100%;">
+                                      ${leftSide.innerHTML = `<img src="${thumbSrc}" class="appeal-thumb">
+                                      <div class="appeal-details">
+                                        <h3>${r[0].toString().trim()} 📄</h3>
+                                        <p style="color:#916bbf;">Click to view poster</p>
+                                      </div>`}
+                                    </a>`;
+                } else {
+                  card.innerHTML = leftSide.innerHTML;
                 }
+                
                 display.appendChild(card);
               }
             });
