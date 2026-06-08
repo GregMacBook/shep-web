@@ -24,8 +24,8 @@
     .media-gallery-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; max-width: 100%; }
     .gallery-figure { margin: 0; padding: 10px; background: #faf8ff; border: 1px solid #eae5f5; border-radius: 8px; text-align: center; width: calc(50% - 10px); min-width: 260px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
     
-    /* DYNAMIC BACKGROUND WRAPPER: Guarantees heads are pinned at the top frame */
-    .poster-img-side { width: 100%; max-width: 350px; height: 450px; display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-size: contain; background-repeat: no-repeat; background-position: top center; }
+    /* POSTER IMAGES FIXED CSS: Using object-fit contain and a safe max-height to ensure the full image fits */
+    .poster-img-side { width: 100%; max-width: 350px; height: auto; max-height: 450px; display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); object-fit: contain; }
     .figure-caption { font-size: 0.9em; font-weight: 600; color: #6b5b95; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
     
     /* Interactive Map Pins styling */
@@ -59,7 +59,7 @@
 
     @media (max-width: 768px) { 
       .appeal-card { flex-direction: column; } 
-      .poster-img-side { max-width: 100%; height: 350px; }
+      .poster-img-side { max-width: 100%; max-height: none; }
       .gallery-figure { width: 100%; }
       .testimonial-card { flex-direction: column; } 
       .testimonial-media { width: 100%; min-width: 100%; } 
@@ -87,14 +87,19 @@
       return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     }
     
-    // SAFE CHANNELS ENGINE: Fetches uncropped payload data block
+    // THE ULTIMATE UNMASKED ENGINE: Drops all thumbnail handlers to pull the raw source file direct from Drive
     function getImgUrl(url, isSmall) {
       if (!url) return 'https://i.imgur.com/oAWTWfg.png';
       try {
         var str = url.toString().trim();
         var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
         if (match) {
-          return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=' + (isSmall ? 'w120' : 's1000');
+          if (isSmall) {
+            return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w120';
+          } else {
+            // This format explicitly bypasses all Google thumbnail crop actions completely
+            return 'https://docs.google.com/uc?export=view&id=' + match[1];
+          }
         }
         return str;
       } catch(e) { return 'https://i.imgur.com/oAWTWfg.png'; }
@@ -295,16 +300,15 @@
                           if (rawItem.toLowerCase().includes("13ajfdkbpnqfmh_3v3efdfyouxvuiwsg")) captionText = "Cannington Senior High School";
                         }
                         
-                        // FIX Applied here for nested multiple arrays too
                         mediaGalleryHtml += `<figure class="gallery-figure">
-                                               <div style="background-image: url('${getImgUrl(finalUrl, false)}');" class="poster-img-side"></div>
+                                               <img src="${getImgUrl(finalUrl, false)}" class="poster-img-side">
                                                <figcaption class="figure-caption">${captionText}</figcaption>
                                              </figure>`;
                       });
                       mediaGalleryHtml += '</div>';
                     } else {
-                      // FIX Applied: Changed standard standalone image layout token to a top-aligned background div
-                      mediaGalleryHtml = `<div style="background-image: url('${getImgUrl(colCLink, false)}');" class="poster-img-side"></div>`;
+                      // Restored clean uncompromised image element tag
+                      mediaGalleryHtml = `<img src="${getImgUrl(colCLink, false)}" class="poster-img-side">`;
                     }
                   }
                   
