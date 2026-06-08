@@ -98,10 +98,10 @@ if (isAppeal && r[3]) {
   var url = r[3].toString().trim();
   
   card.innerHTML = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>
-                    <button onclick="window.open('${url}', '_blank'); return false;" 
-                            style="background:#916bbf; color:white; padding:8px 16px; border-radius:18px; border:none; cursor:pointer; font-weight:bold; font-size:0.8em; margin-left:10px;">
-                        View Poster
-                    </button>`;
+                   <button onclick="window.location.href='${url}'" 
+        style="...">
+    View Poster
+</button>
 }
               
          else {
