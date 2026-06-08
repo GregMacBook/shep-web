@@ -5,13 +5,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fcfaff; overflow: hidden; }
-    body { display: flex; flex-direction: row; }
-    .sidebar { width: 280px; min-width: 280px; background: #916bbf; display: flex; flex-direction: column; height: 100vh; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 20; overflow-y: auto; }
-    .logo-header { padding: 15px; text-align: center; background: white; border-bottom: 3px solid #ac8ad4; position: sticky; top: 0; }
-    .tab { padding: 16px 20px; margin: 6px 0 6px 15px; background: #ac8ad4; border-radius: 25px 0 0 25px; cursor: pointer; transition: 0.3s; font-weight: 600; color: #fff; text-transform: uppercase; font-size: 0.72em; letter-spacing: 1px; }
-    .tab.active { background: #fcfaff; color: #4a4e69; margin-right: -1px; }
-    .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; min-width: 0; }
+    html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fcfaff; }
+    body { display: flex; flex-direction: column; overflow-x: hidden; }
+    
+    /* NEW TOP HEADER & NAV MENU: Bypasses mobile obstruction */
+    .header-wrapper { background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; padding: 10px 0 0 0; }
+    .logo-header { padding: 5px; text-align: center; }
+    
+    /* Scrollable button row across the top */
+    .nav-menu { display: flex; gap: 10px; padding: 12px 20px; overflow-x: auto; width: 100%; box-sizing: border-box; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+    .nav-menu::-webkit-scrollbar { height: 4px; }
+    .nav-menu::-webkit-scrollbar-thumb { background: #ac8ad4; border-radius: 2px; }
+    
+    .tab { padding: 10px 20px; background: #ac8ad4; border-radius: 20px; cursor: pointer; transition: 0.3s; font-weight: 600; color: #fff; text-transform: uppercase; font-size: 0.75em; letter-spacing: 0.5px; display: inline-block; border: none; }
+    .tab.active { background: #916bbf; color: #fff; transform: scale(1.03); box-shadow: 0 2px 8px rgba(145, 107, 191, 0.3); }
+    
+    .main-container { flex-grow: 1; padding: 30px 40px; box-sizing: border-box; min-width: 0; width: 100%; max-width: 1200px; margin: 0 auto; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     
     /* Layout Styles for Standard & Appeal Pages */
@@ -20,11 +29,10 @@
     .appeal-text { font-size: 1.1em; line-height: 1.6; color: #333; flex-grow: 1; white-space: pre-wrap; width: 100%; }
     .appeal-text h3 { margin-top: 0; margin-bottom: 8px; color: #4a4e69; font-size: 1.4em; }
     
-    /* Multi-Image Container for School Donors */
+    /* Multi-Image Container for School Donors & Ways You Can Help */
     .media-gallery-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px; width: 100%; box-sizing: border-box; }
     .gallery-figure { margin: 0; padding: 10px; background: #faf8ff; border: 1px solid #eae5f5; border-radius: 8px; text-align: center; width: calc(50% - 10px); min-width: 260px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); box-sizing: border-box; }
     
-    /* POSTER IMAGES: Fixed dynamic fitting without distortion */
     .poster-img-side { width: 100%; max-width: 350px; height: auto; display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); object-fit: contain; }
     .figure-caption { font-size: 0.9em; font-weight: 600; color: #6b5b95; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
     
@@ -36,6 +44,7 @@
     .commentary-box { background: #fff; padding: 25px; border-radius: 15px; border-left: 10px solid #916bbf; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; color: #4a4e69; line-height: 1.7; max-width: 900px; word-wrap: break-word; }
     .collection-grid { display: flex; gap: 20px; flex-wrap: wrap; }
     .category-column { flex: 1; min-width: 300px; background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .category-column.unacceptable { border-top: 4px solid #d9534f; }
     .category-header { color: #916bbf; border-bottom: 2px solid #ac8ad4; margin-bottom: 15px; text-align: center; font-weight: bold; }
     .item-row { display: flex; align-items: center; margin-bottom: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; }
     .donation-img-small { width: 55px; height: 55px; object-fit: cover; border-radius: 8px; background: #eee; }
@@ -54,7 +63,10 @@
     .testimonial-body { flex-grow: 1; color: #4a4e69; line-height: 1.6; }
     .testimonial-sender { color: #916bbf; font-size: 1.15em; font-weight: 700; margin: 0 0 10px 0; border-bottom: 1px dashed #ac8ad4; padding-bottom: 5px; }
 
-    /* Org Website Button style for WHO WE HELP */
+    /* Contact Links Structure */
+    .contact-link { color: #916bbf; text-decoration: none; font-weight: bold; transition: 0.2s; }
+    .contact-link:hover { color: #ac8ad4; text-decoration: underline; }
+
     .visit-org-btn { display: inline-block; margin-top: 10px; padding: 8px 16px; background: #916bbf; color: white; border-radius: 18px; text-decoration: none; font-weight: bold; font-size: 0.85em; transition: 0.2s; }
     .visit-org-btn:hover { background: #ac8ad4; }
 
@@ -63,15 +75,19 @@
       .poster-img-side { max-width: 100%; }
       .gallery-figure { width: 100%; }
       .testimonial-card { flex-direction: column; } 
-      .testimonial-media { width: 100%; min-width: 100%; } 
+      .testimonial-media { width: 100%; min-width: 100%; }
+      .main-container { padding: 20px; }
     }
   </style>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="logo-header"><img src="https://i.imgur.com/Kge9euA.png" width="140"></div>
-    <div id="tabs"></div>
+
+  <!-- FIXED HEADER: Houses brand logomark and top-scrolling nav system -->
+  <div class="header-wrapper">
+    <div class="logo-header"><img src="https://i.imgur.com/Kge9euA.png" width="130"></div>
+    <div id="tabs" class="nav-menu"></div>
   </div>
+
   <div class="main-container">
     <h1 id="tab-title">SHEP</h1>
     <div class="divider"></div>
@@ -85,7 +101,14 @@
 
     function formatText(text) {
       if (!text) return "";
-      return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      let txt = text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      
+      // FIX: Dynamically parses plain text contact handles into live hyperlinked anchors inside Contact tab
+      if (document.getElementById('tab-title').innerText.toUpperCase().trim() === "CONTACT SHEP") {
+        txt = txt.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi, '<a href="mailto:$1" class="contact-link">$1</a>');
+        txt = txt.replace(/(\(?\d{2,4}\)?\s?\d{3,4}\s?\d{3,4})/gi, '<a href="tel:$1" class="contact-link">$1</a>');
+      }
+      return txt;
     }
     
     function getImgUrl(url, isSmall) {
@@ -129,15 +152,28 @@
       var tabContainer = document.getElementById('tabs');
       tabContainer.innerHTML = "";
       
-      var uniqueSections = ["Annual Appeals"];
+      // CONFIG: Pull unique row blocks from spreadsheet array natively
+      var explicitList = [];
       data.forEach(r => {
         if(r[0] && !annualAppealItems.includes(r[0].toUpperCase().trim()) && r[0].toString().trim() !== "DONATIONFORMURL" && r[0].toString().toUpperCase().trim() !== "INSTAGRAM" && r[0].toString().toUpperCase().trim() !== "FACEBOOK") {
-          if(!uniqueSections.includes(r[0].toString().trim())) uniqueSections.push(r[0].toString().trim());
+          if(!explicitList.includes(r[0].toString().trim())) explicitList.push(r[0].toString().trim());
         }
       });
       
+      // REORDER SYSTEM: Places Annual Appeals precisely beneath WHAT WE CAN'T ACCEPT
+      var uniqueSections = [];
+      explicitList.forEach(item => {
+        uniqueSections.push(item);
+        if (item.toUpperCase().trim() === "WHAT WE CAN'T ACCEPT" || item.toUpperCase().trim() === "WHAT WE CAN’T ACCEPT") {
+          uniqueSections.push("Annual Appeals");
+        }
+      });
+      if (!uniqueSections.includes("Annual Appeals")) {
+        uniqueSections.unshift("Annual Appeals");
+      }
+
       uniqueSections.forEach(sName => {
-        var btn = document.createElement('div'); btn.className = 'tab'; btn.innerText = sName;
+        var btn = document.createElement('button'); btn.className = 'tab'; btn.innerText = sName;
         btn.onclick = function() {
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           btn.classList.add('active');
@@ -186,7 +222,7 @@
                   groups[it[0]].push(it); 
                 });
                 Object.keys(groups).forEach(function(g) {
-                  var col = document.createElement('div'); col.className = 'category-column';
+                  var col = document.createElement('div'); col.className = 'category-column unacceptable';
                   col.innerHTML = '<div class="category-header" style="color: #d9534f; border-bottom: 2px solid #d9534f;">' + g + '</div>';
                   groups[g].forEach(function(it) {
                     var r = document.createElement('div'); r.className = 'item-row';
@@ -249,16 +285,12 @@
                 if(box.children.length === 0) box.innerText = "No testimonials found.";
               }).catch(err => { document.getElementById('testimonial-box').innerText = "Error loading testimonials."; });
 
-          // 5. MONETARY DONATIONS (Dynamic sheet lookup added)
+          // 5. MONETARY DONATIONS
           } else if (name === "MONETARY DONATIONS") {
-             let targetUrl = 'https://tinyurl.com/SHEPDonation'; // Default fallback
-             
-             // Look dynamically for the DONATIONFORMURL row in your sheet data
+             let targetUrl = 'https://tinyurl.com/SHEPDonation'; 
              if (allData && allData.length > 0) {
                let foundRow = allData.find(r => r[0] && r[0].toString().toUpperCase().trim() === 'DONATIONFORMURL');
-               if (foundRow && foundRow[1]) {
-                 targetUrl = foundRow[1].toString().trim();
-               }
+               if (foundRow && foundRow[1]) targetUrl = foundRow[1].toString().trim();
              }
 
              display.innerHTML = `
@@ -303,6 +335,9 @@
                     var assetLinks = colCLink.split(',');
                     if (assetLinks.length > 1) {
                       mediaGalleryHtml = '<div class="media-gallery-wrapper">';
+                      
+                      // OVERRIDE: Specific caption rule for WAYS YOU CAN HELP arrays
+                      var countIndex = 0;
                       assetLinks.forEach(item => {
                         var rawItem = item.trim();
                         var captionText = "School Donation"; 
@@ -315,12 +350,18 @@
                         } else {
                           if (rawItem.toLowerCase().includes("wpuvlvflo6ywb1uj0np4noasd20emqpa")) captionText = "Mercedes College";
                           if (rawItem.toLowerCase().includes("13ajfdkbpnqfmh_3v3efdfyouxvuiwsg")) captionText = "Cannington Senior High School";
+                          
+                          // Custom sizing descriptions requested by the lady
+                          if (name === "WAYS YOU CAN HELP") {
+                            captionText = (countIndex === 0) ? "Mum and Bub 70x70 cms" : "Toiletry Bags 35x35cms";
+                          }
                         }
                         
                         mediaGalleryHtml += `<figure class="gallery-figure">
                                                <img src="${getImgUrl(finalUrl, false)}" class="poster-img-side">
                                                <figcaption class="figure-caption">${captionText}</figcaption>
                                              </figure>`;
+                        countIndex++;
                       });
                       mediaGalleryHtml += '</div>';
                     } else {
