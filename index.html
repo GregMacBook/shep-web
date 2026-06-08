@@ -71,7 +71,6 @@
       var tabContainer = document.getElementById('tabs');
       tabContainer.innerHTML = "";
       var uniqueSections = ["Annual Appeals"];
-      
       data.forEach(r => {
         if(r[0] && !annualAppealItems.includes(r[0].toUpperCase().trim()) && r[0].toString().trim() !== "DONATIONFORMURL") {
           if(!uniqueSections.includes(r[0].toString().trim())) uniqueSections.push(r[0].toString().trim());
@@ -86,7 +85,7 @@
           document.getElementById('tab-title').innerText = sName;
           var display = document.getElementById('content'); display.innerHTML = "";
           
-         data.forEach(r => {
+          data.forEach(r => {
             var rName = r[0] ? r[0].toString().trim() : "";
             var isAppeal = annualAppealItems.includes(rName.toUpperCase());
             var currentKey = isAppeal ? "Annual Appeals" : rName;
@@ -94,26 +93,24 @@
             if (currentKey === sName) {
               var card = document.createElement('div'); card.className = 'appeal-card';
               
-              // This line checks if r[3] (Column D) has content
-              if (isAppeal && r[3] && r[3].toString().length > 5) {
-                var url = r[3].toString().trim();
-                card.innerHTML = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>
-                                  <a href="${url}" target="_blank" rel="noopener noreferrer" style="background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em; display:inline-block;">View Poster</a>`;
-              } else {
-                card.innerHTML = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
-                if(r[2] && !isAppeal) {
-                  var imgCont = document.createElement('div'); imgCont.className = 'row-images-container';
-                  r[2].toString().split(',').forEach(u => imgCont.innerHTML += `<img src="${getImgUrl(u.trim(), false)}" class="row-attached-img">`);
-                  card.appendChild(imgCont);
-                }
+              // DEBUG: Print what we are looking at
+              console.log("Checking Row:", rName, "Link data:", r[3]);
+
+              var html = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
+              
+              if (isAppeal) {
+                // FORCED BUTTON: This will show up regardless of the link content
+                var link = r[3] ? r[3].toString().trim() : "#";
+                html += `<a href="${link}" target="_blank" style="background:red; color:white; padding:10px; border-radius:5px; margin-top:10px; display:inline-block;">TEST BUTTON</a>`;
               }
+              
+              card.innerHTML = html;
               display.appendChild(card);
             }
           });
         };
         tabContainer.appendChild(btn);
       });
-      
       if (tabContainer.firstChild) tabContainer.firstChild.click();
     }
     
