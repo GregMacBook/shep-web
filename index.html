@@ -276,11 +276,13 @@
                     // Split content by comma to dynamically evaluate single vs multiple image attachments
                     var assetLinks = colCLink.split(',');
                     if (assetLinks.length > 1) {
-                      // MULTI-IMAGE CONFIGURATION (e.g. School Donors grid with captions underneath)
+                      // MULTI-IMAGE CONFIGURATION
                       mediaGalleryHtml = '<div class="media-gallery-wrapper">';
                       assetLinks.forEach(link => {
                         var singleLink = link.trim();
                         var schoolName = "School Donation";
+                        
+                        // Clean matching rule mapping exact file ID tags
                         if (singleLink.toLowerCase().includes("wpuvlvflo6ywb1uj0np4noasd20emqpa")) schoolName = "Mercedes College";
                         if (singleLink.toLowerCase().includes("13ajfdkbpnqfmh_3v3efdfyouxvuiwsg")) schoolName = "Cannington Senior High School";
                         
@@ -307,7 +309,7 @@
                               </div>`;
                 }
                 
-                // If we have a side-by-side gallery layout, force it to clear into a clean block structure
+                // Adjust layout structure for grid galleries
                 if (mediaGalleryHtml.includes("media-gallery-wrapper")) {
                   card.style.flexDirection = "column";
                   card.innerHTML = textHtml + mediaGalleryHtml;
