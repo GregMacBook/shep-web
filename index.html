@@ -66,7 +66,7 @@
           document.getElementById('tab-title').innerText = sName;
           var display = document.getElementById('content'); display.innerHTML = "";
           
-          data.forEach(r => {
+     data.forEach(r => {
             var rName = r[0] ? r[0].toString().trim() : "";
             var isAppeal = annualAppealItems.includes(rName.toUpperCase());
             var currentKey = isAppeal ? "Annual Appeals" : rName;
@@ -74,17 +74,16 @@
             if (currentKey === sName) {
               var card = document.createElement('div'); card.className = 'appeal-card';
               
-              // We check r[3] for the link, as identified in your screenshot
-              var linkUrl = r[3]; 
-              var hasLink = linkUrl && linkUrl.toString().trim().length > 5;
-
-              var html = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
+              // 1. Logic for the thumbnail (using Column C / Index 2)
+              var imgHtml = `<img src="${getImgUrl(r[2], true)}" class="appeal-thumb">`;
               
-              if (isAppeal && hasLink) {
-                html += `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="margin-top:10px; background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em; display:inline-block; width:100px; text-align:center;">View Poster</a>`;
-              }
+              // 2. Logic for the destination link (using Column D / Index 3)
+              var linkUrl = r[3] ? r[3].toString().trim() : "";
+              var linkHtml = (isAppeal && linkUrl.length > 5) 
+                             ? `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="margin-top:10px; background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em; display:inline-block; width:100px; text-align:center;">View Poster</a>` 
+                             : "";
               
-              card.innerHTML = html;
+              card.innerHTML = `<div class="appeal-left">${imgHtml}<div><h3>${rName}</h3><p>${r[1]||''}</p>${linkHtml}</div></div>`;
               display.appendChild(card);
             }
           });
