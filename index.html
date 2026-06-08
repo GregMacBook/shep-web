@@ -51,6 +51,11 @@
       } catch(e) { return 'https://i.imgur.com/oAWTWfg.png'; }
     }
 
+    function formatText(text) {
+      if (!text) return "";
+      // This regex looks for **text** and replaces it with <b>text</b>
+      return text.toString().replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    }
     function loadData() {
       fetch(scriptUrlBase)
         .then(r => r.json())
