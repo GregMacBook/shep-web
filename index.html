@@ -73,15 +73,18 @@
             
             if (currentKey === sName) {
               var card = document.createElement('div'); card.className = 'appeal-card';
-              var debugInfo = `<p style="color:red; font-size:10px; margin:0;">DEBUG: Name='${rName}', ColumnE(r[4])='${r[4]}'</p>`;
+              
+              // We check r[3] for the link, as identified in your screenshot
+              var linkUrl = r[3]; 
+              var hasLink = linkUrl && linkUrl.toString().trim().length > 5;
+
               var html = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
               
-              if (isAppeal && r[4] && r[4].toString().length > 5) {
-                var url = r[4].toString().trim();
-                html += `<a href="${url}" target="_blank" style="margin-top:10px; background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em; display:inline-block; width:100px; text-align:center;">View Poster</a>`;
+              if (isAppeal && hasLink) {
+                html += `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="margin-top:10px; background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em; display:inline-block; width:100px; text-align:center;">View Poster</a>`;
               }
               
-              card.innerHTML = debugInfo + html;
+              card.innerHTML = html;
               display.appendChild(card);
             }
           });
