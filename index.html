@@ -14,14 +14,40 @@
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; min-width: 0; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     
+    /* Layout Styles for Standard & Appeal Pages */
     .appeal-card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 8px solid #ac8ad4; display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; }
     .appeal-text-side { flex: 1; min-width: 300px; }
     .poster-img-side { width: 100%; max-width: 350px; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     .appeal-text { font-size: 1.1em; line-height: 1.6; color: #333; margin-bottom: 20px; white-space: pre-wrap; }
     
-    @media (max-width: 768px) {
-      .appeal-card { flex-direction: column; }
+    /* Core Layout Structures from your History File */
+    .commentary-box { background: #fff; padding: 25px; border-radius: 15px; border-left: 10px solid #916bbf; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; color: #4a4e69; line-height: 1.7; max-width: 900px; word-wrap: break-word; }
+    .collection-grid { display: flex; gap: 20px; flex-wrap: wrap; }
+    .category-column { flex: 1; min-width: 300px; background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .category-header { color: #916bbf; border-bottom: 2px solid #ac8ad4; margin-bottom: 15px; text-align: center; font-weight: bold; }
+    .item-row { display: flex; align-items: center; margin-bottom: 10px; padding: 8px; border-bottom: 1px solid #f0f0f0; }
+    .donation-img-small { width: 55px; height: 55px; object-fit: cover; border-radius: 8px; background: #eee; }
+    .item-name { margin-left: 15px; font-weight: bold; color: #4a4e69; font-size: 0.85em; }
+    .pictures-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+    .gallery-card { background: white; padding: 12px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; }
+    .gallery-img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
+    .info-line { margin-bottom: 12px; padding: 18px 22px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; word-wrap: break-word; }
+    .donate-btn { display: inline-block; margin-top: 20px; padding: 18px 45px; background: #84a59d; color: white; border-radius: 35px; font-weight: bold; cursor: pointer; text-decoration: none; border: none; text-transform: uppercase; font-size: 1.1em; }
+    .location-pin { cursor: pointer; font-size: 1.4em; margin-left: 15px; }
+    
+    /* Clean Structural Testimonial Cards */
+    .testimonial-card { background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; gap: 25px; max-width: 900px; align-items: flex-start; border-left: 6px solid #ac8ad4; }
+    .testimonial-media { width: 220px; min-width: 220px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: #fafafa; }
+    .testimonial-img { width: 100%; height: 150px; display: block; object-fit: cover; }
+    .testimonial-video { width: 100%; height: 150px; border: none; display: block; }
+    .testimonial-body { flex-grow: 1; color: #4a4e69; line-height: 1.6; }
+    .testimonial-sender { color: #916bbf; font-size: 1.15em; font-weight: 700; margin: 0 0 10px 0; border-bottom: 1px dashed #ac8ad4; padding-bottom: 5px; }
+
+    @media (max-width: 768px) { 
+      .appeal-card { flex-direction: column; } 
       .poster-img-side { max-width: 100%; }
+      .testimonial-card { flex-direction: column; } 
+      .testimonial-media { width: 100%; min-width: 100%; } 
     }
   </style>
 </head>
@@ -33,18 +59,20 @@
   <div class="main-container">
     <h1 id="tab-title">SHEP</h1>
     <div class="divider"></div>
-    <div id="content">Loading content...</div>
+    <div id="content">Syncing data...</div>
   </div>
 
   <script>
+    let allData = [];
     const annualAppealItems = ["MOTHERS' DAY", "MOTHER'S DAY", "FATHERS' DAY", "FATHER'S DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
-    const scriptUrlBase = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
+    const scriptUrlBase = "https://script.google.com/macros/s/AKfycbwvHOgeop6wQkoWzzww3QGGttQv3UsZTlyipY3O9vAtAir1Ra2abUUv_d4RfXoJSDOa/exec";
 
+    // Text Formatting Helper (Converts **text** to bold)
     function formatText(text) {
       if (!text) return "";
-      return text.toString().replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+      return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     }
-
+    
     function getImgUrl(url, isSmall) {
       if (!url) return 'https://i.imgur.com/oAWTWfg.png';
       try {
@@ -54,18 +82,36 @@
       } catch(e) { return 'https://i.imgur.com/oAWTWfg.png'; }
     }
 
+    function getVideoEmbedUrl(url) {
+      if (!url) return '';
+      try {
+        var str = url.toString().trim();
+        var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
+        return match ? 'https://drive.google.com/file/d/' + match[1] + '/preview' : '';
+      } catch(e) { return ''; }
+    }
+
     function loadData() {
       fetch(scriptUrlBase)
-        .then(r => r.json())
-        .then(data => renderMenu(data));
+        .then(response => response.json())
+        .then(data => { 
+          allData = data; 
+          renderMenu(data); 
+        })
+        .catch(err => {
+          document.getElementById('content').innerText = "Error syncing data.";
+          console.error(err);
+        });
     }
 
     function renderMenu(data) {
       var tabContainer = document.getElementById('tabs');
       tabContainer.innerHTML = "";
+      
+      // Determine unique side menu sections
       var uniqueSections = ["Annual Appeals"];
       data.forEach(r => {
-        if(r[0] && !annualAppealItems.includes(r[0].toUpperCase().trim()) && r[0].toString().trim() !== "DONATIONFORMURL") {
+        if(r[0] && !annualAppealItems.includes(r[0].toUpperCase().trim()) && r[0].toString().trim() !== "DONATIONFORMURL" && r[0].toString().toUpperCase().trim() !== "INSTAGRAM" && r[0].toString().toUpperCase().trim() !== "FACEBOOK") {
           if(!uniqueSections.includes(r[0].toString().trim())) uniqueSections.push(r[0].toString().trim());
         }
       });
@@ -76,28 +122,160 @@
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           btn.classList.add('active');
           document.getElementById('tab-title').innerText = sName;
-          var display = document.getElementById('content'); display.innerHTML = "";
           
-          data.forEach(r => {
-            var rName = r[0] ? r[0].toString().trim() : "";
-            var isAppeal = annualAppealItems.includes(rName.toUpperCase());
-            var currentKey = isAppeal ? "Annual Appeals" : rName;
+          var display = document.getElementById('content'); 
+          var name = sName.toUpperCase().trim();
+          
+          // 1. WHAT DO WE COLLECT SUB-PAGE
+          if (name === "WHAT DO WE COLLECT") {
+            display.innerHTML = '<div class="collection-grid" id="coll-box">Loading categories...</div>';
+            fetch(scriptUrlBase + "?action=collections")
+              .then(response => response.json())
+              .then(items => {
+                var box = document.getElementById('coll-box'); box.innerHTML = "";
+                var groups = {};
+                items.slice(1).forEach(function(it) { 
+                  if(!it[0] || it[0].trim() === "" || !it[1]) return;
+                  if(!groups[it[0]]) groups[it[0]] = []; 
+                  groups[it[0]].push(it); 
+                });
+                Object.keys(groups).forEach(function(g) {
+                  var col = document.createElement('div'); col.className = 'category-column';
+                  col.innerHTML = '<div class="category-header">' + g + '</div>';
+                  groups[g].forEach(function(it) {
+                    var r = document.createElement('div'); r.className = 'item-row';
+                    r.innerHTML = '<div><img src="' + getImgUrl(it[2], true) + '" class="donation-img-small"></div><div class="item-name">' + it[1] + '</div>';
+                    col.appendChild(r);
+                  });
+                  box.appendChild(col);
+                });
+              }).catch(err => { document.getElementById('coll-box').innerText = "Error loading elements."; });
             
-            if (currentKey === sName) {
-              var card = document.createElement('div'); card.className = 'appeal-card';
-              var textHtml = `<div class="appeal-text-side">
+          // 2. WHAT WE CAN'T ACCEPT SUB-PAGE
+          } else if (name === "WHAT WE CAN'T ACCEPT" || name === "WHAT WE CAN’T ACCEPT") {
+            display.innerHTML = '<div class="collection-grid" id="unacceptable-box">Loading...</div>';
+            fetch(scriptUrlBase + "?action=unacceptable")
+              .then(response => response.json())
+              .then(items => {
+                var box = document.getElementById('unacceptable-box'); box.innerHTML = "";
+                var groups = {};
+                items.slice(1).forEach(function(it) { 
+                  if(!it[0] || it[0].trim() === "" || !it[1]) return;
+                  if(!groups[it[0]]) groups[it[0]] = []; 
+                  groups[it[0]].push(it); 
+                });
+                Object.keys(groups).forEach(function(g) {
+                  var col = document.createElement('div'); col.className = 'category-column';
+                  col.innerHTML = '<div class="category-header" style="color: #d9534f; border-bottom: 2px solid #d9534f;">' + g + '</div>';
+                  groups[g].forEach(function(it) {
+                    var r = document.createElement('div'); r.className = 'item-row';
+                    r.innerHTML = '<div><img src="' + getImgUrl(it[2], true) + '" class="donation-img-small"></div><div class="item-name">' + it[1] + '</div>';
+                    col.appendChild(r);
+                  });
+                  box.appendChild(col);
+                });
+              }).catch(err => { document.getElementById('unacceptable-box').innerText = "Error loading elements."; });
+            
+          // 3. PICTURES GALLERY SUB-PAGE
+          } else if (name === "PICTURES") {
+            display.innerHTML = '<div class="pictures-grid" id="pic-box">Loading gallery...</div>';
+            fetch(scriptUrlBase + "?action=pictures")
+              .then(response => response.json())
+              .then(pics => {
+                var box = document.getElementById('pic-box'); box.innerHTML = "";
+                pics.slice(1).forEach(function(p) {
+                  if(!p[1]) return;
+                  var card = document.createElement('div'); card.className = 'gallery-card';
+                  card.innerHTML = '<img src="' + getImgUrl(p[1], false) + '" class="gallery-img"><div style="margin-top:10px;font-weight:bold;color:#4a4e69;">' + p[0] + '</div>';
+                  box.appendChild(card);
+                });
+              }).catch(err => { document.getElementById('pic-box').innerText = "Error loading pictures."; });
+
+          // 4. TESTIMONIALS SUB-PAGE
+          } else if (name === "TESTIMONIALS") {
+            display.innerHTML = '<div id="testimonial-box">Loading structured stories...</div>';
+            fetch(scriptUrlBase + "?action=testimonials")
+              .then(res => res.json())
+              .then(rows => {
+                var box = document.getElementById('testimonial-box'); box.innerHTML = "";
+                rows.slice(1).forEach(function(cols) {
+                  var senderName = cols[0] ? cols[0].trim() : "";
+                  var mediaLink = cols[1] ? cols[1].trim() : "";
+                  var storyText = cols[2] ? cols[2].trim() : "";
+                  
+                  if (!senderName && !storyText) return; 
+                  
+                  var card = document.createElement('div'); card.className = 'testimonial-card';
+                  var isVideo = senderName.toUpperCase().includes("LITTLE THINGS FOR TINY TOTS");
+                  
+                  var mediaHtml = '<div class="testimonial-media"><img src="https://i.imgur.com/oAWTWfg.png" class="testimonial-img"></div>';
+                  if (mediaLink) {
+                    if (isVideo) {
+                      mediaHtml = '<div class="testimonial-media"><iframe src="' + getVideoEmbedUrl(mediaLink) + '" class="testimonial-video" allow="autoplay"></iframe></div>';
+                    } else {
+                      mediaHtml = '<div class="testimonial-media"><img src="' + getImgUrl(mediaLink, false) + '" class="testimonial-img"></div>';
+                    }
+                  }
+                  
+                  card.innerHTML = mediaHtml + 
+                                   '<div class="testimonial-body">' +
+                                     '<div class="testimonial-sender">' + senderName + '</div>' +
+                                     '<div>' + formatText(storyText).replace(/\n/g, '<br>') + '</div>' +
+                                   '</div>';
+                                   
+                  box.appendChild(card);
+                });
+                if(box.children.length === 0) box.innerText = "No testimonials found.";
+              }).catch(err => { document.getElementById('testimonial-box').innerText = "Error loading testimonials."; });
+
+          // 5. MONETARY DONATIONS SUB-PAGE
+          } else if (name === "MONETARY DONATIONS") {
+             display.innerHTML = `<div class="commentary-box"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div><div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div><center><button class="donate-btn" onclick="window.open('https://tinyurl.com/SHEPDonation', '_blank')">Complete Donation & Get Receipt</button></center>`;
+          
+          // 6. STANDARD & ANNUAL APPEAL SIDE-BY-SIDE CARDS
+          } else {
+            display.innerHTML = "";
+            data.forEach(r => {
+              var rName = r[0] ? r[0].toString().trim() : "";
+              var isAppeal = annualAppealItems.includes(rName.toUpperCase());
+              var currentKey = isAppeal ? "Annual Appeals" : rName;
+              
+              if (currentKey === sName) {
+                var card = document.createElement('div'); card.className = 'appeal-card';
+                
+                // Text Container with Bold format transformation
+                var textHtml = `<div class="appeal-text-side">
+                                  <div class="appeal-text"><h3>${rName}</h3>${formatText(r[1]||'')}</div>
+                                </div>`;
+                
+                // Image Element from Col C
+                var imgHtml = r[2] ? `<img src="${getImgUrl(r[2], false)}" class="poster-img-side">` : '';
+                
+                // Button Generation for Drive links in Col D
+                var linkUrl = r[3] ? r[3].toString().trim() : "";
+                var linkHtml = (isAppeal && linkUrl.length > 5) 
+                               ? `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="background:#916bbf; color:white; padding:10px 20px; border-radius:18px; text-decoration:none; font-weight:bold; display:inline-block; margin-top:15px;">View Poster</a>` 
+                               : "";
+                
+                if (linkHtml) {
+                  textHtml = `<div class="appeal-text-side">
                                 <div class="appeal-text"><h3>${rName}</h3>${formatText(r[1]||'')}</div>
+                                ${linkHtml}
                               </div>`;
-              var imgHtml = `<img src="${getImgUrl(r[2], false)}" class="poster-img-side">`;
-              card.innerHTML = textHtml + imgHtml;
-              display.appendChild(card);
-            }
-          });
+                }
+                
+                card.innerHTML = textHtml + imgHtml;
+                display.appendChild(card);
+              }
+            });
+          }
         };
         tabContainer.appendChild(btn);
       });
       if (tabContainer.firstChild) tabContainer.firstChild.click();
     }
+
+    // Initialize layout
     loadData();
   </script>
 </body>
