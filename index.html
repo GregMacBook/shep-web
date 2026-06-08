@@ -86,7 +86,7 @@
           document.getElementById('tab-title').innerText = sName;
           var display = document.getElementById('content'); display.innerHTML = "";
           
-          data.forEach(r => {
+data.forEach(r => {
             var rName = r[0] ? r[0].toString().trim() : "";
             var isAppeal = annualAppealItems.includes(rName.toUpperCase());
             var currentKey = isAppeal ? "Annual Appeals" : rName;
@@ -94,20 +94,20 @@
             if (currentKey === sName) {
               var card = document.createElement('div'); card.className = 'appeal-card';
               
-              // DEBUG: Print what we are looking at
-              console.log("Checking Row:", rName, "Link data:", r[3]);
-
+              // FORCE-PRINT: This will display the data being read right on your card
+              var debugInfo = `<p style="color:red; font-size:10px;">DEBUG: Name='${rName}', ColumnD='${r[3]}'</p>`;
+              
               var html = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
               
-              if (isAppeal) {
-                // FORCED BUTTON: This will show up regardless of the link content
-                var link = r[3] ? r[3].toString().trim() : "#";
-                html += `<a href="${link}" target="_blank" style="background:red; color:white; padding:10px; border-radius:5px; margin-top:10px; display:inline-block;">TEST BUTTON</a>`;
+              if (isAppeal && r[3] && r[3].toString().length > 5) {
+                var url = r[3].toString().trim();
+                html += `<a href="${url}" target="_blank" style="background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em; display:inline-block;">View Poster</a>`;
               }
               
-              card.innerHTML = html;
+              card.innerHTML = debugInfo + html;
               display.appendChild(card);
             }
+          });
           });
         };
         tabContainer.appendChild(btn);
