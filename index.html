@@ -24,8 +24,8 @@
     .media-gallery-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; max-width: 100%; }
     .gallery-figure { margin: 0; padding: 10px; background: #faf8ff; border: 1px solid #eae5f5; border-radius: 8px; text-align: center; width: calc(50% - 10px); min-width: 260px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
     
-    /* POSTER IMAGES FIXED CSS: Using object-fit contain and a safe max-height to ensure the full image fits */
-    .poster-img-side { width: 100%; max-width: 350px; height: auto; max-height: 450px; display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); object-fit: contain; }
+    /* POSTER IMAGES: Contain format to ensure zero cropping on portrait files */
+    .poster-img-side { width: 100%; max-width: 350px; height: auto; display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); object-fit: contain; }
     .figure-caption { font-size: 0.9em; font-weight: 600; color: #6b5b95; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
     
     /* Interactive Map Pins styling */
@@ -48,7 +48,7 @@
     /* Testimonial Elements */
     .testimonial-card { background: white; border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; gap: 25px; max-width: 900px; align-items: flex-start; border-left: 6px solid #ac8ad4; }
     .testimonial-media { width: 220px; min-width: 220px; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); background: #fafafa; }
-    .testimonial-img { width: 100%; height: 150px; display: block; object-fit: cover; }
+    .testimonial-img { width: 100%; height: auto; max-height: 350px; display: block; object-fit: contain; }
     .testimonial-video { width: 100%; height: 150px; border: none; display: block; }
     .testimonial-body { flex-grow: 1; color: #4a4e69; line-height: 1.6; }
     .testimonial-sender { color: #916bbf; font-size: 1.15em; font-weight: 700; margin: 0 0 10px 0; border-bottom: 1px dashed #ac8ad4; padding-bottom: 5px; }
@@ -59,7 +59,7 @@
 
     @media (max-width: 768px) { 
       .appeal-card { flex-direction: column; } 
-      .poster-img-side { max-width: 100%; max-height: none; }
+      .poster-img-side { max-width: 100%; }
       .gallery-figure { width: 100%; }
       .testimonial-card { flex-direction: column; } 
       .testimonial-media { width: 100%; min-width: 100%; } 
@@ -87,19 +87,18 @@
       return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     }
     
-    // THE ULTIMATE UNMASKED ENGINE: Drops all thumbnail handlers to pull the raw source file direct from Drive
     function getImgUrl(url, isSmall) {
       if (!url) return 'https://i.imgur.com/oAWTWfg.png';
       try {
         var str = url.toString().trim();
+        
+        if (str.toLowerCase().includes('imgur.com') || str.toLowerCase().includes('postimg.cc') || str.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)/)) {
+          return str;
+        }
+
         var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
         if (match) {
-          if (isSmall) {
-            return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w120';
-          } else {
-            // This format explicitly bypasses all Google thumbnail crop actions completely
-            return 'https://docs.google.com/uc?export=view&id=' + match[1];
-          }
+          return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=' + (isSmall ? 'w120' : 's1000');
         }
         return str;
       } catch(e) { return 'https://i.imgur.com/oAWTWfg.png'; }
@@ -222,6 +221,7 @@
                 var box = document.getElementById('testimonial-box'); box.innerHTML = "";
                 rows.slice(1).forEach(function(cols) {
                   var senderName = cols[0] ? cols[0].trim() : "";
+                  // DYNAMIC COLUMN RULE: Grabs link asset from Col B (cols[1]) and text block from Col C (cols[2])
                   var mediaLink = cols[1] ? cols[1].trim() : "";
                   var storyText = cols[2] ? cols[2].trim() : "";
                   
@@ -307,7 +307,6 @@
                       });
                       mediaGalleryHtml += '</div>';
                     } else {
-                      // Restored clean uncompromised image element tag
                       mediaGalleryHtml = `<img src="${getImgUrl(colCLink, false)}" class="poster-img-side">`;
                     }
                   }
