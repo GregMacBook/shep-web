@@ -13,11 +13,9 @@
     .tab.active { background: #fcfaff; color: #4a4e69; margin-right: -1px; }
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; min-width: 0; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
-    .appeal-card { display: flex; align-items: center; justify-content: space-between; background: white; padding: 15px 25px; border-radius: 12px; margin-bottom: 15px; border-left: 8px solid #ac8ad4; }
+    .appeal-card { display: flex; flex-direction: column; background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; border-left: 8px solid #ac8ad4; }
     .appeal-left { display: flex; align-items: center; gap: 20px; }
     .appeal-thumb { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; }
-    .row-images-container { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
-    .row-attached-img { max-width: 220px; border-radius: 8px; }
   </style>
 </head>
 <body>
@@ -32,7 +30,6 @@
   </div>
 
   <script>
-    alert("The script is running!");
     const annualAppealItems = ["MOTHERS' DAY", "MOTHER'S DAY", "FATHERS' DAY", "FATHER'S DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
     const scriptUrlBase = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
 
@@ -43,23 +40,6 @@
         var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
         return match ? 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=' + (isSmall ? 'w120' : 'w800') : str;
       } catch(e) { return 'https://i.imgur.com/oAWTWfg.png'; }
-    }
-
-    function init() {
-      fetch("status.json?nocache=" + new Date().getTime())
-        .then(res => res.json())
-        .then(data => { if(data.status === "OFF") showMaintenance(); else loadData(); })
-        .catch(() => {
-          if (typeof google !== 'undefined' && google.script) {
-            google.script.run.withSuccessHandler(status => {
-              if(status === "OFF") showMaintenance(); else loadData();
-            }).getSiteStatus();
-          } else { loadData(); }
-        });
-    }
-
-    function showMaintenance() {
-      document.getElementById('content').innerHTML = `<h1>Site under maintenance</h1><p>Please check back shortly.</p>`;
     }
 
     function loadData() {
@@ -86,36 +66,31 @@
           document.getElementById('tab-title').innerText = sName;
           var display = document.getElementById('content'); display.innerHTML = "";
           
-data.forEach(r => {
+          data.forEach(r => {
             var rName = r[0] ? r[0].toString().trim() : "";
             var isAppeal = annualAppealItems.includes(rName.toUpperCase());
             var currentKey = isAppeal ? "Annual Appeals" : rName;
             
             if (currentKey === sName) {
               var card = document.createElement('div'); card.className = 'appeal-card';
-              
-              // FORCE-PRINT: This will display the data being read right on your card
-              var debugInfo = `<p style="color:red; font-size:10px;">DEBUG: Name='${rName}', ColumnD='${r[3]}'</p>`;
-              
+              var debugInfo = `<p style="color:red; font-size:10px; margin:0;">DEBUG: Name='${rName}', ColumnD(r[3])='${r[3]}'</p>`;
               var html = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
               
-              if (isAppeal && r[3] && r[3].toString().length > 5) {
+              if (isAppeal && r[3]) {
                 var url = r[3].toString().trim();
-                html += `<a href="${url}" target="_blank" style="background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em; display:inline-block;">View Poster</a>`;
+                html += `<a href="${url}" target="_blank" style="margin-top:10px; background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em; display:inline-block; width:100px; text-align:center;">View Poster</a>`;
               }
               
               card.innerHTML = debugInfo + html;
               display.appendChild(card);
             }
           });
-          });
         };
         tabContainer.appendChild(btn);
       });
       if (tabContainer.firstChild) tabContainer.firstChild.click();
     }
-    
-    init();
+    loadData();
   </script>
 </body>
 </html>
