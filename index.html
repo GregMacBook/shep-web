@@ -24,7 +24,7 @@
     .media-gallery-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; max-width: 100%; }
     .gallery-figure { margin: 0; padding: 10px; background: #faf8ff; border: 1px solid #eae5f5; border-radius: 8px; text-align: center; width: calc(50% - 10px); min-width: 260px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
     
-    /* Updated Poster Styles: Completely removed max-height limits to allow uncropped scaling */
+    /* Poster Styles: Scale cleanly without cropping */
     .poster-img-side { width: 100%; max-width: 350px; height: auto; display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     .figure-caption { font-size: 0.9em; font-weight: 600; color: #6b5b95; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
     
@@ -87,7 +87,7 @@
       return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     }
     
-    // FIX: Bypassed Google's forced thumbnail cropping for larger images
+    // BACKWARD-COMPATIBLE FIX: Employs lh3.googleusercontent pipeline for absolute original frames
     function getImgUrl(url, isSmall) {
       if (!url) return 'https://i.imgur.com/oAWTWfg.png';
       try {
@@ -97,8 +97,8 @@
           if (isSmall) {
             return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w120';
           } else {
-            // Raw image stream prevents Google's servers from cropping portrait/tall photos
-            return 'https://drive.google.com/uc?export=view&id=' + match[1];
+            // Absolute direct raw pipeline bypasses all crop algorithms completely
+            return 'https://lh3.googleusercontent.com/d/' + match[1];
           }
         }
         return str;
