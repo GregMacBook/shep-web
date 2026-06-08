@@ -14,12 +14,17 @@
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; min-width: 0; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     
-    /* Layout Styles for Standard & Appeal Pages (With Tightened Spacing) */
+    /* Layout Styles for Standard & Appeal Pages */
     .appeal-card { background: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; border-left: 8px solid #ac8ad4; display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; justify-content: space-between; }
     .appeal-text-side { flex: 1; min-width: 300px; display: flex; justify-content: space-between; align-items: flex-start; }
-    .poster-img-side { width: 100%; max-width: 350px; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     .appeal-text { font-size: 1.1em; line-height: 1.6; color: #333; flex-grow: 1; white-space: pre-wrap; }
     .appeal-text h3 { margin-top: 0; margin-bottom: 8px; color: #4a4e69; }
+    
+    /* Multi-Image Container for School Donors */
+    .media-gallery-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; max-width: 100%; }
+    .gallery-figure { margin: 0; padding: 10px; background: #faf8ff; border: 1px solid #eae5f5; border-radius: 8px; text-align: center; width: calc(50% - 10px); min-width: 260px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+    .poster-img-side { width: 100%; max-width: 350px; height: auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: block; margin: 0 auto; }
+    .figure-caption { font-size: 0.9em; font-weight: 600; color: #6b5b95; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
     
     /* Interactive Map Pins styling */
     .location-pin { cursor: pointer; font-size: 1.6em; margin-left: 15px; padding: 5px; transition: transform 0.2s; display: inline-block; }
@@ -53,6 +58,7 @@
     @media (max-width: 768px) { 
       .appeal-card { flex-direction: column; } 
       .poster-img-side { max-width: 100%; }
+      .gallery-figure { width: 100%; }
       .testimonial-card { flex-direction: column; } 
       .testimonial-media { width: 100%; min-width: 100%; } 
     }
@@ -237,7 +243,7 @@
           } else if (name === "MONETARY DONATIONS") {
              display.innerHTML = `<div class="commentary-box"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div><div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div><center><button class="donate-btn" onclick="window.open('https://tinyurl.com/SHEPDonation', '_blank')">Complete Donation & Get Receipt</button></center>`;
           
-          // 6. STANDARD, MAP-LINK, & ANNUAL APPEAL CARDS
+          // 6. STANDARD, MAP-LINK, ANNUAL APPEALS & MULTI-IMAGE GALLERY PAGES
           } else {
             display.innerHTML = "";
             data.forEach(r => {
@@ -248,7 +254,7 @@
               if (currentKey === sName) {
                 var card = document.createElement('div'); card.className = 'appeal-card';
                 var textHtml = "";
-                var imgHtml = "";
+                var mediaGalleryHtml = "";
                 var pinHtml = "";
                 
                 var colCLink = r[2] ? r[2].toString().trim() : "";
@@ -263,13 +269,31 @@
                                 <div class="appeal-text"><h3>${rName}</h3>${formatText(r[1]||'')} ${orgLinkHtml}</div>
                               </div>`;
                 } else {
-                  // Check if Column C contains a map link vs an image asset
+                  // Check if Column C contains an explicit web map link vs a graphic asset
                   if (colCLink.toLowerCase().includes('http') && !colCLink.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)/) && !colCLink.toLowerCase().includes('drive.google')) {
-                    // It's a Map Pin link! Generate the interactive icon next to the address info text
                     pinHtml = `<div class="location-pin" onclick="window.open('${colCLink}', '_blank'); event.stopPropagation();">📍</div>`;
                   } else if (colCLink) {
-                    // It's a graphic poster link
-                    imgHtml = `<img src="${getImgUrl(colCLink, false)}" class="poster-img-side">`;
+                    // Split content by comma to dynamically evaluate single vs multiple image attachments
+                    var assetLinks = colCLink.split(',');
+                    if (assetLinks.length > 1) {
+                      // MULTI-IMAGE CONFIGURATION (e.g. School Donors grid with captions underneath)
+                      mediaGalleryHtml = '<div class="media-gallery-wrapper">';
+                      assetLinks.forEach(link => {
+                        var singleLink = link.trim();
+                        var schoolName = "School Donation";
+                        if (singleLink.toLowerCase().includes("wpuvlvflo6ywb1uj0np4noasd20emqpa")) schoolName = "Mercedes College";
+                        if (singleLink.toLowerCase().includes("13ajfdkbpnqfmh_3v3efdfyouxvuiwsg")) schoolName = "Cannington Senior High School";
+                        
+                        mediaGalleryHtml += `<figure class="gallery-figure">
+                                               <img src="${getImgUrl(singleLink, false)}" class="poster-img-side">
+                                               <figcaption class="figure-caption">${schoolName}</figcaption>
+                                             </figure>`;
+                      });
+                      mediaGalleryHtml += '</div>';
+                    } else {
+                      // Normal standalone graphic poster display
+                      mediaGalleryHtml = `<img src="${getImgUrl(colCLink, false)}" class="poster-img-side">`;
+                    }
                   }
                   
                   var linkUrl = r[3] ? r[3].toString().trim() : "";
@@ -283,7 +307,14 @@
                               </div>`;
                 }
                 
-                card.innerHTML = textHtml + imgHtml;
+                // If we have a side-by-side gallery layout, force it to clear into a clean block structure
+                if (mediaGalleryHtml.includes("media-gallery-wrapper")) {
+                  card.style.flexDirection = "column";
+                  card.innerHTML = textHtml + mediaGalleryHtml;
+                } else {
+                  card.innerHTML = textHtml + mediaGalleryHtml;
+                }
+                
                 display.appendChild(card);
               }
             });
