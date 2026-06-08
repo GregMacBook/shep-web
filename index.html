@@ -14,13 +14,11 @@
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; min-width: 0; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     
-    /* Layout Styles */
     .appeal-card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; border-left: 8px solid #ac8ad4; display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; }
     .appeal-text-side { flex: 1; min-width: 300px; }
     .poster-img-side { width: 100%; max-width: 350px; height: auto; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
     .appeal-text { font-size: 1.1em; line-height: 1.6; color: #333; margin-bottom: 20px; white-space: pre-wrap; }
     
-    /* Responsive adjustment: Stack on mobile */
     @media (max-width: 768px) {
       .appeal-card { flex-direction: column; }
       .poster-img-side { max-width: 100%; }
@@ -42,6 +40,11 @@
     const annualAppealItems = ["MOTHERS' DAY", "MOTHER'S DAY", "FATHERS' DAY", "FATHER'S DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
     const scriptUrlBase = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
 
+    function formatText(text) {
+      if (!text) return "";
+      return text.toString().replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    }
+
     function getImgUrl(url, isSmall) {
       if (!url) return 'https://i.imgur.com/oAWTWfg.png';
       try {
@@ -51,11 +54,6 @@
       } catch(e) { return 'https://i.imgur.com/oAWTWfg.png'; }
     }
 
-    function formatText(text) {
-      if (!text) return "";
-      // This regex looks for **text** and replaces it with <b>text</b>
-      return text.toString().replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-    }
     function loadData() {
       fetch(scriptUrlBase)
         .then(r => r.json())
@@ -87,15 +85,10 @@
             
             if (currentKey === sName) {
               var card = document.createElement('div'); card.className = 'appeal-card';
-              
-              // Text and Formatting from Column B (Index 1)
               var textHtml = `<div class="appeal-text-side">
-                                <div class="appeal-text"><h3>${rName}</h3>${r[1]||''}</div>
+                                <div class="appeal-text"><h3>${rName}</h3>${formatText(r[1]||'')}</div>
                               </div>`;
-              
-              // Image from Column C (Index 2)
               var imgHtml = `<img src="${getImgUrl(r[2], false)}" class="poster-img-side">`;
-              
               card.innerHTML = textHtml + imgHtml;
               display.appendChild(card);
             }
