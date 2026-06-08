@@ -24,8 +24,8 @@
     .media-gallery-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; max-width: 100%; }
     .gallery-figure { margin: 0; padding: 10px; background: #faf8ff; border: 1px solid #eae5f5; border-radius: 8px; text-align: center; width: calc(50% - 10px); min-width: 260px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
     
-    /* Poster Styles: Scale cleanly and maintain native layout shape */
-    .poster-img-side { width: 100%; max-width: 350px; height: auto; display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    /* POSTER IMAGES: Set to block-contain to prevent cropping portrait formats */
+    .poster-img-side { width: 100%; max-width: 350px; height: auto; display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); object-fit: contain; }
     .figure-caption { font-size: 0.9em; font-weight: 600; color: #6b5b95; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
     
     /* Interactive Map Pins styling */
@@ -87,15 +87,19 @@
       return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     }
     
-    // SAFE IMAGE ENGINE RESTORED: Uses thumbnail sizing parameter 's1000' to preserve uncropped frames
+    // MASTER IMAGE ENGINE: Uses direct link parsing to prevent all server-side cropping
     function getImgUrl(url, isSmall) {
       if (!url) return 'https://i.imgur.com/oAWTWfg.png';
       try {
         var str = url.toString().trim();
         var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
         if (match) {
-          // 's1000' forces Google to deliver the entire uncropped source box payload natively
-          return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=' + (isSmall ? 'w120' : 's1000');
+          if (isSmall) {
+            return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w120';
+          } else {
+            // Secure direct stream bypasses the thumbnail crop mechanism entirely
+            return 'https://drive.google.com/uc?id=' + match[1];
+          }
         }
         return str;
       } catch(e) { return 'https://i.imgur.com/oAWTWfg.png'; }
