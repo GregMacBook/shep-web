@@ -276,19 +276,27 @@
                     // Split content by comma to dynamically evaluate single vs multiple image attachments
                     var assetLinks = colCLink.split(',');
                     if (assetLinks.length > 1) {
-                      // MULTI-IMAGE CONFIGURATION
+                      // DYNAMIC MULTI-IMAGE CONFIGURATION (With smart caption parsing)
                       mediaGalleryHtml = '<div class="media-gallery-wrapper">';
-                      assetLinks.forEach(link => {
-                        var singleLink = link.trim();
-                        var schoolName = "School Donation";
-                        
-                        // Clean matching rule mapping exact file ID tags
-                        if (singleLink.toLowerCase().includes("wpuvlvflo6ywb1uj0np4noasd20emqpa")) schoolName = "Mercedes College";
-                        if (singleLink.toLowerCase().includes("13ajfdkbpnqfmh_3v3efdfyouxvuiwsg")) schoolName = "Cannington Senior High School";
+                      assetLinks.forEach(item => {
+                        var rawItem = item.trim();
+                        var captionText = "School Donation"; // Default fallback label
+                        var finalUrl = rawItem;
+
+                        // Check if the cell uses the smart "Caption - Link" syntax
+                        if (rawItem.includes(" - ")) {
+                          var parts = rawItem.split(" - ");
+                          captionText = parts[0].trim();
+                          finalUrl = parts[1].trim();
+                        } else {
+                          // Inline fallback matches for backward compatibility with your old strings
+                          if (rawItem.toLowerCase().includes("wpuvlvflo6ywb1uj0np4noasd20emqpa")) captionText = "Mercedes College";
+                          if (rawItem.toLowerCase().includes("13ajfdkbpnqfmh_3v3efdfyouxvuiwsg")) captionText = "Cannington Senior High School";
+                        }
                         
                         mediaGalleryHtml += `<figure class="gallery-figure">
-                                               <img src="${getImgUrl(singleLink, false)}" class="poster-img-side">
-                                               <figcaption class="figure-caption">${schoolName}</figcaption>
+                                               <img src="${getImgUrl(finalUrl, false)}" class="poster-img-side">
+                                               <figcaption class="figure-caption">${captionText}</figcaption>
                                              </figure>`;
                       });
                       mediaGalleryHtml += '</div>';
