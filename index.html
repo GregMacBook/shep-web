@@ -86,25 +86,20 @@
           document.getElementById('tab-title').innerText = sName;
           var display = document.getElementById('content'); display.innerHTML = "";
           
-          data.forEach(r => {
+         data.forEach(r => {
             var rName = r[0] ? r[0].toString().trim() : "";
             var isAppeal = annualAppealItems.includes(rName.toUpperCase());
             var currentKey = isAppeal ? "Annual Appeals" : rName;
             
             if (currentKey === sName) {
               var card = document.createElement('div'); card.className = 'appeal-card';
-if (isAppeal && r[3]) {
-  // We use the raw, direct Drive URL here - do not modify it to /preview
-  var url = r[3].toString().trim();
-  
-  card.innerHTML = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>
-                   <button onclick="window.location.href='${url}'" 
-        style="...">
-    View Poster
-</button>
-}
               
-         else {
+              // This line checks if r[3] (Column D) has content
+              if (isAppeal && r[3] && r[3].toString().length > 5) {
+                var url = r[3].toString().trim();
+                card.innerHTML = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>
+                                  <a href="${url}" target="_blank" rel="noopener noreferrer" style="background:#916bbf; color:white; padding:8px 16px; border-radius:18px; text-decoration:none; font-weight:bold; font-size:0.8em; display:inline-block;">View Poster</a>`;
+              } else {
                 card.innerHTML = `<div class="appeal-left"><img src="${getImgUrl(r[2], true)}" class="appeal-thumb"><div><h3>${rName}</h3><p>${r[1]||''}</p></div></div>`;
                 if(r[2] && !isAppeal) {
                   var imgCont = document.createElement('div'); imgCont.className = 'row-images-container';
