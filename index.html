@@ -24,8 +24,8 @@
     .media-gallery-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; max-width: 100%; }
     .gallery-figure { margin: 0; padding: 10px; background: #faf8ff; border: 1px solid #eae5f5; border-radius: 8px; text-align: center; width: calc(50% - 10px); min-width: 260px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
     
-    /* Poster Styles: Scale cleanly without cropping */
-    .poster-img-side { width: 100%; max-width: 350px; height: auto; display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    /* BULLETPROOF POSTER IMAGE FIXED CSS: No background fills, crops, or cover masks */
+    .poster-img-side { width: 100%; max-width: 350px; height: auto; display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); object-fit: contain !important; }
     .figure-caption { font-size: 0.9em; font-weight: 600; color: #6b5b95; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
     
     /* Interactive Map Pins styling */
@@ -87,7 +87,7 @@
       return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
     }
     
-    // BACKWARD-COMPATIBLE FIX: Employs lh3.googleusercontent pipeline for absolute original frames
+    // BACKWARD-COMPATIBLE FIX: Bypasses Google's automatic smart cropping system
     function getImgUrl(url, isSmall) {
       if (!url) return 'https://i.imgur.com/oAWTWfg.png';
       try {
@@ -97,8 +97,8 @@
           if (isSmall) {
             return 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=w120';
           } else {
-            // Absolute direct raw pipeline bypasses all crop algorithms completely
-            return 'https://lh3.googleusercontent.com/d/' + match[1];
+            // Raw uc layout call forces the full uncropped picture file payload down to the client
+            return 'https://drive.google.com/uc?export=view&id=' + match[1];
           }
         }
         return str;
