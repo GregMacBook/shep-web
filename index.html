@@ -403,4 +403,51 @@
                           if (rawItem.toLowerCase().includes("13ajfdkbpnqfmh_3v3efdfyouxvuiwsg")) captionText = "Cannington Senior High School";
                           
                           if (name === "WAYS YOU CAN HELP") {
-                            captionText = (count
+                            captionText = (countIndex === 0) ? "Mum and Bub 70x70 cms" : "Toiletry Bags 35x35cms";
+                          }
+                        }
+                        
+                        mediaGalleryHtml += `<figure class="gallery-figure">
+                                               <img src="${getImgUrl(finalUrl, false)}" class="poster-img-side">
+                                               <figcaption class="figure-caption">${captionText}</figcaption>
+                                             </figure>`;
+                        countIndex++;
+                      });
+                      mediaGalleryHtml += '</div>';
+                    } else {
+                      mediaGalleryHtml = `<img src="${getImgUrl(colCLink, false)}" class="poster-img-side">`;
+                    }
+                  }
+                  
+                  var linkUrl = r[3] ? r[3].toString().trim() : "";
+                  var linkHtml = (isAppeal && linkUrl.length > 5) 
+                                 ? `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="action-link-btn">View Poster</a>` 
+                                 : "";
+                  
+                  textHtml = `<div class="appeal-text-side">
+                                <div class="appeal-text"><h3>${rName}</h3>${formatText(r[1]||'')} ${linkHtml}</div>
+                                ${pinHtml}
+                              </div>`;
+                }
+                
+                if (mediaGalleryHtml.includes("media-gallery-wrapper")) {
+                  card.style.flexDirection = "column";
+                  card.innerHTML = textHtml + mediaGalleryHtml;
+                } else {
+                  card.innerHTML = textHtml + mediaGalleryHtml;
+                }
+                
+                display.appendChild(card);
+              }
+            });
+          }
+        };
+        tabContainer.appendChild(btn);
+      });
+      if (tabContainer.firstChild) tabContainer.firstChild.click();
+    }
+
+    checkStatusAndLoad();
+  </script>
+</body>
+</html>
