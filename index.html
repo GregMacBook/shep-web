@@ -13,7 +13,7 @@
     .logo-header { padding: 5px; text-align: center; }
     
     /* Desktop layout for navigation menu */
-    .nav-menu { display: flex; gap: 10px; padding: 12px 20px; width: 100%; box-sizing: border-box; justify-content: center; flex-wrap: wrap; }
+    .nav-menu { display: flex; gap: 10px; padding: 12px 20px; overflow-x: auto; width: 100%; box-sizing: border-box; white-space: nowrap; justify-content: center; }
     
     .tab { padding: 10px 20px; background: #ac8ad4; border-radius: 20px; cursor: pointer; transition: 0.3s; font-weight: 600; color: #fff; text-transform: uppercase; font-size: 0.75em; letter-spacing: 0.5px; display: inline-block; border: none; }
     .tab.active { background: #916bbf; color: #fff; transform: scale(1.03); box-shadow: 0 2px 8px rgba(145, 107, 191, 0.3); }
@@ -68,11 +68,11 @@
     .visit-org-btn { display: inline-block; margin-top: 10px; padding: 8px 16px; background: #916bbf; color: white; border-radius: 18px; text-decoration: none; font-weight: bold; font-size: 0.85em; transition: 0.2s; }
     .visit-org-btn:hover { background: #ac8ad4; }
 
-    /* MOBILE VIEWPORT STYLES */
+    /* MOBILE PORT REFINE WITH SMART BUTTON STACKING */
     @media (max-width: 768px) { 
-      /* STAGE OVERRIDE: Enforces vertical menu stacking on all phones */
-      .nav-menu { flex-direction: column !important; padding: 10px 15px !important; gap: 6px !important; width: 100% !important; }
-      .tab { width: 100% !important; text-align: center !important; padding: 10px 15px !important; font-size: 0.75em !important; box-sizing: border-box !important; display: block !important; }
+      /* Stacks the buttons vertically on phone screens */
+      .nav-menu { flex-direction: column; white-space: normal; padding: 10px 15px; gap: 6px; width: 100%; max-height: 200px; overflow-y: auto; }
+      .tab { width: 100%; text-align: center; padding: 8px 15px; font-size: 0.72em; box-sizing: border-box; }
       
       .appeal-card { flex-direction: column; } 
       .poster-img-side { max-width: 100%; }
