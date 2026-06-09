@@ -2,19 +2,48 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <title>SHEP Portal</title>
   <style>
-    body { font-family: sans-serif; text-align: center; background: #fcfaff; }
-    p { white-space: pre-wrap; } /* This keeps your paragraph breaks */
-    .nav-menu { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 20px; }
-    .tab { width: 120px; height: 50px; background: #ac8ad4; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 0.7em; font-weight: bold; }
+    body { font-family: sans-serif; text-align: center; background: #fcfaff; color: #333; }
+    p { white-space: pre-wrap; margin: 5px 0; }
+    
+    /* Header Container */
+    .shep-header { padding: 20px; background: #ffffff; border-bottom: 2px solid #78a198; margin-bottom: 10px; }
+    .shep-logo { max-width: 180px; height: auto; }
+    .shep-tagline { font-weight: bold; color: #916bbf; margin-top: 5px; font-size: 1.1em; }
+
+    /* Tab Menu */
+    .nav-menu { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 10px 20px; }
+    .tab { width: 130px; height: 50px; background: #ac8ad4; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 0.75em; font-weight: bold; transition: background 0.2s; }
     .tab.active { background: #916bbf; }
+    
+    /* Content Boxes */
     .page-panel { display: none; padding: 20px; max-width: 900px; margin: auto; text-align: left; }
     .page-panel.active { display: block; }
-    .content-box { border: 3px solid #78a198; border-radius: 25px; padding: 20px; margin-bottom: 15px; background: white; }
-    .item-img { width: 150px; display: block; margin: 10px 0; }
+    .content-box { border: 3px solid #78a198; border-radius: 25px; padding: 20px; margin-bottom: 15px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .commentary-box { background: #fdfaf6; border-left: 5px solid #78a198; padding: 15px; margin-bottom: 15px; border-radius: 4px; }
+    
+    /* Media Handling */
+    .item-img { max-width: 100%; max-height: 250px; border-radius: 12px; display: block; margin: 10px 0; }
+    
+    /* Reinstated Original Green Donation Button Style */
+    .donate-btn { display: inline-block; padding: 14px 28px; background-color: #78a198; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; margin-top: 15px; border: none; cursor: pointer; transition: background 0.2s; }
+    .donate-btn:hover { background-color: #5e827a; }
+    
+    /* Pin Links & Info Styles */
+    .pin-link { display: inline-flex; align-items: center; gap: 5px; color: #916bbf; font-weight: bold; text-decoration: none; margin-top: 5px; }
+    .pin-link:hover { text-decoration: underline; }
+    .info-line { margin: 10px 0; font-size: 1.1em; color: #444; }
   </style>
 </head>
 <body>
+
+  <!-- Header Section with Logo and Tagline -->
+  <div class="shep-header">
+    <img src="https://drive.google.com/thumbnail?id=1jotHfaZhBe9jKnjWK7Ldz_MXl5Pb6Loe&sz=w500" class="shep-logo" alt="SHEP Logo">
+    <div class="shep-tagline">PROMOTING SELF CARE AND HYGIENE FOR THE VULNERABLE</div>
+  </div>
+
   <div id="tabs" class="nav-menu"></div>
   <div id="content-area"></div>
 
@@ -54,44 +83,88 @@
           panel.classList.add('active');
           
           if(panel.innerHTML === "") {
-             // Filter data based on current tab's mapped categories
+             // 1. Handle special hardcoded block for MONETARY DONATIONS
+             if (tName === "MONETARY DONATIONS") {
+                let targetUrl = 'https://tinyurl.com/SHEPDonation'; 
+                if (data && data.length > 0) {
+                  let foundRow = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === 'DONATIONFORMURL');
+                  if (foundRow && foundRow[1]) targetUrl = foundRow[1].toString().trim();
+                }
+
+                panel.innerHTML = `
+                  <h3>MONETARY DONATIONS</h3>
+                  <div class="commentary-box">
+                    <h3>Your Impact Matters</h3>
+                    <p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p>
+                  </div>
+                  <div class="info-line" style="text-align: center;"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div>
+                  <div class="info-line" style="text-align: center;"><span>BSB: 306821 / Acct: 6706014</span></div>
+                  <center>
+                    <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="donate-btn">Complete Donation & Get Receipt</a>
+                  </center>
+                `;
+                return; // Structural link breakout completed for this tab
+             }
+
+             // 2. Default dynamic rendering loop for all other tabs
+             let html = "<h3>" + tName + "</h3>";
              let currentCat = "";
-             let filtered = data.filter(it => {
-                if(it[0] && it[0].toString().trim() !== "") currentCat = it[0].toString().trim();
-                return tabMap[tName].includes(currentCat);
+             let count = 0;
+             
+             data.forEach(it => {
+                let cellA = it[0] ? it[0].toString().trim() : "";
+                if(cellA !== "" && cellA.toUpperCase() !== "DONATIONFORMURL") {
+                    currentCat = cellA;
+                }
+                
+                if (tabMap[tName].includes(currentCat)) {
+                   let colB = it[1] ? it[1].toString().trim() : "";
+                   let colC = it[2] ? it[2].toString().trim() : "";
+                   let colD = it[3] ? it[3].toString().trim() : "";
+                   
+                   // Skip rendering if row context matches the title header block exactly
+                   if (!colB && !colC && !colD && currentCat === tName) return;
+
+                   count++;
+                   html += `<div class="content-box">`;
+                   
+                   // Insert mini titles for grouped categories (like individual appeals)
+                   if (tabMap[tName].length > 1 && cellA !== "") {
+                       html += `<h4>${cellA}</h4>`;
+                   }
+
+                   // Display content fields and clean images
+                   [colB, colC, colD].forEach(val => {
+                      if (!val) return;
+                      if (val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com"))) {
+                         html += `<img src="${val}" class="item-img" alt="SHEP Asset">`;
+                      } else if (!val.startsWith("http")) {
+                         html += `<p>${val}</p>`;
+                      }
+                   });
+
+                   // Pull and display explicit hyperlinked endpoints
+                   let finalLink = [colB, colC, colD].find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg"));
+                   
+                   if (finalLink) {
+                      if (tName === "DONATION POINTS") {
+                         html += `<a href="${finalLink}" target="_blank" class="pin-link">📍 Click for Map Location</a>`;
+                      } else {
+                         html += `<br><a href="${finalLink}" target="_blank" class="pin-link">Click here for more</a>`;
+                      }
+                   }
+                   
+                   html += `</div>`;
+                }
              });
-             panel.innerHTML = renderSmart(tName, filtered);
+             
+             panel.innerHTML = count > 0 ? html : html + "<div class="content-box"><p>Coming soon...</p></div>";
           }
         };
         container.appendChild(btn);
       });
       container.firstChild.click();
     });
-
-    function renderSmart(tName, items) {
-      let html = "<h3>" + tName + "</h3>";
-      if (items.length === 0) return html + "<p>Coming soon...</p>";
-      
-      items.forEach(it => {
-        let content = it[1] || "";
-        let link = it[2] || "";
-        let title = (it[0] && it[0].toString().trim() !== tName) ? `<strong>${it[0]}:</strong> ` : "";
-        
-        if (content || link || title) {
-           html += `<div class="content-box">`;
-           if (content.toString().startsWith("http")) {
-             html += `<img src="${content}" class="item-img">`;
-           } else {
-             html += `<p>${title}${content}</p>`;
-           }
-           if (link.startsWith("http")) {
-             html += `<a href="${link}" target="_blank">Click here for more</a>`;
-           }
-           html += `</div>`;
-        }
-      });
-      return html;
-    }
   </script>
 </body>
 </html>
