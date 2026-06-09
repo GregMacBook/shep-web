@@ -117,7 +117,7 @@
     let allData = [];
     const annualAppealItems = ["MOTHERS' DAY", "MOTHER'S DAY", "FATHERS' DAY", "FATHER'S DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
     
-    // UPDATED: Production Endpoint API mapping integration
+    // Production Endpoint API mapping integration
     const scriptUrlBase = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
     const statusJsonUrl = "https://raw.githubusercontent.com/gregmacbook/shep-web/main/status.json";
 
@@ -334,12 +334,14 @@
                 if(box.children.length === 0) box.innerText = "No testimonials found.";
               }).catch(err => { document.getElementById('testimonial-box').innerText = "Error loading testimonials."; });
 
-          // 5. MONETARY DONATIONS: Refactored with strict structural link breakouts
+          // 5. MONETARY DONATIONS: Fixed async dynamic targetUrl injection
           } else if (name === "MONETARY DONATIONS") {
              let targetUrl = 'https://tinyurl.com/SHEPDonation'; 
              if (allData && allData.length > 0) {
                let foundRow = allData.find(r => r[0] && r[0].toString().toUpperCase().trim() === 'DONATIONFORMURL');
-               if (foundRow && foundRow[1]) targetUrl = foundRow[1].toString().trim();
+               if (foundRow && foundRow[1]) {
+                 targetUrl = foundRow[1].toString().trim();
+               }
              }
 
              display.innerHTML = `
@@ -371,82 +373,4 @@
                 
                 if (name === "WHO WE HELP") {
                   var orgLinkHtml = (colCLink.toLowerCase().includes('http')) 
-                                    ? `<br><a href="${colCLink}" target="_blank" rel="noopener noreferrer" class="visit-org-btn">Visit Website</a>` 
-                                    : "";
-                  
-                  textHtml = `<div class="appeal-text-side">
-                                <div class="appeal-text"><h3>${rName}</h3>${formatText(r[1]||'')} ${orgLinkHtml}</div>
-                              </div>`;
-                } else {
-                  if (colCLink.toLowerCase().includes('http') && !colCLink.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)/) && !colCLink.toLowerCase().includes('drive.google')) {
-                    // Refactored Map Pin element to a native anchor string
-                    pinHtml = `<a href="${colCLink}" target="_blank" rel="noopener noreferrer" class="location-pin">📍</a>`;
-                  } else if (colCLink) {
-                    var assetLinks = colCLink.split(',');
-                    if (assetLinks.length > 1) {
-                      mediaGalleryHtml = '<div class="media-gallery-wrapper">';
-                      
-                      var countIndex = 0;
-                      assetLinks.forEach(item => {
-                        var rawItem = item.trim();
-                        var captionText = "School Donation"; 
-                        var finalUrl = rawItem;
-
-                        if (rawItem.includes(" - ")) {
-                          var parts = rawItem.split(" - ");
-                          captionText = parts[0].trim();
-                          finalUrl = parts[1].trim();
-                        } else {
-                          if (rawItem.toLowerCase().includes("wpuvlvflo6ywb1uj0np4noasd20emqpa")) captionText = "Mercedes College";
-                          if (rawItem.toLowerCase().includes("13ajfdkbpnqfmh_3v3efdfyouxvuiwsg")) captionText = "Cannington Senior High School";
-                          
-                          if (name === "WAYS YOU CAN HELP") {
-                            captionText = (countIndex === 0) ? "Mum and Bub 70x70 cms" : "Toiletry Bags 35x35cms";
-                          }
-                        }
-                        
-                        mediaGalleryHtml += `<figure class="gallery-figure">
-                                               <img src="${getImgUrl(finalUrl, false)}" class="poster-img-side">
-                                               <figcaption class="figure-caption">${captionText}</figcaption>
-                                             </figure>`;
-                        countIndex++;
-                      });
-                      mediaGalleryHtml += '</div>';
-                    } else {
-                      mediaGalleryHtml = `<img src="${getImgUrl(colCLink, false)}" class="poster-img-side)">`;
-                    }
-                  }
-                  
-                  var linkUrl = r[3] ? r[3].toString().trim() : "";
-                  // Refactored View Poster link to a native anchor string
-                  var linkHtml = (isAppeal && linkUrl.length > 5) 
-                                 ? `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="action-link-btn">View Poster</a>` 
-                                 : "";
-                  
-                  textHtml = `<div class="appeal-text-side">
-                                <div class="appeal-text"><h3>${rName}</h3>${formatText(r[1]||'')} ${linkHtml}</div>
-                                ${pinHtml}
-                              </div>`;
-                }
-                
-                if (mediaGalleryHtml.includes("media-gallery-wrapper")) {
-                  card.style.flexDirection = "column";
-                  card.innerHTML = textHtml + mediaGalleryHtml;
-                } else {
-                  card.innerHTML = textHtml + mediaGalleryHtml;
-                }
-                
-                display.appendChild(card);
-              }
-            });
-          }
-        };
-        tabContainer.appendChild(btn);
-      });
-      if (tabContainer.firstChild) tabContainer.firstChild.click();
-    }
-
-    checkStatusAndLoad();
-  </script>
-</body>
-</html>
+                                    ? `<br><a href="${colCLink}" target="_blank" rel="noopener noreferrer" class="visit-org-btn">
