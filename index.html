@@ -37,6 +37,8 @@
     .location-pin { font-size: 1.6em; margin-left: 15px; padding: 5px; transition: transform 0.2s; display: inline-block; text-decoration: none; cursor: pointer; }
     .location-pin:hover { transform: scale(1.2); }
     
+    .commentary-box { background: #fff; padding: 25px; border-radius: 15px; border-left: 10px solid #916bbf; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 25px; color: #4a4e69; line-height: 1.7; max-width: 900px; word-wrap: break-word; }
+    
     /* Responsive grid columns */
     .collection-grid { display: flex; gap: 15px; flex-wrap: wrap; width: 100%; box-sizing: border-box; }
     
@@ -160,7 +162,7 @@
     function formatText(text) {
       if (!text) return "";
       let txt = text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      if (document.getElementById('tab-title').innerText.toUpperCase().trim() === "CONTACT SHEP") {
+      if (document.getElementById('tab-title').innerText.toLowerCase().trim() === "contact shep") {
         txt = txt.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi, '<a href="mailto:$1" class="contact-link" target="_blank">$1</a>');
         txt = txt.replace(/(\(?\d{2,4}\)?\s?\d{3,4}\s?\d{3,4})/gi, '<a href="tel:$1" class="contact-link" target="_blank">$1</a>');
       }
@@ -223,7 +225,6 @@
           
           var display = document.getElementById('content'); 
           display.innerHTML = ""; 
-          // FIX: Standardise comparison keys to handle hidden spacing variants safely
           var filterKey = sName.toLowerCase().trim();
           
           // 1. WHAT DO WE COLLECT
@@ -234,21 +235,30 @@
               .then(items => {
                 var box = document.getElementById('coll-box'); box.innerHTML = "";
                 var groups = {};
-                items.slice(1).forEach(function(it) { 
-                  if(!it[0] || it[0].trim() === "" || !it[1]) return;
-                  if(!groups[it[0]]) groups[it[0]] = []; 
-                  groups[it[0]].push(it); 
-                });
-                Object.keys(groups).forEach(function(g) {
-                  var col = document.createElement('div'); col.className = 'category-column';
-                  col.innerHTML = '<div class="category-header">' + g + '</div>';
-                  groups[g].forEach(function(it) {
-                    var r = document.createElement('div'); r.className = 'item-row';
-                    r.innerHTML = '<div><img src="' + getImgUrl(it[2], true) + '" class="donation-img-small"></div><div class="item-name">' + it[1] + '</div>';
-                    col.appendChild(r);
+                
+                // SAFE PARSER ENGINE: Prevents layout crashes if empty rows or mismatched columns appear
+                if (Array.isArray(items)) {
+                  items.forEach(function(it) { 
+                    if (!it || !it[0] || it[0].toString().trim() === "" || !it[1]) return;
+                    var catName = it[0].toString().trim();
+                    if (!groups[catName]) groups[catName] = []; 
+                    groups[catName].push(it); 
                   });
-                  box.appendChild(col);
-                });
+                  
+                  Object.keys(groups).forEach(function(g) {
+                    var col = document.createElement('div'); col.className = 'category-column';
+                    col.innerHTML = '<div class="category-header">' + g + '</div>';
+                    groups[g].forEach(function(it) {
+                      var itemName = it[1] ? it[1].toString().trim() : "";
+                      var imgUrlStr = it[2] ? it[2].toString().trim() : "";
+                      var r = document.createElement('div'); r.className = 'item-row';
+                      r.innerHTML = '<div><img src="' + getImgUrl(imgUrlStr, true) + '" class="donation-img-small"></div><div class="item-name">' + itemName + '</div>';
+                      col.appendChild(r);
+                    });
+                    box.appendChild(col);
+                  });
+                }
+                if (box.children.length === 0) box.innerText = "No collection items found.";
               }).catch(err => { document.getElementById('coll-box').innerText = "Error loading elements."; });
             
           // 2. WHAT WE CAN'T ACCEPT
@@ -259,21 +269,30 @@
               .then(items => {
                 var box = document.getElementById('unacceptable-box'); box.innerHTML = "";
                 var groups = {};
-                items.slice(1).forEach(function(it) { 
-                  if(!it[0] || it[0].trim() === "" || !it[1]) return;
-                  if(!groups[it[0]]) groups[it[0]] = []; 
-                  groups[it[0]].push(it); 
-                });
-                Object.keys(groups).forEach(function(g) {
-                  var col = document.createElement('div'); col.className = 'category-column unacceptable';
-                  col.innerHTML = '<div class="category-header" style="color: #d9534f; border-bottom: 2px solid #d9534f;">' + g + '</div>';
-                  groups[g].forEach(function(it) {
-                    var r = document.createElement('div'); r.className = 'item-row';
-                    r.innerHTML = '<div><img src="' + getImgUrl(it[2], true) + '" class="donation-img-small"></div><div class="item-name">' + it[1] + '</div>';
-                    col.appendChild(r);
+                
+                // SAFE PARSER ENGINE: Prevents layout crashes on mismatched unacceptable lists
+                if (Array.isArray(items)) {
+                  items.forEach(function(it) { 
+                    if (!it || !it[0] || it[0].toString().trim() === "" || !it[1]) return;
+                    var catName = it[0].toString().trim();
+                    if (!groups[catName]) groups[catName] = []; 
+                    groups[catName].push(it); 
                   });
-                  box.appendChild(col);
-                });
+                  
+                  Object.keys(groups).forEach(function(g) {
+                    var col = document.createElement('div'); col.className = 'category-column unacceptable';
+                    col.innerHTML = '<div class="category-header" style="color: #d9534f; border-bottom: 2px solid #d9534f;">' + g + '</div>';
+                    groups[g].forEach(function(it) {
+                      var itemName = it[1] ? it[1].toString().trim() : "";
+                      var imgUrlStr = it[2] ? it[2].toString().trim() : "";
+                      var r = document.createElement('div'); r.className = 'item-row';
+                      r.innerHTML = '<div><img src="' + getImgUrl(imgUrlStr, true) + '" class="donation-img-small"></div><div class="item-name">' + itemName + '</div>';
+                      col.appendChild(r);
+                    });
+                    box.appendChild(col);
+                  });
+                }
+                if (box.children.length === 0) box.innerText = "No unaccepted items listed.";
               }).catch(err => { document.getElementById('unacceptable-box').innerText = "Error loading elements."; });
             
           // 3. PICTURES GALLERY
@@ -283,49 +302,56 @@
               .then(response => response.json())
               .then(pics => {
                 var box = document.getElementById('pic-box'); box.innerHTML = "";
-                pics.slice(1).forEach(function(p) {
-                  if(!p[1]) return;
-                  var card = document.createElement('div'); card.className = 'gallery-card';
-                  card.innerHTML = '<img src="' + getImgUrl(p[1], false) + '" class="gallery-img"><div style="margin-top:10px;font-weight:bold;color:#4a4e69;">' + p[0] + '</div>';
-                  box.appendChild(card);
-                });
+                if (Array.isArray(pics)) {
+                  pics.forEach(function(p) {
+                    if (!p || !p[1]) return;
+                    var titleText = p[0] ? p[0].toString().trim() : "";
+                    var card = document.createElement('div'); card.className = 'gallery-card';
+                    card.innerHTML = '<img src="' + getImgUrl(p[1], false) + '" class="gallery-img"><div style="margin-top:10px;font-weight:bold;color:#4a4e69;">' + titleText + '</div>';
+                    box.appendChild(card);
+                  });
+                }
+                if (box.children.length === 0) box.innerText = "No gallery items found.";
               }).catch(err => { document.getElementById('pic-box').innerText = "Error loading pictures."; });
 
           // 4. TESTIMONIALS
           } else if (filterKey === "testimonials") {
-            display.innerHTML = '<div id="testimonial-box">Loading structured stories...</div>';
+            display.innerHTML = '<div id="testimonial-box">Loading stories...</div>';
             fetch(scriptUrlBase + "?action=testimonials")
               .then(res => res.json())
               .then(rows => {
                 var box = document.getElementById('testimonial-box'); box.innerHTML = "";
-                rows.slice(1).forEach(function(cols) {
-                  var senderName = cols[0] ? cols[0].trim() : "";
-                  var mediaLink = cols[1] ? cols[1].trim() : "";
-                  var storyText = cols[2] ? cols[2].trim() : "";
-                  
-                  if (!senderName && !storyText) return; 
-                  
-                  var card = document.createElement('div'); card.className = 'testimonial-card';
-                  var isVideo = senderName.toUpperCase().includes("LITTLE THINGS FOR TINY TOTS");
-                  
-                  var mediaHtml = '<div class="testimonial-media"><img src="https://i.imgur.com/oAWTWfg.png" class="testimonial-img"></div>';
-                  if (mediaLink) {
-                    if (isVideo) {
-                      mediaHtml = '<div class="testimonial-media"><iframe src="' + getVideoEmbedUrl(mediaLink) + '" class="testimonial-video" allow="autoplay"></iframe></div>';
-                    } else {
-                      mediaHtml = '<div class="testimonial-media"><img src="' + getImgUrl(mediaLink, false) + '" class="testimonial-img"></div>';
+                if (Array.isArray(rows)) {
+                  rows.slice(1).forEach(function(cols) {
+                    if (!cols) return;
+                    var senderName = cols[0] ? cols[0].toString().trim() : "";
+                    var mediaLink = cols[1] ? cols[1].toString().trim() : "";
+                    var storyText = cols[2] ? cols[2].toString().trim() : "";
+                    
+                    if (!senderName && !storyText) return; 
+                    
+                    var card = document.createElement('div'); card.className = 'testimonial-card';
+                    var isVideo = senderName.toUpperCase().includes("LITTLE THINGS FOR TINY TOTS");
+                    
+                    var mediaHtml = '<div class="testimonial-media"><img src="https://i.imgur.com/oAWTWfg.png" class="testimonial-img"></div>';
+                    if (mediaLink) {
+                      if (isVideo) {
+                        mediaHtml = '<div class="testimonial-media"><iframe src="' + getVideoEmbedUrl(mediaLink) + '" class="testimonial-video" allow="autoplay"></iframe></div>';
+                      } else {
+                        mediaHtml = '<div class="testimonial-media"><img src="' + getImgUrl(mediaLink, false) + '" class="testimonial-img"></div>';
+                      }
                     }
-                  }
-                  
-                  card.innerHTML = mediaHtml + 
-                                   '<div class="testimonial-body">' +
-                                     '<div class="testimonial-sender">' + senderName + '</div>' +
-                                     '<div>' + formatText(storyText).replace(/\n/g, '<br>') + '</div>' +
-                                   '</div>';
-                                   
-                  box.appendChild(card);
-                });
-                if(box.children.length === 0) box.innerText = "No testimonials found.";
+                    
+                    card.innerHTML = mediaHtml + 
+                                     '<div class="testimonial-body">' +
+                                       '<div class="testimonial-sender">' + senderName + '</div>' +
+                                       '<div>' + formatText(storyText).replace(/\n/g, '<br>') + '</div>' +
+                                     '</div>';
+                                     
+                    box.appendChild(card);
+                  });
+                }
+                if (box.children.length === 0) box.innerText = "No testimonials found.";
               }).catch(err => { document.getElementById('testimonial-box').innerText = "Error loading testimonials."; });
 
           // 5. MONETARY DONATIONS
@@ -359,7 +385,6 @@
               var isAppeal = annualAppealItems.includes(rName.toUpperCase());
               var rowKey = isAppeal ? "annual appeals" : rName.toLowerCase().trim();
               
-              // REPAIRED ENGINE: Flexible lookup engine maps spacing variants flawlessly
               if (rowKey === filterKey) {
                 var card = document.createElement('div'); card.className = 'appeal-card';
                 var textHtml = "";
@@ -440,7 +465,11 @@
         };
         tabContainer.appendChild(btn);
       });
-      if (tabContainer.firstChild) tabContainer.firstChild.click();
+      
+      // Automatic selection block
+      if (tabContainer.firstChild) {
+        tabContainer.firstChild.click();
+      }
     }
 
     loadData();
