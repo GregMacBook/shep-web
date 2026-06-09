@@ -9,7 +9,6 @@
     .tab.active { background: #916bbf; }
     .page-panel { display: none; padding: 20px; max-width: 900px; margin: auto; text-align: left; }
     .page-panel.active { display: block; }
-    .item-img { width: 60px; height: 60px; object-fit: cover; }
   </style>
 </head>
 <body>
@@ -18,6 +17,8 @@
 
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbycfZErUOOIJE_QEfj0SYZLz6qPK6hHMxQ5jxgLFwfHiSRC-22rmvrj61zleoaduA/exec";
+    
+    // Exact mapping for your 13 requested tabs
     const tabMap = {
       "OUR MISSION": ["OUR MISSION"], 
       "ABOUT US": ["ABOUT US"],
@@ -51,24 +52,27 @@
           panel.classList.add('active');
           
           if(panel.innerHTML === "") {
-             // Find all rows that match the items mapped to this tab
-             var filtered = data.filter(r => tabMap[tName].includes(r[0]));
-             panel.innerHTML = renderSmart(tName, filtered);
+             // Logic to capture all content, including blank rows for WHO WE HELP (11-25) and CONTACT SHEP (53-56)
+             let inSection = false;
+             let html = "<h3>" + tName + "</h3>";
+             data.forEach(it => {
+                let rowCategory = it[0] ? it[0].toString().trim() : "";
+                if (tabMap[tName].includes(rowCategory)) inSection = true;
+                else if (rowCategory !== "" && !tabMap[tName].includes(rowCategory)) inSection = false;
+
+                if (inSection && it[1]) {
+                   let text = it[1];
+                   let link = it[2] || "";
+                   html += `<p>${text} ${link.startsWith('http') ? '<br><a href="'+link+'" target="_blank">Click here</a>' : ''}</p>`;
+                }
+             });
+             panel.innerHTML = html;
           }
         };
         container.appendChild(btn);
       });
       container.firstChild.click();
     });
-
-    function renderSmart(tName, items) {
-      let html = "<h3>" + tName + "</h3>";
-      items.forEach(it => {
-        let text = it[1] || ""; let link = it[2] || "";
-        html += `<p>${it[0] !== tName ? '<strong>'+it[0]+':</strong> ' : ''} ${text} ${link.startsWith('http') ? '<br><a href="'+link+'" target="_blank">Click here</a>' : ''}</p>`;
-      });
-      return html;
-    }
   </script>
 </body>
 </html>
