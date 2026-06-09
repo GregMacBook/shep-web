@@ -8,11 +8,18 @@
     .tab { width: 120px; height: 50px; background: #ac8ad4; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 0.7em; font-weight: bold; }
     .tab.active { background: #916bbf; }
     
-    /* The Content Container with Curly Borders */
     .page-panel { display: none; padding: 20px; max-width: 900px; margin: auto; text-align: left; }
     .page-panel.active { display: block; }
-    .content-box { border: 2px solid #78a198; border-radius: 20px; padding: 15px; margin-bottom: 10px; }
-    .item-img { width: 150px; }
+    
+    /* Curly Green Brackets Style */
+    .content-box { 
+        border: 3px solid #78a198; 
+        border-radius: 25px; 
+        padding: 20px; 
+        margin-bottom: 15px; 
+        background: white;
+    }
+    .item-img { width: 150px; display: block; margin: 10px 0; }
   </style>
 </head>
 <body>
@@ -55,38 +62,40 @@
           panel.classList.add('active');
           
           if(panel.innerHTML === "") {
-             var filtered = data.filter(row => tabMap[tName].includes(row[0] ? row[0].toString().trim() : ""));
-             panel.innerHTML = renderSmart(tName, filtered);
+             let html = "<h3>" + tName + "</h3>";
+             let currentCat = "";
+             
+             data.forEach(it => {
+                // If Column A has text, it's a new category
+                if(it[0] && it[0].toString().trim() !== "") {
+                    currentCat = it[0].toString().trim();
+                }
+                
+                // If the current row belongs to our tab
+                if (tabMap[tName].includes(currentCat)) {
+                   let text = it[1] || "";
+                   let link = it[2] || "";
+                   if (text || link) {
+                      html += `<div class="content-box">`;
+                      if (text.startsWith("http")) {
+                        html += `<img src="${text}" class="item-img">`;
+                      } else {
+                        html += `<p>${text}</p>`;
+                      }
+                      if (link.startsWith("http")) {
+                        html += `<a href="${link}" target="_blank">Click here for more</a>`;
+                      }
+                      html += `</div>`;
+                   }
+                }
+             });
+             panel.innerHTML = html || "<p>Coming soon...</p>";
           }
         };
         container.appendChild(btn);
       });
       container.firstChild.click();
     });
-
-    // The function that was missing!
-    function renderSmart(tName, items) {
-      let html = "<h3>" + tName + "</h3>";
-      if (items.length === 0) return html + "<p>Coming soon...</p>";
-      
-      items.forEach(it => {
-        let content = it[1] || "";
-        let link = it[2] || "";
-        if (content || link) {
-           html += `<div class="content-box">`;
-           if (content.toString().startsWith("http")) {
-             html += `<img src="${content}" class="item-img">`;
-           } else {
-             html += `<p>${content}</p>`;
-           }
-           if (link.startsWith("http")) {
-             html += `<a href="${link}" target="_blank">Click here for more</a>`;
-           }
-           html += `</div>`;
-        }
-      });
-      return html;
-    }
   </script>
 </body>
 </html>
