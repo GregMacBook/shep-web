@@ -53,15 +53,16 @@
 
 // REPLACE your current renderMenu function in index.html with this:
 
+// REPLACE your renderMenu function with this structure:
     function renderMenu(data) {
       var tabContainer = document.getElementById('tabs');
       tabContainer.innerHTML = "";
       tabContainer.style.display = 'flex';
       
-      // Dynamic: Scan Column A for all unique section names
-      var sections = [...new Set(data.map(r => r[0]).filter(n => n && n !== "DONATIONFORMURL"))];
+      // Use your actual list of tabs here
+      var allTabs = ["WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "PICTURES", "TESTIMONIALS", "MONETARY DONATIONS", /* ... add your other 8 tabs here */];
       
-      sections.forEach(sName => {
+      allTabs.forEach(sName => {
         var btn = document.createElement('button'); btn.className = 'tab'; btn.innerText = sName;
         btn.onclick = function() {
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -69,39 +70,26 @@
           document.getElementById('tab-title').innerText = sName;
           
           var display = document.getElementById('content');
-          display.innerHTML = '<div class="collection-grid" id="coll-box">Loading...</div>';
+          display.innerHTML = '<div id="main-content">Loading content...</div>';
           
-          // Pull data specifically for "What Do We Collect"
-          fetch(scriptUrlBase + "?action=collections")
-            .then(res => res.json())
-            .then(items => {
-              var box = document.getElementById('coll-box'); box.innerHTML = "";
-              var groups = {};
-              
-              // Memory tracker to fill in the "Age Appropriate" blank category rows
-              var activeCat = "";
-              items.slice(1).forEach(it => {
-                if (it[0] && it[0].toString().trim() !== "") activeCat = it[0];
-                if (!it[1]) return; // Only rows with item names
-                if (!groups[activeCat]) groups[activeCat] = [];
-                groups[activeCat].push(it);
-              });
-              
-              Object.keys(groups).forEach(g => {
-                var col = document.createElement('div'); col.className = 'category-column';
-                col.innerHTML = '<div class="category-header">' + g + '</div>';
-                groups[g].forEach(it => {
-                  var r = document.createElement('div'); r.className = 'item-row';
-                  r.innerHTML = '<div><img src="' + getImgUrl(it[2], true) + '" class="donation-img-small"></div><div class="item-name">' + it[1] + '</div>';
-                  col.appendChild(r);
-                });
-                box.appendChild(col);
-              });
-            });
+          // Route to the correct data based on the TAB NAME
+          switch(sName) {
+            case "WHAT DO WE COLLECT":
+              fetchDataAndRenderGrid("collections"); 
+              break;
+            case "WHAT WE CAN'T ACCEPT":
+              fetchDataAndRenderGrid("unacceptable");
+              break;
+            case "PICTURES":
+              renderPictures();
+              break;
+            // Add other cases here to match your 13 tabs...
+            default:
+              document.getElementById('main-content').innerHTML = "Content for " + sName + " coming soon.";
+          }
         };
         tabContainer.appendChild(btn);
       });
-      if (tabContainer.firstChild) tabContainer.firstChild.click();
     }
     loadData();
   </script>
