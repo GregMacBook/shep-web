@@ -51,12 +51,17 @@
         .catch(err => { document.getElementById('content').innerText = "Error loading data."; });
     }
 
+// REPLACE your current renderMenu function in index.html with this:
+
     function renderMenu(data) {
       var tabContainer = document.getElementById('tabs');
-      var uniqueSections = ["What Do We Collect", "What We Can't Accept"];
+      tabContainer.innerHTML = "";
       tabContainer.style.display = 'flex';
       
-      uniqueSections.forEach(sName => {
+      // Dynamic: Scan Column A for all unique section names
+      var sections = [...new Set(data.map(r => r[0]).filter(n => n && n !== "DONATIONFORMURL"))];
+      
+      sections.forEach(sName => {
         var btn = document.createElement('button'); btn.className = 'tab'; btn.innerText = sName;
         btn.onclick = function() {
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -66,17 +71,22 @@
           var display = document.getElementById('content');
           display.innerHTML = '<div class="collection-grid" id="coll-box">Loading...</div>';
           
-          var action = (sName === "What Do We Collect") ? "collections" : "unacceptable";
-          fetch(scriptUrlBase + "?action=" + action)
+          // Pull data specifically for "What Do We Collect"
+          fetch(scriptUrlBase + "?action=collections")
             .then(res => res.json())
             .then(items => {
               var box = document.getElementById('coll-box'); box.innerHTML = "";
               var groups = {};
+              
+              // Memory tracker to fill in the "Age Appropriate" blank category rows
+              var activeCat = "";
               items.slice(1).forEach(it => {
-                if (!it[1]) return; // Only process rows with an Item Name
-                if (!groups[it[0]]) groups[it[0]] = [];
-                groups[it[0]].push(it);
+                if (it[0] && it[0].toString().trim() !== "") activeCat = it[0];
+                if (!it[1]) return; // Only rows with item names
+                if (!groups[activeCat]) groups[activeCat] = [];
+                groups[activeCat].push(it);
               });
+              
               Object.keys(groups).forEach(g => {
                 var col = document.createElement('div'); col.className = 'category-column';
                 col.innerHTML = '<div class="category-header">' + g + '</div>';
@@ -91,7 +101,7 @@
         };
         tabContainer.appendChild(btn);
       });
-      tabContainer.firstChild.click();
+      if (tabContainer.firstChild) tabContainer.firstChild.click();
     }
     loadData();
   </script>
