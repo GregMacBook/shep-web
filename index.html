@@ -63,11 +63,6 @@
     .testimonial-body { flex-grow: 1; color: #4a4e69; line-height: 1.6; }
     .testimonial-sender { color: #916bbf; font-size: 1.15em; font-weight: 700; margin: 0 0 10px 0; border-bottom: 1px dashed #ac8ad4; padding-bottom: 5px; }
 
-    /* Lockdown Screen Style */
-    .lockdown-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; text-align: center; color: #4a4e69; padding: 20px; }
-    .lockdown-title { font-size: 2.5em; color: #916bbf; margin-bottom: 15px; font-weight: bold; }
-    .lockdown-text { font-size: 1.2em; max-width: 600px; line-height: 1.6; }
-
     .contact-link { color: #916bbf; text-decoration: none; font-weight: bold; transition: 0.2s; }
     .contact-link:hover { color: #ac8ad4; text-decoration: underline; }
     .visit-org-btn { display: inline-block; margin-top: 10px; padding: 8px 16px; background: #916bbf; color: white; border-radius: 18px; text-decoration: none; font-weight: bold; font-size: 0.85em; transition: 0.2s; }
@@ -75,6 +70,7 @@
 
     /* MOBILE VIEWPORT STYLES */
     @media (max-width: 768px) { 
+      /* STAGE OVERRIDE: Enforces vertical menu stacking on all phones */
       .nav-menu { flex-direction: column !important; padding: 10px 15px !important; gap: 6px !important; width: 100% !important; }
       .tab { width: 100% !important; text-align: center !important; padding: 10px 15px !important; font-size: 0.75em !important; box-sizing: border-box !important; display: block !important; }
       
@@ -104,49 +100,13 @@
   <div class="main-container">
     <h1 id="tab-title">SHEP</h1>
     <div class="divider"></div>
-    <div id="content">Checking site status...</div>
+    <div id="content">Syncing data...</div>
   </div>
 
   <script>
     let allData = [];
     const annualAppealItems = ["MOTHERS' DAY", "MOTHER'S DAY", "FATHERS' DAY", "FATHER'S DAY", "EASTER", "CHRISTMAS", "WINTER", "HAMPER"];
     const scriptUrlBase = "https://script.google.com/macros/s/AKfycbwvHOgeop6wQkoWzzww3QGGttQv3UsZTlyipY3O9vAtAir1Ra2abUUv_d4RfXoJSDOa/exec";
-    
-    // CONFIG: Swapped to raw.githubusercontent.com for clean text parsing
-    const statusJsonUrl = "https://raw.githubusercontent.com/gregmacbook/shep-web/main/status.json";
-
-    function checkStatusAndLoad() {
-      // FIX: Append timestamp parameter (?t=...) to force GitHub's servers to ignore the active cache pool
-      fetch(statusJsonUrl + "?t=" + new Date().getTime())
-        .then(response => response.json())
-        .then(config => {
-          if (config && config.status && config.status.toUpperCase().trim() === "OFF") {
-            renderLockdownScreen();
-          } else {
-            loadData();
-          }
-        })
-        .catch(err => {
-          console.error("Status check failed, defaulting to active:", err);
-          loadData(); // Fallback to load site if configuration is unreachable
-        });
-    }
-
-    function renderLockdownScreen() {
-      // Strip navigation tabs
-      document.getElementById('tabs').style.display = 'none';
-      document.getElementById('tab-title').innerText = "System Maintenance";
-      
-      var display = document.getElementById('content');
-      display.innerHTML = `
-        <div class="lockdown-container">
-          <div class="lockdown-title">Site Temporarily Offline</div>
-          <div class="lockdown-text">
-            <strong>Safe Haven Essential Packs (SHEP)</strong> is currently updating its content database to better serve the community. We will be back online shortly!
-          </div>
-        </div>
-      `;
-    }
 
     function formatText(text) {
       if (!text) return "";
@@ -183,7 +143,6 @@
     }
 
     function loadData() {
-      document.getElementById('tabs').style.display = 'flex'; // Ensure visible
       fetch(scriptUrlBase)
         .then(response => response.json())
         .then(data => { 
@@ -441,8 +400,7 @@
       if (tabContainer.firstChild) tabContainer.firstChild.click();
     }
 
-    // Trigger cache-busting entry sequence on application initialisation
-    checkStatusAndLoad();
+    loadData();
   </script>
 </body>
 </html>
