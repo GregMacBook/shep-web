@@ -2,61 +2,81 @@
 <html lang="en">
 <head>
   <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Ensure all 4 columns fit */
-    .collection-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; }
-    @media (max-width: 900px) { .collection-grid { grid-template-columns: 1fr; } }
+    /* Restore the layout that fits 4 columns */
+    .collection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; width: 100%; }
+    .category-column { background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .category-header { color: #916bbf; border-bottom: 2px solid #ac8ad4; margin-bottom: 12px; text-align: center; font-weight: bold; text-transform: uppercase; }
+    .nav-menu { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 20px; }
+    .tab { padding: 10px 20px; background: #ac8ad4; color: white; border: none; border-radius: 20px; cursor: pointer; text-transform: uppercase; font-weight: bold; }
+    .tab.active { background: #916bbf; }
+    .donation-img-small { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; }
+    .item-row { display: flex; align-items: center; margin-bottom: 8px; }
   </style>
 </head>
 <body>
-  <div id="tabs"></div>
-  <h1 id="tab-title">SHEP</h1>
-  <div id="content">Loading...</div>
+  <div id="tabs" class="nav-menu"></div>
+  <h1 id="tab-title" style="text-align: center;">SHEP</h1>
+  <div id="content" style="padding: 20px;">Loading portal...</div>
 
   <script>
     const scriptUrlBase = "https://script.google.com/macros/s/AKfycbycfZErUOOIJE_QEfj0SYZLz6qPK6hHMxQ5jxgLFwfHiSRC-22rmvrj61zleoaduA/exec";
 
-    // 1. DYNAMICALLY LOAD ALL TABS
     function loadData() {
       fetch(scriptUrlBase)
         .then(res => res.json())
         .then(data => {
+          // Dynamically gather all unique tab names from Column A
           var tabs = [...new Set(data.map(r => r[0]).filter(n => n && n !== "DONATIONFORMURL"))];
-          renderMenu(tabs, data);
+          renderTabs(tabs, data);
         });
     }
 
-    function renderMenu(tabs, allData) {
-      var tabContainer = document.getElementById('tabs');
-      tabs.forEach(sName => {
-        var btn = document.createElement('button'); btn.innerText = sName;
+    function renderTabs(tabs, allData) {
+      var container = document.getElementById('tabs');
+      tabs.forEach(tabName => {
+        var btn = document.createElement('button');
+        btn.className = 'tab'; btn.innerText = tabName;
         btn.onclick = function() {
-          document.getElementById('tab-title').innerText = sName;
-          // Route by tab name
-          if (sName === "MONETARY DONATIONS") {
-            renderDonations(allData);
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('tab-title').innerText = tabName;
+          
+          if (tabName === "MONETARY DONATIONS") {
+            var donateRow = allData.find(r => r[0] === 'DONATIONFORMURL');
+            document.getElementById('content').innerHTML = '<center><h3>Your Support Matters</h3><a href="' + (donateRow ? donateRow[1] : "#") + '" target="_blank" style="padding: 15px 30px; background: #84a59d; color: white; border-radius: 20px; text-decoration: none;">Complete Donation</a></center>';
           } else {
-            renderContent(sName);
+            renderGrid(tabName);
           }
         };
-        tabContainer.appendChild(btn);
+        container.appendChild(btn);
       });
-      tabContainer.firstChild.click(); // Load first tab
+      container.firstChild.click();
     }
 
-    // 2. PATCHED DONATION URL FETCH
-    function renderDonations(allData) {
-      var donationRow = allData.find(r => r[0] && r[0].toString().toUpperCase() === 'DONATIONFORMURL');
-      var url = donationRow ? donationRow[1] : "https://tinyurl.com/SHEPDonation";
-      document.getElementById('content').innerHTML = '<a href="'+url+'" target="_blank">Complete Donation</a>';
-    }
-
-    // 3. STABLE RENDER ENGINE (as it was last night)
-    function renderContent(tabName) {
+    function renderGrid(tabName) {
+      document.getElementById('content').innerHTML = '<div class="collection-grid" id="grid"></div>';
       fetch(scriptUrlBase + "?action=" + tabName)
         .then(res => res.json())
         .then(items => {
-          // ... [Your stable rendering logic here] ...
+          var grid = document.getElementById('grid');
+          var groups = {};
+          items.forEach(it => {
+            if (!groups[it[0]]) groups[it[0]] = [];
+            groups[it[0]].push(it);
+          });
+          Object.keys(groups).forEach(g => {
+            var col = document.createElement('div'); col.className = 'category-column';
+            col.innerHTML = '<div class="category-header">' + g + '</div>';
+            groups[g].forEach(it => {
+              if (it[1]) {
+                col.innerHTML += '<div class="item-row"><img src="' + (it[2] || 'https://i.imgur.com/oAWTWfg.png') + '" class="donation-img-small"><span style="margin-left:10px">' + it[1] + '</span></div>';
+              }
+            });
+            grid.appendChild(col);
+          });
         });
     }
     loadData();
