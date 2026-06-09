@@ -232,16 +232,20 @@
                 var groups = {};
                 
                 if (Array.isArray(items) && items.length > 0) {
-                  // SELF-HEALING MAPPER: Dynamically maps columns based on header titles
                   var headers = items[0].map(h => h ? h.toString().toLowerCase().trim() : "");
                   var catIdx = headers.indexOf("category");
-                  var itemIdx = headers.indexOf("item");
-                  var imgIdx = headers.indexOf("image url");
+                  var itemIdx = headers.indexOf("item name");
+                  if (itemIdx === -1) itemIdx = headers.indexOf("item");
                   
-                  // Fallbacks if precise text headers differ
+                  // MULTI-FALLBACK SEARCH: Looks for "share url", "image url", or uses the 4th column if available
+                  var imgIdx = headers.indexOf("share url");
+                  if (imgIdx === -1) imgIdx = headers.indexOf("image url");
+                  if (imgIdx === -1) imgIdx = headers.indexOf("url");
+                  
+                  // Set safe hard indices if headings are totally blank or missing
                   if (catIdx === -1) catIdx = 0;
                   if (itemIdx === -1) itemIdx = 1;
-                  if (imgIdx === -1) imgIdx = 2;
+                  if (imgIdx === -1) imgIdx = (items[0].length >= 4) ? 3 : 2; 
 
                   items.slice(1).forEach(function(it) { 
                     if (!it || !it[catIdx] || it[catIdx].toString().trim() === "") return;
@@ -255,7 +259,13 @@
                     col.innerHTML = '<div class="category-header">' + g + '</div>';
                     groups[g].forEach(function(it) {
                       var itemName = it[itemIdx] ? it[itemIdx].toString().trim() : "";
+                      
+                      // Fallback visual safety if a row skips column C entirely
                       var imgUrlStr = it[imgIdx] ? it[imgIdx].toString().trim() : "";
+                      if (!imgUrlStr && it[2] && it[2].toString().toLowerCase().includes("http")) {
+                        imgUrlStr = it[2].toString().trim();
+                      }
+                      
                       var r = document.createElement('div'); r.className = 'item-row';
                       r.innerHTML = '<div><img src="' + getImgUrl(imgUrlStr, true) + '" class="donation-img-small"></div><div class="item-name">' + itemName + '</div>';
                       col.appendChild(r);
@@ -276,15 +286,18 @@
                 var groups = {};
                 
                 if (Array.isArray(items) && items.length > 0) {
-                  // SELF-HEALING MAPPER: Dynamically maps columns for unacceptable list
                   var headers = items[0].map(h => h ? h.toString().toLowerCase().trim() : "");
                   var catIdx = headers.indexOf("category");
-                  var itemIdx = headers.indexOf("item");
-                  var imgIdx = headers.indexOf("image url");
+                  var itemIdx = headers.indexOf("item name");
+                  if (itemIdx === -1) itemIdx = headers.indexOf("item");
+                  
+                  var imgIdx = headers.indexOf("share url");
+                  if (imgIdx === -1) imgIdx = headers.indexOf("image url");
+                  if (imgIdx === -1) imgIdx = headers.indexOf("url");
                   
                   if (catIdx === -1) catIdx = 0;
                   if (itemIdx === -1) itemIdx = 1;
-                  if (imgIdx === -1) imgIdx = 2;
+                  if (imgIdx === -1) imgIdx = (items[0].length >= 4) ? 3 : 2;
 
                   items.slice(1).forEach(function(it) { 
                     if (!it || !it[catIdx] || it[catIdx].toString().trim() === "") return;
@@ -299,6 +312,10 @@
                     groups[g].forEach(function(it) {
                       var itemName = it[itemIdx] ? it[itemIdx].toString().trim() : "";
                       var imgUrlStr = it[imgIdx] ? it[imgIdx].toString().trim() : "";
+                      if (!imgUrlStr && it[2] && it[2].toString().toLowerCase().includes("http")) {
+                        imgUrlStr = it[2].toString().trim();
+                      }
+                      
                       var r = document.createElement('div'); r.className = 'item-row';
                       r.innerHTML = '<div><img src="' + getImgUrl(imgUrlStr, true) + '" class="donation-img-small"></div><div class="item-name">' + itemName + '</div>';
                       col.appendChild(r);
