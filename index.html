@@ -7,35 +7,15 @@
   <style>
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fcfaff; }
     body { display: flex; flex-direction: column; overflow-x: hidden; }
-    
-    /* Header & Navigation layout */
     .header-wrapper { background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; padding: 10px 0 0 0; }
     .logo-header { padding: 5px; text-align: center; }
-    
-    /* Navigation menu */
     .nav-menu { display: flex; gap: 10px; padding: 12px 20px; width: 100%; box-sizing: border-box; justify-content: center; flex-wrap: wrap; }
-    
     .tab { padding: 10px 20px; background: #ac8ad4; border-radius: 20px; cursor: pointer; transition: 0.3s; font-weight: 600; color: #fff; text-transform: uppercase; font-size: 0.75em; letter-spacing: 0.5px; display: inline-block; border: none; }
     .tab.active { background: #916bbf; color: #fff; transform: scale(1.03); box-shadow: 0 2px 8px rgba(145, 107, 191, 0.3); }
-    
     .main-container { flex-grow: 1; padding: 30px 40px; box-sizing: border-box; min-width: 0; width: 100%; max-width: 1200px; margin: 0 auto; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
-    
-    /* Standard Layout components */
-    .appeal-card { background: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 12px; border-left: 8px solid #ac8ad4; display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; justify-content: space-between; width: 100%; box-sizing: border-box; }
-    .appeal-text-side { flex: 1; min-width: 300px; display: flex; justify-content: space-between; align-items: flex-start; flex-direction: column; }
-    .appeal-text { font-size: 1.1em; line-height: 1.6; color: #333; flex-grow: 1; white-space: pre-wrap; width: 100%; }
-    .appeal-text h3 { margin-top: 0; margin-bottom: 8px; color: #4a4e69; font-size: 1.4em; }
-    
-    .media-gallery-wrapper { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px; width: 100%; box-sizing: border-box; }
-    .gallery-figure { margin: 0; padding: 10px; background: #faf8ff; border: 1px solid #eae5f5; border-radius: 8px; text-align: center; width: calc(50% - 10px); min-width: 260px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); box-sizing: border-box; }
-    
-    .poster-img-side { width: 100%; max-width: 350px; height: auto; display: block; margin: 0 auto; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); object-fit: contain; }
-    .figure-caption { font-size: 0.9em; font-weight: 600; color: #6b5b95; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-    
     .collection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; width: 100%; box-sizing: border-box; }
     .category-column { background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 5px; box-sizing: border-box; width: 100%; }
-    .category-column.unacceptable { border-top: 4px solid #d9534f; }
     .category-header { color: #916bbf; border-bottom: 2px solid #ac8ad4; margin-bottom: 12px; text-align: center; font-weight: bold; font-size: 0.9em; padding-bottom: 5px; min-height: 35px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
     .item-row { display: flex; align-items: center; margin-bottom: 8px; padding: 6px; border-bottom: 1px solid #f8f6fa; }
     .donation-img-small { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; background: #eee; flex-shrink: 0; }
@@ -53,21 +33,67 @@
     <div id="content">Loading portal...</div>
   </div>
   <script>
-    // UPDATE THIS URL AFTER DEPLOYING NEW VERSION!
     const scriptUrlBase = "https://script.google.com/macros/s/AKfycbycfZErUOOIJE_QEfj0SYZLz6qPK6hHMxQ5jxgLFwfHiSRC-22rmvrj61zleoaduA/exec";
 
     function getImgUrl(url, isSmall) {
       if (!url || url.toString().trim() === "") return 'https://i.imgur.com/oAWTWfg.png';
       try {
         var str = url.toString().trim();
-        if (str.toLowerCase().includes('imgur.com') || str.toLowerCase().includes('postimg.cc') || str.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)/)) return str;
         var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
         return match ? 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=' + (isSmall ? 'w120' : 's1000') : str;
       } catch(e) { return 'https://i.imgur.com/oAWTWfg.png'; }
     }
-    
-    // ... [Rest of the render functions remain identical] ...
-    // Make sure to keep the loadData and renderMenu logic intact from the previous stable file!
+
+    function loadData() {
+      fetch(scriptUrlBase)
+        .then(res => res.json())
+        .then(data => { renderMenu(data); })
+        .catch(err => { document.getElementById('content').innerText = "Error loading data."; });
+    }
+
+    function renderMenu(data) {
+      var tabContainer = document.getElementById('tabs');
+      var uniqueSections = ["What Do We Collect", "What We Can't Accept"];
+      tabContainer.style.display = 'flex';
+      
+      uniqueSections.forEach(sName => {
+        var btn = document.createElement('button'); btn.className = 'tab'; btn.innerText = sName;
+        btn.onclick = function() {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('tab-title').innerText = sName;
+          
+          var display = document.getElementById('content');
+          display.innerHTML = '<div class="collection-grid" id="coll-box">Loading...</div>';
+          
+          var action = (sName === "What Do We Collect") ? "collections" : "unacceptable";
+          fetch(scriptUrlBase + "?action=" + action)
+            .then(res => res.json())
+            .then(items => {
+              var box = document.getElementById('coll-box'); box.innerHTML = "";
+              var groups = {};
+              items.slice(1).forEach(it => {
+                if (!it[1]) return; // Only process rows with an Item Name
+                if (!groups[it[0]]) groups[it[0]] = [];
+                groups[it[0]].push(it);
+              });
+              Object.keys(groups).forEach(g => {
+                var col = document.createElement('div'); col.className = 'category-column';
+                col.innerHTML = '<div class="category-header">' + g + '</div>';
+                groups[g].forEach(it => {
+                  var r = document.createElement('div'); r.className = 'item-row';
+                  r.innerHTML = '<div><img src="' + getImgUrl(it[2], true) + '" class="donation-img-small"></div><div class="item-name">' + it[1] + '</div>';
+                  col.appendChild(r);
+                });
+                box.appendChild(col);
+              });
+            });
+        };
+        tabContainer.appendChild(btn);
+      });
+      tabContainer.firstChild.click();
+    }
+    loadData();
   </script>
 </body>
 </html>
