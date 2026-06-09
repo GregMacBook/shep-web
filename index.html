@@ -5,11 +5,11 @@
   <style>
     body { font-family: sans-serif; text-align: center; background: #fcfaff; }
     .nav-menu { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 20px; }
-    .tab { padding: 10px 20px; background: #ac8ad4; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
+    .tab { width: 120px; height: 50px; background: #ac8ad4; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 0.7em; font-weight: bold; }
     .tab.active { background: #916bbf; }
-    .page-panel { display: none; padding: 20px; max-width: 1000px; margin: auto; text-align: left; }
+    .page-panel { display: none; padding: 20px; max-width: 900px; margin: auto; text-align: left; }
     .page-panel.active { display: block; }
-    .item-img { width: 50px; height: 50px; object-fit: cover; }
+    .item-img { width: 60px; height: 60px; object-fit: cover; }
   </style>
 </head>
 <body>
@@ -18,14 +18,27 @@
 
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbycfZErUOOIJE_QEfj0SYZLz6qPK6hHMxQ5jxgLFwfHiSRC-22rmvrj61zleoaduA/exec";
-    // Full list of tabs from your sheet
-    const myTabs = ['ABOUT US', 'Mothers\' Day', 'Fathers\' Day', 'Easter', 'Christmas', 'Winter', 'Hamper', 'WHAT DO WE COLLECT', 'WHAT WE CAN\'T ACCEPT', 'WHO WE HELP', 'WAYS YOU CAN HELP', 'DONATION POINTS', 'SCHOOL DONORS', 'REGISTRATION', 'TESTIMONIALS', 'MONETARY DONATIONS', 'CONTACT SHEP'];
+    const tabMap = {
+      "OUR MISSION": ["OUR MISSION"], 
+      "ABOUT US": ["ABOUT US"],
+      "ANNUAL APPEALS": ["Mothers' Day", "Fathers' Day", "Easter", "Christmas", "Winter", "Hamper"],
+      "WHAT DO WE COLLECT": ["WHAT DO WE COLLECT"],
+      "WHAT WE CAN'T ACCEPT": ["WHAT WE CAN'T ACCEPT"],
+      "WHO WE HELP": ["WHO WE HELP"],
+      "WAYS YOU CAN HELP": ["WAYS YOU CAN HELP"],
+      "DONATION POINTS": ["DONATION POINTS"],
+      "SCHOOL DONORS": ["SCHOOL DONORS"],
+      "REGISTRATION": ["REGISTRATION"],
+      "TESTIMONIALS": ["TESTIMONIALS"],
+      "MONETARY DONATIONS": ["MONETARY DONATIONS"],
+      "CONTACT SHEP": ["CONTACT SHEP"]
+    };
 
     fetch(scriptUrl).then(r => r.json()).then(data => {
       var container = document.getElementById('tabs');
       var contentArea = document.getElementById('content-area');
       
-      myTabs.forEach(tName => {
+      Object.keys(tabMap).forEach(tName => {
         var btn = document.createElement('button'); btn.className = 'tab'; btn.innerText = tName;
         var panel = document.createElement('div'); panel.className = 'page-panel';
         panel.id = 'panel-' + tName;
@@ -38,7 +51,8 @@
           panel.classList.add('active');
           
           if(panel.innerHTML === "") {
-             var filtered = data.filter(r => r[0] === tName);
+             // Find all rows that match the items mapped to this tab
+             var filtered = data.filter(r => tabMap[tName].includes(r[0]));
              panel.innerHTML = renderSmart(tName, filtered);
           }
         };
@@ -50,16 +64,8 @@
     function renderSmart(tName, items) {
       let html = "<h3>" + tName + "</h3>";
       items.forEach(it => {
-        // it[1] is main content, it[2] is image/link
-        let text = it[1] || "";
-        let link = it[2] || "";
-        if (tName === "WHAT DO WE COLLECT" && link.includes("http")) {
-           html += `<p><img src="${link}" class="item-img"> ${text}</p>`;
-        } else if (link.includes("http")) {
-           html += `<p>${text} <br><a href="${link}" target="_blank">Click for more</a></p>`;
-        } else {
-           html += `<p>${text}</p>`;
-        }
+        let text = it[1] || ""; let link = it[2] || "";
+        html += `<p>${it[0] !== tName ? '<strong>'+it[0]+':</strong> ' : ''} ${text} ${link.startsWith('http') ? '<br><a href="'+link+'" target="_blank">Click here</a>' : ''}</p>`;
       });
       return html;
     }
