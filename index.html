@@ -232,12 +232,25 @@
                 var groups = {};
                 
                 if (Array.isArray(items) && items.length > 0) {
-                  // Direct clean mapping: Reads Column A (Category), Column B (Item Name), Column C (Direct Link)
+                  // SELF-HEALING MEMORY TRACKER: Remembers the last valid category name for blank rows!
+                  var activeCategory = "";
+                  
                   items.slice(1).forEach(function(it) { 
-                    if (!it || !it[0] || it[0].toString().trim() === "") return;
-                    var catName = it[0].toString().trim();
-                    if (!groups[catName]) groups[catName] = []; 
-                    groups[catName].push(it); 
+                    if (!it) return;
+                    
+                    var colA = it[0] ? it[0].toString().trim() : "";
+                    var colB = it[1] ? it[1].toString().trim() : "";
+                    
+                    // Update active category if Column A has a header name, otherwise keep previous memory text
+                    if (colA !== "") {
+                      activeCategory = colA;
+                    }
+                    
+                    // Skip row if it has absolutely no item text
+                    if (activeCategory === "" || colB === "") return;
+                    
+                    if (!groups[activeCategory]) groups[activeCategory] = []; 
+                    groups[activeCategory].push(it); 
                   });
                   
                   Object.keys(groups).forEach(function(g) {
@@ -267,11 +280,22 @@
                 var groups = {};
                 
                 if (Array.isArray(items) && items.length > 0) {
+                  var activeCategory = "";
+                  
                   items.slice(1).forEach(function(it) { 
-                    if (!it || !it[0] || it[0].toString().trim() === "") return;
-                    var catName = it[0].toString().trim();
-                    if (!groups[catName]) groups[catName] = []; 
-                    groups[catName].push(it); 
+                    if (!it) return;
+                    
+                    var colA = it[0] ? it[0].toString().trim() : "";
+                    var colB = it[1] ? it[1].toString().trim() : "";
+                    
+                    if (colA !== "") {
+                      activeCategory = colA;
+                    }
+                    
+                    if (activeCategory === "" || colB === "") return;
+                    
+                    if (!groups[activeCategory]) groups[activeCategory] = []; 
+                    groups[activeCategory].push(it); 
                   });
                   
                   Object.keys(groups).forEach(function(g) {
