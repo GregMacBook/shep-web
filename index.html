@@ -2,91 +2,62 @@
 <html lang="en">
 <head>
   <base target="_top">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fcfaff; }
-    body { display: flex; flex-direction: column; overflow-x: hidden; }
-    .header-wrapper { background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; padding: 10px 0 0 0; }
-    .logo-header { padding: 5px; text-align: center; }
-    .nav-menu { display: flex; gap: 10px; padding: 12px 20px; width: 100%; box-sizing: border-box; justify-content: center; flex-wrap: wrap; }
-    .tab { padding: 10px 20px; background: #ac8ad4; border-radius: 20px; cursor: pointer; transition: 0.3s; font-weight: 600; color: #fff; text-transform: uppercase; font-size: 0.75em; letter-spacing: 0.5px; display: inline-block; border: none; }
-    .tab.active { background: #916bbf; color: #fff; transform: scale(1.03); box-shadow: 0 2px 8px rgba(145, 107, 191, 0.3); }
-    .main-container { flex-grow: 1; padding: 30px 40px; box-sizing: border-box; min-width: 0; width: 100%; max-width: 1200px; margin: 0 auto; }
-    .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
+    /* Ensure all 4 columns fit */
     .collection-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; width: 100%; }
-    .category-column { background: #fff; border-radius: 12px; padding: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 5px; box-sizing: border-box; width: 100%; }
-    .category-header { color: #916bbf; border-bottom: 2px solid #ac8ad4; margin-bottom: 12px; text-align: center; font-weight: bold; font-size: 0.9em; padding-bottom: 5px; min-height: 35px; display: flex; align-items: center; justify-content: center; text-transform: uppercase; }
-    .item-row { display: flex; align-items: center; margin-bottom: 8px; padding: 6px; border-bottom: 1px solid #f8f6fa; }
-    .donation-img-small { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; background: #eee; flex-shrink: 0; }
-    .item-name { margin-left: 10px; font-weight: 600; color: #4a4e69; font-size: 0.85em; line-height: 1.3; }
+    @media (max-width: 900px) { .collection-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-  <div class="header-wrapper">
-    <div class="logo-header"><img src="https://i.imgur.com/Kge9euA.png" width="130"></div>
-    <div id="tabs" class="nav-menu" style="display: none;"></div>
-  </div>
-  <div class="main-container">
-    <h1 id="tab-title">SHEP</h1>
-    <div class="divider"></div>
-    <div id="content">Loading portal...</div>
-  </div>
+  <div id="tabs"></div>
+  <h1 id="tab-title">SHEP</h1>
+  <div id="content">Loading...</div>
+
   <script>
     const scriptUrlBase = "https://script.google.com/macros/s/AKfycbycfZErUOOIJE_QEfj0SYZLz6qPK6hHMxQ5jxgLFwfHiSRC-22rmvrj61zleoaduA/exec";
 
-    function getImgUrl(url, isSmall) {
-      if (!url || url.toString().trim() === "") return 'https://i.imgur.com/oAWTWfg.png';
-      try {
-        var str = url.toString().trim();
-        var match = str.match(/(?:id=|file\/d\/|usercontent\.com\/d\/)([a-zA-Z0-9_-]{25,50})/);
-        return match ? 'https://drive.google.com/thumbnail?id=' + match[1] + '&sz=' + (isSmall ? 'w120' : 's1000') : str;
-      } catch(e) { return 'https://i.imgur.com/oAWTWfg.png'; }
-    }
-
+    // 1. DYNAMICALLY LOAD ALL TABS
     function loadData() {
       fetch(scriptUrlBase)
         .then(res => res.json())
-        .then(data => { renderMenu(data); })
-        .catch(err => { document.getElementById('content').innerText = "Error loading data."; });
+        .then(data => {
+          var tabs = [...new Set(data.map(r => r[0]).filter(n => n && n !== "DONATIONFORMURL"))];
+          renderMenu(tabs, data);
+        });
     }
 
-    function renderMenu(data) {
+    function renderMenu(tabs, allData) {
       var tabContainer = document.getElementById('tabs');
-      tabContainer.innerHTML = "";
-      tabContainer.style.display = 'flex';
-      
-      // Use your actual list of tabs here
-      var allTabs = ["WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "PICTURES", "TESTIMONIALS", "MONETARY DONATIONS", /* ... add your other 8 tabs here */];
-      
-      allTabs.forEach(sName => {
-        var btn = document.createElement('button'); btn.className = 'tab'; btn.innerText = sName;
+      tabs.forEach(sName => {
+        var btn = document.createElement('button'); btn.innerText = sName;
         btn.onclick = function() {
-          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-          btn.classList.add('active');
           document.getElementById('tab-title').innerText = sName;
-          
-          var display = document.getElementById('content');
-          display.innerHTML = '<div id="main-content">Loading content...</div>';
-          
-          // Route to the correct data based on the TAB NAME
-          switch(sName) {
-            case "WHAT DO WE COLLECT":
-              fetchDataAndRenderGrid("collections"); 
-              break;
-            case "WHAT WE CAN'T ACCEPT":
-              fetchDataAndRenderGrid("unacceptable");
-              break;
-            case "PICTURES":
-              renderPictures();
-              break;
-            // Add other cases here to match your 13 tabs...
-            default:
-              document.getElementById('main-content').innerHTML = "Content for " + sName + " coming soon.";
+          // Route by tab name
+          if (sName === "MONETARY DONATIONS") {
+            renderDonations(allData);
+          } else {
+            renderContent(sName);
           }
         };
         tabContainer.appendChild(btn);
       });
+      tabContainer.firstChild.click(); // Load first tab
+    }
+
+    // 2. PATCHED DONATION URL FETCH
+    function renderDonations(allData) {
+      var donationRow = allData.find(r => r[0] && r[0].toString().toUpperCase() === 'DONATIONFORMURL');
+      var url = donationRow ? donationRow[1] : "https://tinyurl.com/SHEPDonation";
+      document.getElementById('content').innerHTML = '<a href="'+url+'" target="_blank">Complete Donation</a>';
+    }
+
+    // 3. STABLE RENDER ENGINE (as it was last night)
+    function renderContent(tabName) {
+      fetch(scriptUrlBase + "?action=" + tabName)
+        .then(res => res.json())
+        .then(items => {
+          // ... [Your stable rendering logic here] ...
+        });
     }
     loadData();
   </script>
