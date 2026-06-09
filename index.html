@@ -2,26 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>SHEP Portal</title>
   <style>
     body { font-family: sans-serif; text-align: center; background: #fcfaff; }
-    /* Tab Menu */
     .nav-menu { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 20px; }
     .tab { padding: 10px 20px; background: #ac8ad4; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
     .tab.active { background: #916bbf; }
-    /* Content Panels */
     .page-panel { display: none; padding: 20px; max-width: 1000px; margin: auto; text-align: left; }
     .page-panel.active { display: block; }
+    .item-img { width: 50px; height: 50px; object-fit: cover; }
   </style>
 </head>
 <body>
-
   <div id="tabs" class="nav-menu"></div>
   <div id="content-area"></div>
 
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbycfZErUOOIJE_QEfj0SYZLz6qPK6hHMxQ5jxgLFwfHiSRC-22rmvrj61zleoaduA/exec";
-    const myTabs = ["ABOUT US", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "CONTACT SHEP", "MONETARY DONATIONS"];
+    // Full list of tabs from your sheet
+    const myTabs = ['ABOUT US', 'Mothers\' Day', 'Fathers\' Day', 'Easter', 'Christmas', 'Winter', 'Hamper', 'WHAT DO WE COLLECT', 'WHAT WE CAN\'T ACCEPT', 'WHO WE HELP', 'WAYS YOU CAN HELP', 'DONATION POINTS', 'SCHOOL DONORS', 'REGISTRATION', 'TESTIMONIALS', 'MONETARY DONATIONS', 'CONTACT SHEP'];
 
     fetch(scriptUrl).then(r => r.json()).then(data => {
       var container = document.getElementById('tabs');
@@ -31,7 +29,6 @@
         var btn = document.createElement('button'); btn.className = 'tab'; btn.innerText = tName;
         var panel = document.createElement('div'); panel.className = 'page-panel';
         panel.id = 'panel-' + tName;
-        panel.innerHTML = "Loading...";
         contentArea.appendChild(panel);
         
         btn.onclick = () => {
@@ -40,9 +37,9 @@
           btn.classList.add('active');
           panel.classList.add('active');
           
-          if(panel.innerHTML === "Loading...") {
-             var filtered = data.filter(row => row[0].toString().trim() === tName);
-             panel.innerHTML = renderContent(filtered);
+          if(panel.innerHTML === "") {
+             var filtered = data.filter(r => r[0] === tName);
+             panel.innerHTML = renderSmart(tName, filtered);
           }
         };
         container.appendChild(btn);
@@ -50,13 +47,19 @@
       container.firstChild.click();
     });
 
-    function renderContent(items) {
-      let html = "";
+    function renderSmart(tName, items) {
+      let html = "<h3>" + tName + "</h3>";
       items.forEach(it => {
+        // it[1] is main content, it[2] is image/link
         let text = it[1] || "";
-        let url = it[2] || "";
-        // If it's a URL, make it a clickable link
-        html += `<p>${text} ${url.toString().startsWith('http') ? '<br><a href="'+url+'" target="_blank">Click here</a>' : ''}</p>`;
+        let link = it[2] || "";
+        if (tName === "WHAT DO WE COLLECT" && link.includes("http")) {
+           html += `<p><img src="${link}" class="item-img"> ${text}</p>`;
+        } else if (link.includes("http")) {
+           html += `<p>${text} <br><a href="${link}" target="_blank">Click for more</a></p>`;
+        } else {
+           html += `<p>${text}</p>`;
+        }
       });
       return html;
     }
