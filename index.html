@@ -103,7 +103,7 @@
                     <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="donate-btn">Complete Donation & Get Receipt</a>
                   </center>
                 `;
-                return; // Structural link breakout completed for this tab
+                return;
              }
 
              // 2. Default dynamic rendering loop for all other tabs
@@ -122,29 +122,28 @@
                    let colC = it[2] ? it[2].toString().trim() : "";
                    let colD = it[3] ? it[3].toString().trim() : "";
                    
-                   // Skip rendering if row context matches the title header block exactly
                    if (!colB && !colC && !colD && currentCat === tName) return;
 
                    count++;
                    html += `<div class="content-box">`;
                    
-                   // Insert mini titles for grouped categories (like individual appeals)
                    if (tabMap[tName].length > 1 && cellA !== "") {
                        html += `<h4>${cellA}</h4>`;
                    }
 
-                   // Display content fields and clean images
                    [colB, colC, colD].forEach(val => {
                       if (!val) return;
-                      if (val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com"))) {
-                         html += `<img src="${val}" class="item-img" alt="SHEP Asset">`;
+                      if (val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com") || val.includes("postimg.cc") || val.includes("imgur.com"))) {
+                         // Support single image cells or multiple image strings split by commas
+                         val.split(',').forEach(imgUrl => {
+                            html += `<img src="${imgUrl.trim()}" class="item-img" alt="SHEP Asset">`;
+                         });
                       } else if (!val.startsWith("http")) {
                          html += `<p>${val}</p>`;
                       }
                    });
 
-                   // Pull and display explicit hyperlinked endpoints
-                   let finalLink = [colB, colC, colD].find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg"));
+                   let finalLink = [colB, colC, colD].find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg"));
                    
                    if (finalLink) {
                       if (tName === "DONATION POINTS") {
@@ -158,7 +157,7 @@
                 }
              });
              
-             panel.innerHTML = count > 0 ? html : html + "<div class="content-box"><p>Coming soon...</p></div>";
+             panel.innerHTML = count > 0 ? html : html + '<div class="content-box"><p>Coming soon...</p></div>';
           }
         };
         container.appendChild(btn);
