@@ -1,59 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <base target="_top">
   <style>
-    body { font-family: sans-serif; text-align: center; background: #fcfaff; }
+    /* Tab Container */
     .nav-menu { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 20px; }
-    .tab { width: 140px; height: 60px; background: #ac8ad4; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 0.75em; display: flex; align-items: center; justify-content: center; }
+    .tab { padding: 10px 20px; background: #ac8ad4; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; }
     .tab.active { background: #916bbf; }
-    .collection-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; padding: 20px; text-align: left; }
-    .category-column { background: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .item-row { display: flex; align-items: center; margin-bottom: 8px; }
-    .donation-img { width: 40px; height: 40px; object-fit: cover; }
+    /* Content Area */
+    #content { padding: 20px; max-width: 1000px; margin: auto; }
   </style>
 </head>
 <body>
   <div id="tabs" class="nav-menu"></div>
-  <h1 id="tab-title">SHEP</h1>
-  <div id="content">Select a tab...</div>
+  <div id="content">Please select a tab.</div>
 
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbycfZErUOOIJE_QEfj0SYZLz6qPK6hHMxQ5jxgLFwfHiSRC-22rmvrj61zleoaduA/exec";
-
+    
+    // 1. Initialize Tabs
     fetch(scriptUrl).then(r => r.json()).then(data => {
       var tabs = [...new Set(data.map(r => r[0]).filter(n => n && n !== "DONATIONFORMURL"))];
-      var container = document.getElementById('tabs');
+      var tabContainer = document.getElementById('tabs');
       tabs.forEach(tName => {
         var btn = document.createElement('button'); btn.className = 'tab'; btn.innerText = tName;
         btn.onclick = () => {
           document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          document.getElementById('tab-title').innerText = tName;
-          loadContent(tName, data);
+          loadTabContent(tName);
         };
-        container.appendChild(btn);
+        tabContainer.appendChild(btn);
       });
-      container.firstChild.click();
+      tabContainer.firstChild.click(); // Default to first tab
     });
 
-    function loadContent(name, allData) {
-      if (name === "MONETARY DONATIONS") {
-        var url = (allData.find(r => r[0] === 'DONATIONFORMURL') || [])[1] || "#";
-        document.getElementById('content').innerHTML = '<a href="'+url+'" target="_blank" style="padding:20px; background:#84a59d; color:white; text-decoration:none; border-radius:20px;">Complete Donation</a>';
-      } else {
-        fetch(scriptUrl + "?action=" + name).then(r => r.json()).then(items => {
-          var groups = {};
-          items.forEach(it => { if(!groups[it[0]]) groups[it[0]]=[]; groups[it[0]].push(it); });
-          var html = '<div class="collection-grid">';
-          Object.keys(groups).forEach(g => {
-            html += '<div class="category-column"><h3>'+g+'</h3>';
-            groups[g].forEach(it => html += '<div class="item-row"><img src="'+(it[2]||'')+'" class="donation-img"> '+it[1]+'</div>');
-            html += '</div>';
-          });
-          document.getElementById('content').innerHTML = html + '</div>';
-        });
-      }
+    // 2. Fetch data PER TAB
+    function loadTabContent(name) {
+      document.getElementById('content').innerHTML = "Loading...";
+      fetch(scriptUrl + "?action=" + name).then(r => r.json()).then(items => {
+        // Render based on the page type
+        if (name === "WHAT DO WE COLLECT") {
+            renderGrid(items); // Use the horizontal grid renderer
+        } else {
+            renderSimpleContent(items); // Use a standard text/image renderer
+        }
+      });
     }
   </script>
 </body>
