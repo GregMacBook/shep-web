@@ -3,23 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    p { white-space: pre-wrap; }
     body { font-family: sans-serif; text-align: center; background: #fcfaff; }
+    p { white-space: pre-wrap; } /* This keeps your paragraph breaks */
     .nav-menu { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 20px; }
     .tab { width: 120px; height: 50px; background: #ac8ad4; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 0.7em; font-weight: bold; }
     .tab.active { background: #916bbf; }
-    
     .page-panel { display: none; padding: 20px; max-width: 900px; margin: auto; text-align: left; }
     .page-panel.active { display: block; }
-    
-    /* Curly Green Brackets Style */
-    .content-box { 
-        border: 3px solid #78a198; 
-        border-radius: 25px; 
-        padding: 20px; 
-        margin-bottom: 15px; 
-        background: white;
-    }
+    .content-box { border: 3px solid #78a198; border-radius: 25px; padding: 20px; margin-bottom: 15px; background: white; }
     .item-img { width: 150px; display: block; margin: 10px 0; }
   </style>
 </head>
@@ -63,40 +54,44 @@
           panel.classList.add('active');
           
           if(panel.innerHTML === "") {
-             let html = "<h3>" + tName + "</h3>";
+             // Filter data based on current tab's mapped categories
              let currentCat = "";
-             
-             data.forEach(it => {
-                // If Column A has text, it's a new category
-                if(it[0] && it[0].toString().trim() !== "") {
-                    currentCat = it[0].toString().trim();
-                }
-                
-                // If the current row belongs to our tab
-                if (tabMap[tName].includes(currentCat)) {
-                   let text = it[1] || "";
-                   let link = it[2] || "";
-                   if (text || link) {
-                      html += `<div class="content-box">`;
-                      if (text.startsWith("http")) {
-                        html += `<img src="${text}" class="item-img">`;
-                      } else {
-                        html += `<p>${text}</p>`;
-                      }
-                      if (link.startsWith("http")) {
-                        html += `<a href="${link}" target="_blank">Click here for more</a>`;
-                      }
-                      html += `</div>`;
-                   }
-                }
+             let filtered = data.filter(it => {
+                if(it[0] && it[0].toString().trim() !== "") currentCat = it[0].toString().trim();
+                return tabMap[tName].includes(currentCat);
              });
-             panel.innerHTML = html || "<p>Coming soon...</p>";
+             panel.innerHTML = renderSmart(tName, filtered);
           }
         };
         container.appendChild(btn);
       });
       container.firstChild.click();
     });
+
+    function renderSmart(tName, items) {
+      let html = "<h3>" + tName + "</h3>";
+      if (items.length === 0) return html + "<p>Coming soon...</p>";
+      
+      items.forEach(it => {
+        let content = it[1] || "";
+        let link = it[2] || "";
+        let title = (it[0] && it[0].toString().trim() !== tName) ? `<strong>${it[0]}:</strong> ` : "";
+        
+        if (content || link || title) {
+           html += `<div class="content-box">`;
+           if (content.toString().startsWith("http")) {
+             html += `<img src="${content}" class="item-img">`;
+           } else {
+             html += `<p>${title}${content}</p>`;
+           }
+           if (link.startsWith("http")) {
+             html += `<a href="${link}" target="_blank">Click here for more</a>`;
+           }
+           html += `</div>`;
+        }
+      });
+      return html;
+    }
   </script>
 </body>
 </html>
