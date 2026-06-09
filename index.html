@@ -138,7 +138,6 @@
     }
 
     function renderLockdownScreen() {
-      document.getElementById('tabs').style.with = 'none';
       document.getElementById('tabs').style.display = 'none';
       document.getElementById('tab-title').innerText = "System Maintenance";
       var display = document.getElementById('content');
@@ -269,4 +268,186 @@
                 var groups = {};
                 items.slice(1).forEach(function(it) { 
                   if(!it[0] || it[0].trim() === "" || !it[1]) return;
-                  if(!groups
+                  if(!groups[it[0]]) groups[it[0]] = []; 
+                  groups[it[0]].push(it); 
+                });
+                Object.keys(groups).forEach(function(g) {
+                  var col = document.createElement('div'); col.className = 'category-column unacceptable';
+                  col.innerHTML = '<div class="category-header" style="color: #d9534f; border-bottom: 2px solid #d9534f;">' + g + '</div>';
+                  groups[g].forEach(function(it) {
+                    var r = document.createElement('div'); r.className = 'item-row';
+                    r.innerHTML = '<div><img src="' + getImgUrl(it[2], true) + '" class="donation-img-small"></div><div class="item-name">' + it[1] + '</div>';
+                    col.appendChild(r);
+                  });
+                  box.appendChild(col);
+                });
+              }).catch(err => { document.getElementById('unacceptable-box').innerText = "Error loading elements."; });
+            
+          // 3. PICTURES GALLERY
+          } else if (name === "PICTURES") {
+            display.innerHTML = '<div class="pictures-grid" id="pic-box">Loading gallery...</div>';
+            fetch(scriptUrlBase + "?action=pictures")
+              .then(response => response.json())
+              .then(pics => {
+                var box = document.getElementById('pic-box'); box.innerHTML = "";
+                pics.slice(1).forEach(function(p) {
+                  if(!p[1]) return;
+                  var card = document.createElement('div'); card.className = 'gallery-card';
+                  card.innerHTML = '<img src="' + getImgUrl(p[1], false) + '" class="gallery-img"><div style="margin-top:10px;font-weight:bold;color:#4a4e69;">' + p[0] + '</div>';
+                  box.appendChild(card);
+                });
+              }).catch(err => { document.getElementById('pic-box').innerText = "Error loading pictures."; });
+
+          // 4. TESTIMONIALS
+          } else if (name === "TESTIMONIALS") {
+            display.innerHTML = '<div id="testimonial-box">Loading structured stories...</div>';
+            fetch(scriptUrlBase + "?action=testimonials")
+              .then(res => res.json())
+              .then(rows => {
+                var box = document.getElementById('testimonial-box'); box.innerHTML = "";
+                rows.slice(1).forEach(function(cols) {
+                  var senderName = cols[0] ? cols[0].trim() : "";
+                  var mediaLink = cols[1] ? cols[1].trim() : "";
+                  var storyText = cols[2] ? cols[2].trim() : "";
+                  
+                  if (!senderName && !storyText) return; 
+                  
+                  var card = document.createElement('div'); card.className = 'testimonial-card';
+                  var isVideo = senderName.toUpperCase().includes("LITTLE THINGS FOR TINY TOTS");
+                  
+                  var mediaHtml = '<div class="testimonial-media"><img src="https://i.imgur.com/oAWTWfg.png" class="testimonial-img"></div>';
+                  if (mediaLink) {
+                    if (isVideo) {
+                      mediaHtml = '<div class="testimonial-media"><iframe src="' + getVideoEmbedUrl(mediaLink) + '" class="testimonial-video" allow="autoplay"></iframe></div>';
+                    } else {
+                      mediaHtml = '<div class="testimonial-media"><img src="' + getImgUrl(mediaLink, false) + '" class="testimonial-img"></div>';
+                    }
+                  }
+                  
+                  card.innerHTML = mediaHtml + 
+                                   '<div class="testimonial-body">' +
+                                     '<div class="testimonial-sender">' + senderName + '</div>' +
+                                     '<div>' + formatText(storyText).replace(/\n/g, '<br>') + '</div>' +
+                                   '</div>';
+                                   
+                  box.appendChild(card);
+                });
+                if(box.children.length === 0) box.innerText = "No testimonials found.";
+              }).catch(err => { document.getElementById('testimonial-box').innerText = "Error loading testimonials."; });
+
+          // 5. MONETARY DONATIONS
+          } else if (name === "MONETARY DONATIONS") {
+             let targetUrl = 'https://tinyurl.com/SHEPDonation'; 
+             if (data && data.length > 0) {
+               let foundRow = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === 'DONATIONFORMURL');
+               if (foundRow && foundRow[1]) {
+                 targetUrl = foundRow[1].toString().trim();
+               }
+             }
+
+             display.innerHTML = `
+               <div class="commentary-box">
+                 <h3>Your Impact Matters</h3>
+                 <p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p>
+               </div>
+               <div class="info-line" style="text-align: center;"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div>
+               <div class="info-line" style="text-align: center;"><span>BSB: 306821 / Acct: 6706014</span></div>
+               <center>
+                 <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="donate-btn">Complete Donation & Get Receipt</a>
+               </center>
+             `;
+          
+          // 6. STANDARD, MAP-LINK, ANNUAL APPEALS & GALLERY TILES
+          } else {
+            data.forEach(r => {
+              var rName = r[0] ? r[0].toString().trim() : "";
+              var isAppeal = annualAppealItems.includes(rName.toUpperCase());
+              var currentKey = isAppeal ? "Annual Appeals" : rName;
+              
+              if (currentKey === sName) {
+                var card = document.createElement('div'); card.className = 'appeal-card';
+                var textHtml = "";
+                var mediaGalleryHtml = "";
+                var pinHtml = "";
+                
+                var colCLink = r[2] ? r[2].toString().trim() : "";
+                
+                if (name === "WHO WE HELP") {
+                  var orgLinkHtml = (colCLink.toLowerCase().includes('http')) 
+                                    ? `<br><a href="${colCLink}" target="_blank" rel="noopener noreferrer" class="visit-org-btn">Visit Website</a>` 
+                                    : "";
+                  
+                  textHtml = `<div class="appeal-text-side">
+                                <div class="appeal-text"><h3>${rName}</h3>${formatText(r[1]||'')} ${orgLinkHtml}</div>
+                              </div>`;
+                } else {
+                  if (colCLink.toLowerCase().includes('http') && !colCLink.toLowerCase().match(/\.(jpeg|jpg|gif|png|webp)/) && !colCLink.toLowerCase().includes('drive.google')) {
+                    pinHtml = `<a href="${colCLink}" target="_blank" rel="noopener noreferrer" class="location-pin">📍</a>`;
+                  } else if (colCLink) {
+                    var assetLinks = colCLink.split(',');
+                    if (assetLinks.length > 1) {
+                      mediaGalleryHtml = '<div class="media-gallery-wrapper">';
+                      
+                      var countIndex = 0;
+                      assetLinks.forEach(item => {
+                        var rawItem = item.trim();
+                        var captionText = "School Donation"; 
+                        var finalUrl = rawItem;
+
+                        if (rawItem.includes(" - ")) {
+                          var parts = rawItem.split(" - ");
+                          captionText = parts[0].trim();
+                          finalUrl = parts[1].trim();
+                        } else {
+                          if (rawItem.toLowerCase().includes("wpuvlvflo6ywb1uj0np4noasd20emqpa")) captionText = "Mercedes College";
+                          if (rawItem.toLowerCase().includes("13ajfdkbpnqfmh_3v3efdfyouxvuiwsg")) captionText = "Cannington Senior High School";
+                          
+                          if (name === "WAYS YOU CAN HELP") {
+                            captionText = (countIndex === 0) ? "Mum and Bub 70x70 cms" : "Toiletry Bags 35x35cms";
+                          }
+                        }
+                        
+                        mediaGalleryHtml += `<figure class="gallery-figure">
+                                               <img src="${getImgUrl(finalUrl, false)}" class="poster-img-side">
+                                               <figcaption class="figure-caption">${captionText}</figcaption>
+                                             </figure>`;
+                        countIndex++;
+                      });
+                      mediaGalleryHtml += '</div>';
+                    } else {
+                      mediaGalleryHtml = `<img src="${getImgUrl(colCLink, false)}" class="poster-img-side">`;
+                    }
+                  }
+                  
+                  var linkUrl = r[3] ? r[3].toString().trim() : "";
+                  var linkHtml = (isAppeal && linkUrl.length > 5) 
+                                 ? `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="action-link-btn">View Poster</a>` 
+                                 : "";
+                  
+                  textHtml = `<div class="appeal-text-side">
+                                <div class="appeal-text"><h3>${rName}</h3>${formatText(r[1]||'')} ${linkHtml}</div>
+                                ${pinHtml}
+                              </div>`;
+                }
+                
+                if (mediaGalleryHtml.includes("media-gallery-wrapper")) {
+                  card.style.flexDirection = "column";
+                  card.innerHTML = textHtml + mediaGalleryHtml;
+                } else {
+                  card.innerHTML = textHtml + mediaGalleryHtml;
+                }
+                
+                display.appendChild(card);
+              }
+            });
+          }
+        };
+        tabContainer.appendChild(btn);
+      });
+      if (tabContainer.firstChild) tabContainer.firstChild.click();
+    }
+
+    checkStatusAndLoad();
+  </script>
+</body>
+</html>
