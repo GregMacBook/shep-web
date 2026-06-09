@@ -9,6 +9,7 @@
     .tab.active { background: #916bbf; }
     .page-panel { display: none; padding: 20px; max-width: 900px; margin: auto; text-align: left; }
     .page-panel.active { display: block; }
+    .item-img { width: 100px; }
   </style>
 </head>
 <body>
@@ -18,7 +19,6 @@
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbycfZErUOOIJE_QEfj0SYZLz6qPK6hHMxQ5jxgLFwfHiSRC-22rmvrj61zleoaduA/exec";
     
-    // Exact mapping for your 13 requested tabs
     const tabMap = {
       "OUR MISSION": ["OUR MISSION"], 
       "ABOUT US": ["ABOUT US"],
@@ -52,7 +52,6 @@
           panel.classList.add('active');
           
           if(panel.innerHTML === "") {
-             // Logic to capture all content, including blank rows for WHO WE HELP (11-25) and CONTACT SHEP (53-56)
              let inSection = false;
              let html = "<h3>" + tName + "</h3>";
              data.forEach(it => {
@@ -60,10 +59,16 @@
                 if (tabMap[tName].includes(rowCategory)) inSection = true;
                 else if (rowCategory !== "" && !tabMap[tName].includes(rowCategory)) inSection = false;
 
-                if (inSection && it[1]) {
-                   let text = it[1];
+                if (inSection) {
+                   let text = it[1] || "";
                    let link = it[2] || "";
-                   html += `<p>${text} ${link.startsWith('http') ? '<br><a href="'+link+'" target="_blank">Click here</a>' : ''}</p>`;
+                   
+                   // Check if content is an image link or a webpage link
+                   if (text.startsWith("http")) {
+                       html += `<p><img src="${text}" class="item-img"></p>`;
+                   } else if (text !== "" || link !== "") {
+                       html += `<p>${text} ${link.startsWith('http') ? '<br><a href="'+link+'" target="_blank">Click here</a>' : ''}</p>`;
+                   }
                 }
              });
              panel.innerHTML = html;
