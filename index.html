@@ -117,7 +117,7 @@
                    return;
                 }
                 testimonialData.forEach((row, index) => {
-                   if (index === 0) return; // Skip headers
+                   if (index === 0) return; 
                    let labelName = row[1] || "";
                    let imgLink = row[2] || "";
                    let quote = row[3] || "";
@@ -173,14 +173,13 @@
              let count = 0;
              
              data.forEach((it, rIdx) => {
-                if (rIdx === 0) return; // Skip row headers
+                if (rIdx === 0) return; 
                 
                 let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
                 let targetMatch = tabMap[tName][0].toUpperCase();
                 
                 if (colA === targetMatch) {
                    let cols = [];
-                   // Grab columns B, C, D, E
                    for (let c = 1; c <= 4; c++) {
                       if (it[c] && it[c].toString().trim() !== "") {
                          cols.push(it[c].toString().trim());
@@ -191,25 +190,24 @@
                    count++;
                    html += `<div class="content-box">`;
                    
-                   // Special check for Annual Appeals to add sub-headers for the distinct events
                    if (tName === "ANNUAL APPEALS" && it[1]) {
                       html += `<h4>${it[1]}</h4>`;
-                      // Filter out the event title from the paragraph generator so it doesn't repeat
-                      cols = cols.filter(val => val !== it[1]);
                    }
 
-                   // Output text and images securely
                    cols.forEach(val => {
-                      if (val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com") || val.includes("postimg.cc") || val.includes("imgur.com"))) {
+                      let isImg = val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com") || val.includes("postimg.cc") || val.includes("imgur.com"));
+                      let isNormalLink = val.startsWith("http") && !isImg;
+                      
+                      if (isImg) {
                          val.split(',').forEach(imgUrl => {
                             html += `<img src="${imgUrl.trim()}" class="large-img" alt="SHEP Asset">`;
                          });
-                      } else if (!val.startsWith("http")) {
+                      } else if (!isNormalLink) {
+                         if (tName === "ANNUAL APPEALS" && val === it[1]) return;
                          html += `<p>${val}</p>`;
                       }
                    });
 
-                   // Isolate tracking endpoints for redirect buttons
                    let finalLink = cols.find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg"));
                    
                    if (finalLink) {
