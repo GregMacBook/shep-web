@@ -1,225 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>SHEP Portal</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; background: #fcfaff; color: #333; }
-    p { white-space: pre-wrap; margin: 5px 0; }
-    h4 { margin: 10px 0 5px 0; color: #916bbf; border-bottom: 1px dashed #ac8ad4; padding-bottom: 3px; }
-    
-    /* Header Container */
-    .shep-header { padding: 20px; background: #ffffff; border-bottom: 2px solid #78a198; margin-bottom: 10px; }
-    .shep-logo { max-width: 180px; height: auto; }
-    .shep-tagline { font-weight: bold; color: #916bbf; margin-top: 5px; font-size: 1.1em; }
-
-    /* Tab Menu */
-    .nav-menu { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 10px 20px; }
-    .tab { width: 130px; height: 50px; background: #ac8ad4; color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 0.75em; font-weight: bold; transition: background 0.2s; }
-    .tab.active { background: #916bbf; }
-    
-    /* Content Boxes */
-    .page-panel { display: none; padding: 20px; max-width: 900px; margin: auto; text-align: left; }
-    .page-panel.active { display: block; }
-    .content-box { border: 3px solid #78a198; border-radius: 25px; padding: 20px; margin-bottom: 15px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .commentary-box { background: #fdfaf6; border-left: 5px solid #78a198; padding: 15px; margin-bottom: 15px; border-radius: 4px; }
-    
-    /* Media Grid for items */
-    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-top: 10px; }
-    .item-card { border: 1px solid #e2ecea; border-radius: 15px; padding: 10px; text-align: center; background: #fff; }
-    .item-img { max-width: 100%; height: 120px; object-fit: cover; border-radius: 8px; display: block; margin: 5px auto; }
-    .large-img { max-width: 100%; max-height: 450px; border-radius: 12px; display: block; margin: 10px 0; }
-    
-    /* Links */
-    .donate-btn { display: inline-block; padding: 14px 28px; background-color: #78a198; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; margin-top: 15px; border: none; cursor: pointer; transition: background 0.2s; }
-    .donate-btn:hover { background-color: #5e827a; }
-    .pin-link { display: inline-flex; align-items: center; gap: 5px; color: #916bbf; font-weight: bold; text-decoration: none; margin-top: 5px; }
-    .pin-link:hover { text-decoration: underline; }
-    .info-line { margin: 10px 0; font-size: 1.1em; color: #444; }
-  </style>
-</head>
-<body>
-
-  <div class="shep-header">
-    <img src="https://drive.google.com/thumbnail?id=1jotHfaZhBe9jKnjWK7Ldz_MXl5Pb6Loe&sz=w500" class="shep-logo" alt="SHEP Logo">
-    <div class="shep-tagline">PROMOTING SELF CARE AND HYGIENE FOR THE VULNERABLE</div>
-  </div>
-
-  <div id="tabs" class="nav-menu"></div>
-  <div id="content-area"></div>
-
-  <script>
-    // ACTIVE WORKBOOK PIPELINE LINK
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
-
-    const tabMap = {
-      "OUR MISSION": ["OUR MISSION"], 
-      "ABOUT US": ["ABOUT US"],
-      "ANNUAL APPEALS": ["ANNUAL APPEALS", "SPECIAL DRIVES"],
-      "WHAT DO WE COLLECT": ["WHAT DO WE COLLECT"],
-      "WHAT WE CAN'T ACCEPT": ["WHAT WE CAN'T ACCEPT"],
-      "WHO WE HELP": ["WHO WE HELP", "WHO DO WE HELP"],
-      "WAYS YOU CAN HELP": ["WAYS YOU CAN HELP"],
-      "DONATION POINTS": ["DONATION POINTS", "DONATION POINT"],
-      "SCHOOL DONORS": ["SCHOOL DONORS"],
-      "REGISTRATION": ["REGISTRATION"],
-      "TESTIMONIALS": ["TESTIMONIALS", "Testimonials"],
-      "MONETARY DONATIONS": ["MONETARY DONATIONS"],
-      "CONTACT SHEP": ["CONTACT SHEP"]
-    };
-
-    function cleanUrlFormat(url) {
-      if (!url) return "";
-      let src = url.toString().trim();
-      if (src.includes("drive.google.com/file/d/")) {
-        let id = src.split("/file/d/")[1].split("/")[0];
-        return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
-      }
-      return src;
-    }
-
-    fetch(scriptUrl).then(r => r.json()).then(response => {
-      const data = response.mainContent || [];
-      const testimonialData = response.testimonials || [];
-      const cantAcceptData = response.cantAccept || [];
-      const collectData = response.collect || [];
-      
-      var container = document.getElementById('tabs');
-      var contentArea = document.getElementById('content-area');
-      
-      Object.keys(tabMap).forEach(tName => {
-        var btn = document.createElement('button'); btn.className = 'tab'; btn.innerText = tName;
-        var panel = document.createElement('div'); panel.className = 'page-panel';
-        panel.id = 'panel-' + tName;
-        contentArea.appendChild(panel);
-        
-        btn.onclick = () => {
-          document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-          document.querySelectorAll('.page-panel').forEach(p => p.classList.remove('active'));
-          btn.classList.add('active');
-          panel.classList.add('active');
-          
-          if(panel.innerHTML === "") {
-             if (tName === "MONETARY DONATIONS") {
-                let targetUrl = 'https://tinyurl.com/SHEPDonation'; 
-                panel.innerHTML = `
-                  <h3>MONETARY DONATIONS</h3>
-                  <div class="commentary-box">
-                    <h3>Your Impact Matters</h3>
-                    <p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community.</p>
-                  </div>
-                  <div class="info-line" style="text-align: center;"><span>Account: Jessica Leigh Pooley</span></div>
-                  <div class="info-line" style="text-align: center;"><span>BSB: 306821 / Acct: 6706014</span></div>
-                  <center><a href="${targetUrl}" target="_blank" class="donate-btn">Complete Donation & Get Receipt</a></center>
-                `;
-                return;
-             }
-
-             if (tName === "OUR MISSION") {
-                let html = "<h3>OUR MISSION</h3>";
-                let missionRow = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === "OUR MISSION");
-                if (missionRow) {
-                   let missionText = missionRow[2] || missionRow[1] || ""; 
-                   let imgLink = missionRow[3] || missionRow[2] || "";
-                   html += `<div class="content-box" style="text-align: center;">`;
-                   if (missionText) html += `<p style="font-size: 1.4em; font-weight: bold; color: #916bbf; line-height: 1.8; margin-bottom: 20px;">${missionText}</p>`;
-                   if (imgLink && imgLink.startsWith("http")) html += `<img src="${cleanUrlFormat(imgLink)}" class="large-img" style="margin:0 auto;">`;
-                   html += `</div>`;
-                }
-                panel.innerHTML = html;
-                return;
-             }
-
-             if (tName === "TESTIMONIALS") {
-                let html = "<h3>TESTIMONIALS</h3>";
-                testimonialData.forEach((row, idx) => {
-                   if (idx === 0) return;
-                   let awardName = row[0] || "";
-                   let imgLink = row[1] || "";
-                   let storyTxt = row[2] || "";
-                   if (awardName || imgLink || storyTxt) {
-                      html += `<div class="content-box">`;
-                      if (awardName) html += `<h4 style="font-size:1.2em; color:#916bbf; border:none; margin-bottom:10px;">${awardName}</h4>`;
-                      if (storyTxt) html += `<p style="font-size:1.05em; line-height:1.5; margin-bottom:15px;">${storyTxt}</p>`;
-                      if (imgLink && imgLink.startsWith("http")) html += `<img src="${cleanUrlFormat(imgLink)}" class="large-img">`;
-                      html += `</div>`;
-                   }
-                });
-                panel.innerHTML = html;
-                return;
-             }
-
-             if (tName === "WHAT WE CAN'T ACCEPT") {
-                let html = "<h3>WHAT WE CAN'T ACCEPT</h3>";
-                cantAcceptData.forEach((row, idx) => {
-                   if (idx === 0) return;
-                   let txtItem = row[1] || "";
-                   let imgLink = row[3] || row[2] || "";
-                   if (txtItem || imgLink) {
-                      html += `<div class="content-box">`;
-                      if (txtItem) html += `<p style="font-size: 1.1em; font-weight: bold;">${txtItem}</p>`;
-                      if (imgLink && imgLink.startsWith("http")) html += `<img src="${cleanUrlFormat(imgLink)}" class="large-img">`;
-                      html += `</div>`;
-                   }
-                });
-                panel.innerHTML = html;
-                return;
-             }
-
-             if (tName === "WHAT DO WE COLLECT") {
-                let html = "<h3>WHAT DO WE COLLECT</h3>";
-                let sections = { "WOMEN": [], "MEN": [], "UNASSIGNED": [] };
-                collectData.forEach((it, idx) => {
-                   if (idx === 0) return;
-                   let subCat = it[0] ? it[0].toString().trim().toUpperCase() : "UNASSIGNED";
-                   let itemName = it[1] || "";
-                   let imgUrl = it[3] || it[2] || "";
-                   if (itemName) {
-                      if (!sections[subCat]) sections[subCat] = [];
-                      sections[subCat].push({ name: itemName, img: cleanUrlFormat(imgUrl) });
-                   }
-                });
-                ["WOMEN", "MEN", "UNASSIGNED"].forEach(gender => {
-                   if (sections[gender] && sections[gender].length > 0) {
-                      html += `<h4>${gender} ITEMS</h4><div class="items-grid">`;
-                      sections[gender].forEach(item => {
-                         html += `<div class="item-card">`;
-                         if (item.img) html += `<img src="${item.img}" class="item-img">`;
-                         html += `<p style="font-weight:bold; font-size:0.9em; margin-top:5px;">${item.name}</p></div>`;
-                      });
-                      html += `</div><br>`;
-                   }
-                });
-                panel.innerHTML = html;
-                return;
-             }
-
-             // GLOBAL FILTER FOR CORE TABS
+// GLOBAL FILTER FOR CORE TABS (UPGRADED ARRAY & OBJECT VALUE EXTRACTOR)
              let html = "<h3>" + tName + "</h3>";
+             let count = 0;
+             
              data.forEach((it, rIdx) => {
-                if (rIdx === 0) return; 
-                let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
+                if (rIdx === 0 && Array.isArray(it)) return; 
+                
+                // Extract the identifier from Column A or an object property
+                let colA = "";
+                if (it && typeof it === 'object') {
+                   colA = (it[0] || it.Category || it.Section || it.Tab || "").toString().trim().toUpperCase();
+                } else if (it) {
+                   colA = it.toString().trim().toUpperCase();
+                }
+                
                 let matchesTab = tabMap[tName].map(k => k.toUpperCase()).some(k => colA.includes(k));
                 
                 if (matchesTab) {
+                   count++;
                    let textLines = [];
                    let imageLinks = [];
                    let actionLinks = [];
                    
-                   for (let c = 1; c < it.length; c++) {
-                      let val = it[c] ? it[c].toString().trim() : "";
-                      if (!val) continue;
+                   // Dynamically read cells whether they arrive as an array or object keys
+                   let cellValues = Array.isArray(it) ? it.slice(1) : Object.values(it).slice(1);
+                   
+                   cellValues.forEach(val => {
+                      if (!val || val.toString().trim() === "" || val.toString().toUpperCase().trim() === colA) return;
+                      let strVal = val.toString().trim();
                       
-                      if (val.startsWith("http")) {
-                         if (val.includes("drive.google.com") || val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg")) {
-                            imageLinks.push(val);
+                      if (strVal.startsWith("http")) {
+                         if (strVal.includes("drive.google.com") || strVal.includes(".jpg") || strVal.includes(".png") || strVal.includes(".jpeg")) {
+                            imageLinks.push(strVal);
                          } else {
-                            actionLinks.push(val);
+                            actionLinks.push(strVal);
                          }
                       } else {
-                         textLines.push(val);
+                         textLines.push(strVal);
                       }
-                   }
+                   });
                    
                    html += `<div class="content-box">`;
                    if (tName === "ANNUAL APPEALS" && textLines[0]) html += `<h4>${textLines[0]}</h4>`;
@@ -243,7 +61,8 @@
                    html += `</div>`;
                 }
              });
-             panel.innerHTML = html;
+             
+             panel.innerHTML = count > 0 ? html : html + '<div class="content-box"><p>Database Syncing...</p></div>';
           }
         };
         container.appendChild(btn);
@@ -251,5 +70,3 @@
       container.firstChild.click();
     });
   </script>
-</body>
-</html>
