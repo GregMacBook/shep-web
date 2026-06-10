@@ -24,6 +24,10 @@
     .content-box { border: 3px solid #78a198; border-radius: 25px; padding: 20px; margin-bottom: 15px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     .commentary-box { background: #fdfaf6; border-left: 5px solid #78a198; padding: 15px; margin-bottom: 15px; border-radius: 4px; }
     
+    /* Maintenance Mode Layout Box */
+    .maintenance-box { max-width: 600px; margin: 50px auto; padding: 40px; border: 3px dashed #916bbf; border-radius: 25px; background: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .maintenance-box h2 { color: #916bbf; margin-top: 0; }
+    
     /* Media Grid for items */
     .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-top: 10px; }
     .item-card { border: 1px solid #e2ecea; border-radius: 15px; padding: 10px; text-align: center; background: #fff; }
@@ -50,7 +54,8 @@
 
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbyUtkFi5-wjofBC2wAVG-zPqbvfTAKHlFXkRlQpy25za51bdOwMnkuSt_cEsJYErtab/exec";
-    
+    const configFile = "status.json"; 
+
     const tabMap = {
       "OUR MISSION": ["OUR MISSION"], 
       "ABOUT US": ["ABOUT US"],
@@ -76,180 +81,197 @@
       return src;
     }
 
-    fetch(scriptUrl).then(r => r.json()).then(response => {
-      const data = response.mainContent;
-      const testimonialData = response.testimonials;
-      
-      var container = document.getElementById('tabs');
-      var contentArea = document.getElementById('content-area');
-      
-      Object.keys(tabMap).forEach(tName => {
-        var btn = document.createElement('button'); btn.className = 'tab'; btn.innerText = tName;
-        var panel = document.createElement('div'); panel.className = 'page-panel';
-        panel.id = 'panel-' + tName;
-        contentArea.appendChild(panel);
-        
-        btn.onclick = () => {
-          document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-          document.querySelectorAll('.page-panel').forEach(p => p.classList.remove('active'));
-          btn.classList.add('active');
-          panel.classList.add('active');
-          
-          if(panel.innerHTML === "") {
-             if (tName === "MONETARY DONATIONS") {
-                let targetUrl = 'https://tinyurl.com/SHEPDonation'; 
-                if (data && data.length > 0) {
-                  let foundRow = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === 'DONATIONFORMURL');
-                  if (foundRow && foundRow[1]) targetUrl = foundRow[1].toString().trim();
-                }
-                panel.innerHTML = `
-                  <h3>MONETARY DONATIONS</h3>
-                  <div class="commentary-box">
-                    <h3>Your Impact Matters</h3>
-                    <p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p>
-                  </div>
-                  <div class="info-line" style="text-align: center;"><span>Account: Jessica Leigh Pooley</span></div>
-                  <div class="info-line" style="text-align: center;"><span>BSB: 306821 / Acct: 6706014</span></div>
-                  <center>
-                    <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="donate-btn">Complete Donation & Get Receipt</a>
-                  </center>
-                `;
-                return;
-             }
-
-             // FIXED FOR TESTIMONIALS TAB GRID ALIGNMENT
-             if (tName === "TESTIMONIALS") {
-                let html = "<h3>TESTIMONIALS</h3>";
-                if (!testimonialData || testimonialData.length <= 1) {
-                   panel.innerHTML = html + '<div class="content-box"><p>Coming soon...</p></div>';
-                   return;
-                }
-                testimonialData.forEach((row, index) => {
-                   if (index === 0) return; // Skip headers ("Name", "Link")
-                   
-                   let labelName = row[1] ? row[1].toString().trim() : ""; // Col B
-                   let imgLink = row[2] ? row[2].toString().trim() : "";   // Col C
-                   let quote = row[3] ? row[3].toString().trim() : "";     // Col D
-                   
-                   if (labelName || quote || imgLink) {
-                      html += `<div class="content-box">`;
-                      
-                      // Display the quote message text at the top cleanly
-                      if (quote) html += `<p style="font-size: 1.05em; line-height: 1.5; margin-bottom: 15px;">${quote}</p>`;
-                      
-                      // Identify and render images cleanly
-                      if (imgLink && imgLink.startsWith("http")) {
-                         if (imgLink.includes("drive.google.com")) {
-                            // If it's your video/Drive link, render a text shortcut button instead of a broken thumbnail box
-                            html += `<p><a href="${imgLink}" target="_blank" class="pin-link">🎥 Click to view attached media</a></p>`;
-                         } else {
-                            // It's a clean Imgur image link, pop it right open!
-                            html += `<img src="${imgLink}" class="large-img" alt="Testimonial Graphic">`;
-                         }
-                      }
-                      
-                      // Display the attribution handle text at the bottom right
-                      if (labelName) html += `<p style="text-align: right; font-weight: bold; color: #78a198; margin-top: 10px;">- ${labelName}</p>`;
-                      html += `</div>`;
-                   }
-                });
-                panel.innerHTML = html;
-                return;
-             }
-
-             if (tName === "WHAT DO WE COLLECT") {
-                let html = "<h3>WHAT DO WE COLLECT</h3>";
-                let sections = { "WOMEN": [], "MEN": [], "UNASSIGNED": [] };
-                
-                data.forEach(it => {
-                   let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
-                   if (colA === "WHAT DO WE COLLECT") {
-                      let subCat = it[1] ? it[1].toString().trim().toUpperCase() : "UNASSIGNED";
-                      let itemName = it[2] || "";
-                      let imgUrl = it[3] || "";
-                      if (itemName) {
-                         if (!sections[subCat]) sections[subCat] = [];
-                         sections[subCat].push({ name: itemName, img: cleanDriveUrl(imgUrl) });
-                      }
-                   }
-                });
-
-                let totalItems = 0;
-                ["WOMEN", "MEN", "UNASSIGNED"].forEach(gender => {
-                   if (sections[gender] && sections[gender].length > 0) {
-                      totalItems += sections[gender].length;
-                      html += `<h4>${gender} ITEMS</h4><div class="items-grid">`;
-                      sections[gender].forEach(item => {
-                         html += `<div class="item-card">`;
-                         if (item.img) html += `<img src="${item.img}" class="item-img">`;
-                         html += `<p style="font-weight:bold; font-size:0.9em; margin-top:5px;">${item.name}</p></div>`;
-                      });
-                      html += `</div><br>`;
-                   }
-                });
-                panel.innerHTML = totalItems > 0 ? html : html + '<div class="content-box"><p>Coming soon...</p></div>';
-                return;
-             }
-
-             let html = "<h3>" + tName + "</h3>";
-             let count = 0;
-             
-             data.forEach((it, rIdx) => {
-                if (rIdx === 0) return; 
-                
-                let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
-                let matchesTab = tabMap[tName].map(k => k.toUpperCase()).includes(colA);
-                
-                if (matchesTab) {
-                   let cols = [];
-                   for (let c = 1; c <= 4; c++) {
-                      if (it[c] && it[c].toString().trim() !== "") {
-                         cols.push(it[c].toString().trim());
-                      }
-                   }
-                   
-                   if (cols.length === 0) return;
-                   count++;
-                   html += `<div class="content-box">`;
-                   
-                   if (tName === "ANNUAL APPEALS" && it[1]) {
-                      html += `<h4>${it[1]}</h4>`;
-                   }
-
-                   cols.forEach(val => {
-                      let isDrive = val.startsWith("http") && val.includes("drive.google.com");
-                      let isImg = val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com") || val.includes("postimg.cc") || val.includes("imgur.com") || isDrive);
-                      let isNormalLink = val.startsWith("http") && !isImg;
-                      
-                      if (isImg) {
-                         val.split(',').forEach(imgUrl => {
-                            html += `<img src="${cleanDriveUrl(imgUrl)}" class="large-img" alt="SHEP Asset">`;
-                         });
-                      } else if (!isNormalLink) {
-                         if (tName === "ANNUAL APPEALS" && val === it[1]) return;
-                         html += `<p>${val}</p>`;
-                      }
-                   });
-
-                   let finalLink = cols.find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg") && !val.includes("drive.google.com"));
-                   
-                   if (finalLink) {
-                      if (tName === "DONATION POINTS" || colA === "DONATION POINT" || colA === "DONATION POINTS") {
-                         html += `<a href="${finalLink}" target="_blank" class="pin-link">📍 Click for Map Location</a>`;
-                      } else {
-                         html += `<br><a href="${finalLink}" target="_blank" class="pin-link">Click here for more</a>`;
-                      }
-                   }
-                   html += `</div>`;
-                }
-             });
-             panel.innerHTML = count > 0 ? html : html + '<div class="content-box"><p>Coming soon...</p></div>';
-          }
-        };
-        container.appendChild(btn);
+    // Read circuit breaker file from repository
+    fetch(configFile)
+      .then(r => r.json())
+      .then(config => {
+        if (config.status && config.status.toUpperCase().trim() === "OFF") {
+          document.getElementById('tabs').style.display = 'none';
+          document.getElementById('content-area').innerHTML = `
+            <div class="maintenance-box">
+              <h2>🛠️ Portal Under Maintenance</h2>
+              <p style="font-size: 1.1em; line-height: 1.6; text-align: center;">
+                The SHEP Portal is currently undergoing updates to improve our data sync and display systems. 
+                We will be back operational shortly! Thank you for your patience.
+              </p>
+            </div>
+          `;
+          return;
+        }
+        runDataPipeline();
+      })
+      .catch(err => {
+        runDataPipeline();
       });
-      container.firstChild.click();
-    });
+
+    function runDataPipeline() {
+      fetch(scriptUrl).then(r => r.json()).then(response => {
+        const data = response.mainContent;
+        const testimonialData = response.testimonials;
+        
+        var container = document.getElementById('tabs');
+        var contentArea = document.getElementById('content-area');
+        
+        Object.keys(tabMap).forEach(tName => {
+          var btn = document.createElement('button'); btn.className = 'tab'; btn.innerText = tName;
+          var panel = document.createElement('div'); panel.className = 'page-panel';
+          panel.id = 'panel-' + tName;
+          contentArea.appendChild(panel);
+          
+          btn.onclick = () => {
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.page-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            panel.classList.add('active');
+            
+            if(panel.innerHTML === "") {
+               if (tName === "MONETARY DONATIONS") {
+                  let targetUrl = 'https://tinyurl.com/SHEPDonation'; 
+                  if (data && data.length > 0) {
+                     let foundRow = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === 'DONATIONFORMURL');
+                     if (foundRow && foundRow[1]) targetUrl = foundRow[1].toString().trim();
+                  }
+                  panel.innerHTML = `
+                    <h3>MONETARY DONATIONS</h3>
+                    <div class="commentary-box">
+                      <h3>Your Impact Matters</h3>
+                      <p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p>
+                    </div>
+                    <div class="info-line" style="text-align: center;"><span>Account: Jessica Leigh Pooley</span></div>
+                    <div class="info-line" style="text-align: center;"><span>BSB: 306821 / Acct: 6706014</span></div>
+                    <center>
+                      <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="donate-btn">Complete Donation & Get Receipt</a>
+                    </center>
+                  `;
+                  return;
+               }
+
+               if (tName === "TESTIMONIALS") {
+                  let html = "<h3>TESTIMONIALS</h3>";
+                  if (!testimonialData || testimonialData.length <= 1) {
+                     panel.innerHTML = html + '<div class="content-box"><p>Database Syncing...</p></div>';
+                     return;
+                  }
+                  testimonialData.forEach((row, index) => {
+                     if (index === 0) return; 
+                     
+                     let labelName = row[1] ? row[1].toString().trim() : ""; 
+                     let imgLink = row[2] ? row[2].toString().trim() : "";   
+                     let quote = row[3] ? row[3].toString().trim() : "";     
+                     
+                     if (labelName || quote || imgLink) {
+                        html += `<div class="content-box">`;
+                        if (quote) html += `<p style="font-size: 1.05em; line-height: 1.5; margin-bottom: 15px;">${quote}</p>`;
+                        
+                        if (imgLink && imgLink.startsWith("http")) {
+                           if (imgLink.includes("drive.google.com")) {
+                              html += `<p><a href="${imgLink}" target="_blank" class="pin-link">🎥 Click to view attached media</a></p>`;
+                           } else {
+                              html += `<img src="${imgLink}" class="large-img" alt="Testimonial Graphic">`;
+                           }
+                        }
+                        if (labelName) html += `<p style="text-align: right; font-weight: bold; color: #78a198; margin-top: 10px;">- ${labelName}</p>`;
+                        html += `</div>`;
+                     }
+                  });
+                  panel.innerHTML = html;
+                  return;
+               }
+
+               if (tName === "WHAT DO WE COLLECT") {
+                  let html = "<h3>WHAT DO WE COLLECT</h3>";
+                  let sections = { "WOMEN": [], "MEN": [], "UNASSIGNED": [] };
+                  
+                  data.forEach(it => {
+                     let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
+                     if (colA === "WHAT DO WE COLLECT") {
+                        let subCat = it[1] ? it[1].toString().trim().toUpperCase() : "UNASSIGNED";
+                        let itemName = it[2] || "";
+                        let imgUrl = it[3] || "";
+                        if (itemName) {
+                           if (!sections[subCat]) sections[subCat] = [];
+                           sections[subCat].push({ name: itemName, img: cleanDriveUrl(imgUrl) });
+                        }
+                     }
+                  });
+
+                  let totalItems = 0;
+                  ["WOMEN", "MEN", "UNASSIGNED"].forEach(gender => {
+                     if (sections[gender] && sections[gender].length > 0) {
+                        totalItems += sections[gender].length;
+                        html += `<h4>${gender} ITEMS</h4><div class="items-grid">`;
+                        sections[gender].forEach(item => {
+                           html += `<div class="item-card">`;
+                           if (item.img) html += `<img src="${item.img}" class="item-img">`;
+                           html += `<p style="font-weight:bold; font-size:0.9em; margin-top:5px;">${item.name}</p></div>`;
+                        });
+                        html += `</div><br>`;
+                     }
+                  });
+                  panel.innerHTML = totalItems > 0 ? html : html + '<div class="content-box"><p>Database Syncing...</p></div>';
+                  return;
+               }
+
+               let html = "<h3>" + tName + "</h3>";
+               let count = 0;
+               
+               data.forEach((it, rIdx) => {
+                  if (rIdx === 0) return; 
+                  
+                  let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
+                  let matchesTab = tabMap[tName].map(k => k.toUpperCase()).includes(colA);
+                  
+                  if (matchesTab) {
+                     let cols = [];
+                     for (let c = 1; c <= 4; c++) {
+                        if (it[c] && it[c].toString().trim() !== "") {
+                           cols.push(it[c].toString().trim());
+                        }
+                     }
+                     
+                     if (cols.length === 0) return;
+                     count++;
+                     html += `<div class="content-box">`;
+                     
+                     if (tName === "ANNUAL APPEALS" && it[1]) {
+                        html += `<h4>${it[1]}</h4>`;
+                     }
+
+                     cols.forEach(val => {
+                        let isDrive = val.startsWith("http") && val.includes("drive.google.com");
+                        let isImg = val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com") || val.includes("postimg.cc") || val.includes("imgur.com") || isDrive);
+                        let isNormalLink = val.startsWith("http") && !isImg;
+                        
+                        if (isImg) {
+                           val.split(',').forEach(imgUrl => {
+                              html += `<img src="${cleanDriveUrl(imgUrl)}" class="large-img" alt="SHEP Asset">`;
+                           });
+                        } else if (!isNormalLink) {
+                           if (tName === "ANNUAL APPEALS" && val === it[1]) return;
+                           html += `<p>${val}</p>`;
+                        }
+                     });
+
+                     let finalLink = cols.find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg") && !val.includes("drive.google.com"));
+                     
+                     if (finalLink) {
+                        if (tName === "DONATION POINTS" || colA === "DONATION POINT" || colA === "DONATION POINTS") {
+                           html += `<a href="${finalLink}" target="_blank" class="pin-link">📍 Click for Map Location</a>`;
+                        } else {
+                           html += `<br><a href="${finalLink}" target="_blank" class="pin-link">Click here for more</a>`;
+                        }
+                     }
+                     html += `</div>`;
+                  }
+               });
+               panel.innerHTML = count > 0 ? html : html + '<div class="content-box"><p>Database Syncing...</p></div>';
+            }
+          };
+          container.appendChild(btn);
+        });
+        container.firstChild.click();
+      });
+    }
   </script>
 </body>
 </html>
