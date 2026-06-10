@@ -124,16 +124,27 @@
             panel.classList.add('active');
             
             if(panel.innerHTML === "") {
-              if (tName === "OUR MISSION") {
-                  let missionText = "PROMOTING SELF CARE AND HYGIENE FOR THE VULNERABLE";
-                  panel.innerHTML = `
-                    <h3>OUR MISSION</h3>
-                    <div class="content-box">
-                      <p style="font-size: 1.2em; font-weight: bold; color: #916bbf; text-align: center; line-height: 1.6;">
-                        ${missionText}
-                      </p>
-                    </div>
-                  `;
+          if (tName === "OUR MISSION") {
+                  let html = "<h3>OUR MISSION</h3>";
+                  // Find the row where Column A is "OUR MISSION" inside the main data stream
+                  let missionRow = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === "OUR MISSION");
+                  
+                  if (missionRow) {
+                     let missionText = missionRow[1] || ""; // Column B
+                     let imgLink = missionRow[2] || "";     // Column C
+                     
+                     html += `<div class="content-box" style="text-align: center;">`;
+                     if (missionText) {
+                        html += `<p style="font-size: 1.4em; font-weight: bold; color: #916bbf; line-height: 1.8; margin-bottom: 20px;">${missionText}</p>`;
+                     }
+                     if (imgLink && imgLink.toString().trim().startsWith("http")) {
+                        html += `<img src="${cleanUrlFormat(imgLink)}" class="large-img" style="margin: 0 auto; max-height: 400px;">`;
+                     }
+                     html += `</div>`;
+                  } else {
+                     html += '<div class="content-box"><p>Database Syncing...</p></div>';
+                  }
+                  panel.innerHTML = html;
                   return;
                }
                if (tName === "MONETARY DONATIONS") {
