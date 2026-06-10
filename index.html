@@ -28,7 +28,7 @@
     .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-top: 10px; }
     .item-card { border: 1px solid #e2ecea; border-radius: 15px; padding: 10px; text-align: center; background: #fff; }
     .item-img { max-width: 100%; height: 120px; object-fit: cover; border-radius: 8px; display: block; margin: 5px auto; }
-    .large-img { max-width: 100%; max-height: 250px; border-radius: 12px; display: block; margin: 10px 0; }
+    .large-img { max-width: 100%; max-height: 450px; border-radius: 12px; display: block; margin: 10px 0; }
     
     /* Button & Link Styles */
     .donate-btn { display: inline-block; padding: 14px 28px; background-color: #78a198; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; margin-top: 15px; border: none; cursor: pointer; transition: background 0.2s; }
@@ -66,6 +66,15 @@
       "MONETARY DONATIONS": ["MONETARY DONATIONS"],
       "CONTACT SHEP": ["CONTACT SHEP"]
     };
+
+    function cleanDriveUrl(url) {
+      let src = url.toString().trim();
+      if (src.includes("drive.google.com/file/d/")) {
+        let id = src.split("/file/d/")[1].split("/")[0];
+        return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
+      }
+      return src;
+    }
 
     fetch(scriptUrl).then(r => r.json()).then(response => {
       const data = response.mainContent;
@@ -108,6 +117,7 @@
                 return;
              }
 
+             // FIXED FOR TESTIMONIALS TAB GRID ALIGNMENT
              if (tName === "TESTIMONIALS") {
                 let html = "<h3>TESTIMONIALS</h3>";
                 if (!testimonialData || testimonialData.length <= 1) {
@@ -115,16 +125,31 @@
                    return;
                 }
                 testimonialData.forEach((row, index) => {
-                   // Skip header row AND skip row if it's the template label row
-                   if (index === 0 || (row[1] && row[1].toString().includes("Label Name"))) return; 
-                   let labelName = row[1] || "";
-                   let imgLink = row[2] || "";
-                   let quote = row[3] || "";
+                   if (index === 0) return; // Skip headers ("Name", "Link")
+                   
+                   let labelName = row[1] ? row[1].toString().trim() : ""; // Col B
+                   let imgLink = row[2] ? row[2].toString().trim() : "";   // Col C
+                   let quote = row[3] ? row[3].toString().trim() : "";     // Col D
+                   
                    if (labelName || quote || imgLink) {
                       html += `<div class="content-box">`;
-                      if (quote) html += `<p style="font-style: italic; font-size: 1.1em;">"${quote}"</p>`;
-                      if (imgLink && imgLink.toString().trim().startsWith("http")) html += `<img src="${imgLink.toString().trim()}" class="large-img">`;
-                      if (labelName) html += `<p style="text-align: right; font-weight: bold; color: #78a198;">- ${labelName}</p>`;
+                      
+                      // Display the quote message text at the top cleanly
+                      if (quote) html += `<p style="font-size: 1.05em; line-height: 1.5; margin-bottom: 15px;">${quote}</p>`;
+                      
+                      // Identify and render images cleanly
+                      if (imgLink && imgLink.startsWith("http")) {
+                         if (imgLink.includes("drive.google.com")) {
+                            // If it's your video/Drive link, render a text shortcut button instead of a broken thumbnail box
+                            html += `<p><a href="${imgLink}" target="_blank" class="pin-link">🎥 Click to view attached media</a></p>`;
+                         } else {
+                            // It's a clean Imgur image link, pop it right open!
+                            html += `<img src="${imgLink}" class="large-img" alt="Testimonial Graphic">`;
+                         }
+                      }
+                      
+                      // Display the attribution handle text at the bottom right
+                      if (labelName) html += `<p style="text-align: right; font-weight: bold; color: #78a198; margin-top: 10px;">- ${labelName}</p>`;
                       html += `</div>`;
                    }
                 });
@@ -144,7 +169,7 @@
                       let imgUrl = it[3] || "";
                       if (itemName) {
                          if (!sections[subCat]) sections[subCat] = [];
-                         sections[subCat].push({ name: itemName, img: imgUrl });
+                         sections[subCat].push({ name: itemName, img: cleanDriveUrl(imgUrl) });
                       }
                    }
                 });
@@ -156,7 +181,7 @@
                       html += `<h4>${gender} ITEMS</h4><div class="items-grid">`;
                       sections[gender].forEach(item => {
                          html += `<div class="item-card">`;
-                         if (item.img) html += `<img src="${item.img.toString().trim()}" class="item-img">`;
+                         if (item.img) html += `<img src="${item.img}" class="item-img">`;
                          html += `<p style="font-weight:bold; font-size:0.9em; margin-top:5px;">${item.name}</p></div>`;
                       });
                       html += `</div><br>`;
@@ -192,12 +217,13 @@
                    }
 
                    cols.forEach(val => {
-                      let isImg = val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com") || val.includes("postimg.cc") || val.includes("imgur.com"));
+                      let isDrive = val.startsWith("http") && val.includes("drive.google.com");
+                      let isImg = val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com") || val.includes("postimg.cc") || val.includes("imgur.com") || isDrive);
                       let isNormalLink = val.startsWith("http") && !isImg;
                       
                       if (isImg) {
                          val.split(',').forEach(imgUrl => {
-                            html += `<img src="${imgUrl.trim()}" class="large-img" alt="SHEP Asset">`;
+                            html += `<img src="${cleanDriveUrl(imgUrl)}" class="large-img" alt="SHEP Asset">`;
                          });
                       } else if (!isNormalLink) {
                          if (tName === "ANNUAL APPEALS" && val === it[1]) return;
@@ -205,7 +231,7 @@
                       }
                    });
 
-                   let finalLink = cols.find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg"));
+                   let finalLink = cols.find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg") && !val.includes("drive.google.com"));
                    
                    if (finalLink) {
                       if (tName === "DONATION POINTS" || colA === "DONATION POINT" || colA === "DONATION POINTS") {
