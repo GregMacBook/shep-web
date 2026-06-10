@@ -81,7 +81,6 @@
       return src;
     }
 
-    // Read circuit breaker file from repository
     fetch(configFile)
       .then(r => r.json())
       .then(config => {
@@ -100,14 +99,14 @@
         }
         runDataPipeline();
       })
-      .catch(err => {
-        runDataPipeline();
-      });
+      .catch(err => { runDataPipeline(); });
 
     function runDataPipeline() {
       fetch(scriptUrl).then(r => r.json()).then(response => {
-        const data = response.mainContent;
-        const testimonialData = response.testimonials;
+        const data = response.mainContent || [];
+        const testimonialData = response.testimonials || [];
+        const cantAcceptData = response.cantAccept || [];
+        const collectData = response.collect || [];
         
         var container = document.getElementById('tabs');
         var contentArea = document.getElementById('content-area');
@@ -148,13 +147,12 @@
 
                if (tName === "TESTIMONIALS") {
                   let html = "<h3>TESTIMONIALS</h3>";
-                  if (!testimonialData || testimonialData.length <= 1) {
+                  if (testimonialData.length <= 1) {
                      panel.innerHTML = html + '<div class="content-box"><p>Database Syncing...</p></div>';
                      return;
                   }
                   testimonialData.forEach((row, index) => {
                      if (index === 0) return; 
-                     
                      let labelName = row[1] ? row[1].toString().trim() : ""; 
                      let imgLink = row[2] ? row[2].toString().trim() : "";   
                      let quote = row[3] ? row[3].toString().trim() : "";     
@@ -162,12 +160,11 @@
                      if (labelName || quote || imgLink) {
                         html += `<div class="content-box">`;
                         if (quote) html += `<p style="font-size: 1.05em; line-height: 1.5; margin-bottom: 15px;">${quote}</p>`;
-                        
                         if (imgLink && imgLink.startsWith("http")) {
                            if (imgLink.includes("drive.google.com")) {
                               html += `<p><a href="${imgLink}" target="_blank" class="pin-link">🎥 Click to view attached media</a></p>`;
                            } else {
-                              html += `<img src="${imgLink}" class="large-img" alt="Testimonial Graphic">`;
+                              html += `<img src="${imgLink}" class="large-img">`;
                            }
                         }
                         if (labelName) html += `<p style="text-align: right; font-weight: bold; color: #78a198; margin-top: 10px;">- ${labelName}</p>`;
@@ -178,20 +175,39 @@
                   return;
                }
 
+               if (tName === "WHAT WE CAN'T ACCEPT") {
+                  let html = "<h3>WHAT WE CAN'T ACCEPT</h3>";
+                  let count = 0;
+                  cantAcceptData.forEach((row, idx) => {
+                     if (idx === 0) return;
+                     let txtItem = row[1] || "";
+                     let imgLink = row[2] || "";
+                     if (txtItem || imgLink) {
+                        count++;
+                        html += `<div class="content-box">`;
+                        if (txtItem) html += `<p style="font-size: 1.1em; font-weight: bold;">${txtItem}</p>`;
+                        if (imgLink && imgLink.toString().trim().startsWith("http")) {
+                           html += `<img src="${cleanDriveUrl(imgLink)}" class="large-img">`;
+                        }
+                        html += `</div>`;
+                     }
+                  });
+                  panel.innerHTML = count > 0 ? html : html + '<div class="content-box"><p>Database Syncing...</p></div>';
+                  return;
+               }
+
                if (tName === "WHAT DO WE COLLECT") {
                   let html = "<h3>WHAT DO WE COLLECT</h3>";
                   let sections = { "WOMEN": [], "MEN": [], "UNASSIGNED": [] };
                   
-                  data.forEach(it => {
-                     let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
-                     if (colA === "WHAT DO WE COLLECT") {
-                        let subCat = it[1] ? it[1].toString().trim().toUpperCase() : "UNASSIGNED";
-                        let itemName = it[2] || "";
-                        let imgUrl = it[3] || "";
-                        if (itemName) {
-                           if (!sections[subCat]) sections[subCat] = [];
-                           sections[subCat].push({ name: itemName, img: cleanDriveUrl(imgUrl) });
-                        }
+                  collectData.forEach((it, idx) => {
+                     if (idx === 0) return;
+                     let subCat = it[1] ? it[1].toString().trim().toUpperCase() : "UNASSIGNED";
+                     let itemName = it[2] || "";
+                     let imgUrl = it[3] || "";
+                     if (itemName) {
+                        if (!sections[subCat]) sections[subCat] = [];
+                        sections[subCat].push({ name: itemName, img: cleanDriveUrl(imgUrl) });
                      }
                   });
 
@@ -217,7 +233,6 @@
                
                data.forEach((it, rIdx) => {
                   if (rIdx === 0) return; 
-                  
                   let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
                   let matchesTab = tabMap[tName].map(k => k.toUpperCase()).includes(colA);
                   
@@ -228,15 +243,12 @@
                            cols.push(it[c].toString().trim());
                         }
                      }
-                     
                      if (cols.length === 0) return;
                      count++;
                      html += `<div class="content-box">`;
-                     
                      if (tName === "ANNUAL APPEALS" && it[1]) {
                         html += `<h4>${it[1]}</h4>`;
                      }
-
                      cols.forEach(val => {
                         let isDrive = val.startsWith("http") && val.includes("drive.google.com");
                         let isImg = val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com") || val.includes("postimg.cc") || val.includes("imgur.com") || isDrive);
@@ -244,7 +256,7 @@
                         
                         if (isImg) {
                            val.split(',').forEach(imgUrl => {
-                              html += `<img src="${cleanDriveUrl(imgUrl)}" class="large-img" alt="SHEP Asset">`;
+                              html += `<img src="${cleanDriveUrl(imgUrl)}" class="large-img">`;
                            });
                         } else if (!isNormalLink) {
                            if (tName === "ANNUAL APPEALS" && val === it[1]) return;
@@ -253,7 +265,6 @@
                      });
 
                      let finalLink = cols.find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg") && !val.includes("drive.google.com"));
-                     
                      if (finalLink) {
                         if (tName === "DONATION POINTS" || colA === "DONATION POINT" || colA === "DONATION POINTS") {
                            html += `<a href="${finalLink}" target="_blank" class="pin-link">📍 Click for Map Location</a>`;
