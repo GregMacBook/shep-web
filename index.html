@@ -38,34 +38,9 @@
 
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
+    const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
-    const cleanMenuKeys = [
-      "OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT",
-      "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP",
-      "DONATION POINTS", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS",
-      "MONETARY DONATIONS", "CONTACT SHEP"
-    ];
-
-    function formatBold(text) { 
-      return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
-    }
-
-function getImgUrl(url) {
-      if (!url) return "";
-      var str = url.toString().trim();
-      
-      // If it's a Googleusercontent link, ensure it has the correct display parameter
-      if (str.includes('googleusercontent.com')) {
-         return str + "?usp=sharing";
-      }
-      
-      // Handle standard Drive links
-      if (str.includes('/file/d/')) {
-        var id = str.split('/file/d/')[1].split('/')[0];
-        return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
-      }
-      return str;
-    }
+    function formatBold(text) { return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); }
 
     fetch(scriptUrl)
       .then(r => r.json())
@@ -77,195 +52,74 @@ function getImgUrl(url) {
 
         cleanMenuKeys.forEach(function(tName, index) {
           var btn = document.createElement('div');
-          btn.className = 'tab'; 
-          btn.innerText = tName;
-          
+          btn.className = 'tab'; btn.innerText = tName;
           btn.onclick = function() {
             document.getElementById('tab-title').innerText = tName;
             display.innerHTML = "";
-            
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
 
             if (tName === "MONETARY DONATIONS") {
-              display.innerHTML = `
-                <div class="commentary-box">
-                  <h3>Your Impact Matters</h3>
-                  <p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p>
-                </div>
-                <div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div>
-                <div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div>
-                <center><button class="donate-btn" onclick="window.open('https://tinyurl.com/SHEPDonation', '_blank')">Complete Donation & Get Receipt</button></center>
-              `;
+              display.innerHTML = `<div class="commentary-box"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community.</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div><div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div><center><button class="donate-btn" onclick="window.open('https://tinyurl.com/SHEPDonation', '_blank')">Complete Donation & Get Receipt</button></center>`;
               return;
             }
-if (tName === "ANNUAL APPEALS") {
+
+            if (tName === "ANNUAL APPEALS") {
               let appealsRows = data.filter(row => row[0] && row[0].toString().toUpperCase().trim() === "ANNUAL APPEALS");
-              
               if (appealsRows.length > 0) {
                 appealsRows.forEach(row => {
                   let textLines = [];
                   let imageLinks = [];
-                  
-                  for (let c = 1; c < row.length; c++) {
+                  for (let c = 1; c <= 5; c++) {
                     let val = row[c] ? row[c].toString().trim() : "";
                     if (!val) continue;
-                    
-                    // Force detection of your specific Google content links
-                    if (val.startsWith("http")) {
-                      if (val.includes("usercontent.com") || val.includes("drive.google.com")) {
-                        imageLinks.push(val);
-                      } else {
-                        imageLinks.push(val);
-                      }
+                    if (val.match(/\.(jpg|jpeg|png|gif)$/i) || val.includes("imgur.com") || val.includes("googleusercontent.com")) {
+                      imageLinks.push(val);
                     } else {
                       textLines.push(val);
                     }
                   }
-
-                  let title = textLines.length > 0 ? textLines[0] : "Special Appeal";
-                  let details = textLines.slice(1).join('<br>');
-
-                  display.innerHTML += `
-                    <div style="background: white; border-top: 5px solid #ac8ad4; border-radius: 15px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
-                      <h2 style="color: #916bbf; margin-top: 0; margin-bottom: 10px; font-size: 1.8em; text-transform: uppercase;">
-                        ${formatBold(title)}
-                      </h2>
-                      ${details ? `<p style="font-size: 1.2em; color: #4a4e69; margin-bottom: 25px;">${formatBold(details)}</p>` : ''}
-                      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
-                        ${imageLinks.map(img => `<img src="${img}" onerror="this.style.display='none'" style="max-height: 400px; width: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">`).join('')}
-                      </div>
-                    </div>
-                  `;
+                  let title = textLines[0] || "Special Appeal";
+                  display.innerHTML += `<div style="background: white; border-top: 5px solid #ac8ad4; border-radius: 15px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;"><h2 style="color: #916bbf; margin-top:0;">${formatBold(title)}</h2><p>${textLines.slice(1).join('<br>')}</p><div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">${imageLinks.map(img => `<img src="${img}" style="max-height: 400px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">`).join('')}</div></div>`;
                 });
-              } else {
-                display.innerHTML = '<div class="commentary-box"><p>Database syncing or tab is currently clear.</p></div>';
               }
               return;
             }
+
             if (tName === "OUR MISSION") {
-              let missionRow = data.find(row => row[0] && row[0].toString().toUpperCase().trim() === "OUR MISSION");
-              if (missionRow) {
-                let textLines = [];
-                let imgUrl = "";
-                
-                for (let c = 1; c < missionRow.length; c++) {
-                  let val = missionRow[c] ? missionRow[c].toString().trim() : "";
-                  if (!val) continue;
-                  if (val.startsWith("http")) {
-                    imgUrl = getImgUrl(val);
-                  } else {
-                    textLines.push(val);
-                  }
-                }
-
-                // Split layout styling: Text left, Poster right
-                display.innerHTML = `
-                  <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 30px; background: white; border-left: 10px solid #916bbf; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 900px;">
-                    <div style="flex: 1; text-align: center;">
-                      <p style="font-size: 1.8em; font-weight: bold; color: #4a4e69; line-height: 2; margin: 0;">
-                        ${textLines.join('<br>').replace(/\n/g, '<br>')}
-                      </p>
-                    </div>
-                    ${imgUrl ? `
-                    <div style="flex: 1; display: flex; justify-content: center;">
-                      <img src="${imgUrl}" style="max-height: 450px; width: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                    </div>
-                    ` : ''}
-                  </div>
-                `;
-              } else {
-                display.innerHTML = '<div class="commentary-box"><p>Database syncing...</p></div>';
+              let row = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === "OUR MISSION");
+              if(row) {
+                 let text = row[1] || "";
+                 let img = row[2] && (row[2].match(/\.(jpg|jpeg|png|gif)$/i) || row[2].includes("usercontent")) ? row[2] : "";
+                 display.innerHTML = `<div style="display:flex; align-items:center; gap:30px; background:white; padding:30px; border-radius:15px; box-shadow:0 4px 15px rgba(0,0,0,0.05);"><div style="flex:1;"><p style="font-size:1.5em; font-weight:bold;">${text.replace(/\n/g, '<br>')}</p></div>${img ? `<div style="flex:1;"><img src="${img}" style="max-width:100%; border-radius:12px;"></div>` : ''}</div>`;
               }
               return;
             }
 
-            // FILTER & BUILD CONTENT CARDS FOR OTHER CORE TABS DYNAMICALLY
-            let foundMatch = false;
-
-            data.forEach(function(row) {
-              if (!Array.isArray(row) || row.length === 0) return;
-              var colA = row[0] ? row[0].toString().trim().toUpperCase() : "";
-              
-              if (colA === tName) {
-                foundMatch = true;
-                let textLines = [];
-                let imageLinks = [];
-                let actionLinks = [];
-
-                for (let c = 1; c < row.length; c++) {
-                  let val = row[c] ? row[c].toString().trim() : "";
-                  if (!val) continue;
-
-                  if (val.startsWith("http")) {
-                     if (val.includes("drive.google.com") || val.includes("imgur.com") || val.includes("postimg.cc") || val.match(/\.(jpg|jpeg|png|gif)$/i)) {
-                        imageLinks.push(val);
-                     } else {
-                        actionLinks.push(val);
-                     }
-                  } else {
-                     textLines.push(val);
-                  }
+            let found = false;
+            data.forEach(row => {
+              if (row[0] && row[0].toString().trim().toUpperCase() === tName) {
+                found = true;
+                let text = [], imgs = [], links = [];
+                for(let c=1; c<row.length; c++) {
+                  let v = row[c] ? row[c].toString().trim() : "";
+                  if(!v) continue;
+                  if(v.match(/\.(jpg|jpeg|png|gif)$/i) || v.includes("usercontent")) imgs.push(v);
+                  else if(v.startsWith("http")) links.push(v);
+                  else text.push(v);
                 }
-
-                if (textLines.length > 0 || imageLinks.length > 0 || actionLinks.length > 0) {
-                  var card = document.createElement('div');
-                  card.className = 'info-line';
-
-                  var textContainer = document.createElement('div');
-                  textContainer.className = 'info-line-row';
-                  
-                  var textSpan = document.createElement('span');
-                  textSpan.innerHTML = formatBold(textLines.join('<br>').replace(/\n/g, '<br>'));
-                  textContainer.appendChild(textSpan);
-
-                  actionLinks.forEach(lnk => {
-                     if (tName === "DONATION POINTS" || lnk.includes("maps.google.com") || lnk.includes("maps.app.goo.gl")) {
-                        var pin = document.createElement('div');
-                        pin.className = 'location-pin';
-                        pin.innerHTML = '📍';
-                        pin.onclick = function(e) { window.open(lnk, '_blank'); e.stopPropagation(); };
-                        textContainer.appendChild(pin);
-                     }
-                  });
-
-                  card.appendChild(textContainer);
-
-                  actionLinks.forEach(lnk => {
-                     if (tName !== "DONATION POINTS" && !lnk.includes("maps.google.com") && !lnk.includes("maps.app.goo.gl")) {
-                        var linkBtn = document.createElement('a');
-                        linkBtn.className = 'action-link-btn';
-                        linkBtn.href = lnk;
-                        linkBtn.target = '_blank';
-                        linkBtn.innerText = '🔗 Open External Resource';
-                        card.appendChild(linkBtn);
-                     }
-                  });
-
-                  imageLinks.forEach(img => {
-                     var imgElement = document.createElement('img');
-                     imgElement.className = 'large-gallery-img';
-                     imgElement.src = getImgUrl(img);
-                     card.appendChild(imgElement);
-                  });
-
-                  display.appendChild(card);
-                }
+                let card = document.createElement('div'); card.className = 'info-line';
+                card.innerHTML = `<span>${formatBold(text.join('<br>'))}</span>`;
+                links.forEach(l => card.innerHTML += `<a href="${l}" class="action-link-btn" target="_blank">🔗 Link</a>`);
+                imgs.forEach(i => card.innerHTML += `<img src="${i}" class="large-gallery-img">`);
+                display.appendChild(card);
               }
             });
-
-            if (!foundMatch) {
-              display.innerHTML = '<div class="commentary-box"><p>Database syncing or tab is currently clear.</p></div>';
-            }
+            if (!found) display.innerHTML = '<div class="commentary-box">Database syncing...</div>';
           };
-
           tabContainer.appendChild(btn);
           if (index === 0) btn.click();
         });
-      })
-      .catch(err => {
-        console.error("Pipeline failure: ", err);
-        document.getElementById('content').innerHTML = '<div class="commentary-box"><h3>Sync Interrupted</h3><p>Could not connect to live spreadsheet data.</p></div>';
       });
   </script>
 </body>
