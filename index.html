@@ -72,7 +72,7 @@
       "CONTACT SHEP": ["CONTACT SHEP"]
     };
 
-    // Global sanitation engine for Google Drive resources & Imgur wrappers
+    // Global sanitation engine for handling absolute resource addresses
     function cleanUrlFormat(url) {
       if (!url) return "";
       let src = url.toString().trim();
@@ -80,8 +80,9 @@
         let id = src.split("/file/d/")[1].split("/")[0];
         return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
       }
-      if (src.includes("imgur.com/") && !src.includes("i.imgur.com")) {
-        return src.replace("imgur.com/", "i.imgur.com/");
+      // UNIVERSAL IMGUR PATCH: Forces any variation of imgur.com straight to the direct CDN assets address
+      if (src.includes("imgur.com") && !src.includes("i.imgur.com")) {
+        return src.replace("imgur.com", "i.imgur.com");
       }
       return src;
     }
@@ -150,7 +151,6 @@
                   return;
                }
 
-               // FIXED TESTIMONIAL ENGINE TO PROPERLY INTERCEPT CONVERTED URLS
                if (tName === "TESTIMONIALS") {
                   let html = "<h3>TESTIMONIALS</h3>";
                   if (testimonialData.length <= 1) {
@@ -171,7 +171,6 @@
                            if (imgLink.includes("drive.google.com")) {
                               html += `<p><a href="${imgLink}" target="_blank" class="pin-link">🎥 Click to view attached media</a></p>`;
                            } else {
-                              // We explicitly run the cleaning filter here inside the template builder
                               let processedImg = cleanUrlFormat(imgLink);
                               html += `<img src="${processedImg}" class="large-img">`;
                            }
