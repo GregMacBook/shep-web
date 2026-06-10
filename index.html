@@ -50,10 +50,13 @@
       return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
     }
 
-    function getImgUrl(url) {
+ function getImgUrl(url) {
       if (!url) return "";
       var str = url.toString().trim();
-      if (str.includes('googleusercontent.com')) return str;
+      // If it's already a direct Google content link, return it as-is
+      if (str.includes('lh3.googleusercontent.com') || str.includes('googleusercontent.com')) return str;
+      
+      // Otherwise, process as a standard Drive file link
       if (str.includes('/file/d/')) {
         var id = str.split('/file/d/')[1].split('/')[0];
         return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
@@ -101,19 +104,22 @@ if (tName === "ANNUAL APPEALS") {
                   let textLines = [];
                   let imageLinks = [];
                   
-                  // Scan the row for text (Cols B & C) and poster images (Cols D & E)
                   for (let c = 1; c < row.length; c++) {
                     let val = row[c] ? row[c].toString().trim() : "";
                     if (!val) continue;
                     
+                    // Force detection of your specific Google content links
                     if (val.startsWith("http")) {
-                      imageLinks.push(getImgUrl(val));
+                      if (val.includes("usercontent.com") || val.includes("drive.google.com")) {
+                        imageLinks.push(val);
+                      } else {
+                        imageLinks.push(getImgUrl(val));
+                      }
                     } else {
                       textLines.push(val);
                     }
                   }
 
-                  // Treat the first text item as the Header (e.g., "Mother's Day")
                   let title = textLines.length > 0 ? textLines[0] : "Special Appeal";
                   let details = textLines.slice(1).join('<br>');
 
@@ -123,10 +129,8 @@ if (tName === "ANNUAL APPEALS") {
                         ${formatBold(title)}
                       </h2>
                       ${details ? `<p style="font-size: 1.2em; color: #4a4e69; margin-bottom: 25px;">${formatBold(details)}</p>` : ''}
-                      
-                      <!-- Posters side-by-side flexbox -->
                       <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
-                        ${imageLinks.map(img => `<img src="${img}" style="max-height: 400px; width: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">`).join('')}
+                        ${imageLinks.map(img => `<img src="${img}" onerror="this.style.display='none'" style="max-height: 400px; width: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">`).join('')}
                       </div>
                     </div>
                   `;
