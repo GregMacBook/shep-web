@@ -6,6 +6,7 @@
   <style>
     body { font-family: sans-serif; text-align: center; background: #fcfaff; color: #333; }
     p { white-space: pre-wrap; margin: 5px 0; }
+    h4 { margin: 10px 0 5px 0; color: #916bbf; border-bottom: 1px dashed #ac8ad4; padding-bottom: 3px; }
     
     /* Header Container */
     .shep-header { padding: 20px; background: #ffffff; border-bottom: 2px solid #78a198; margin-bottom: 10px; }
@@ -23,14 +24,15 @@
     .content-box { border: 3px solid #78a198; border-radius: 25px; padding: 20px; margin-bottom: 15px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     .commentary-box { background: #fdfaf6; border-left: 5px solid #78a198; padding: 15px; margin-bottom: 15px; border-radius: 4px; }
     
-    /* Media Handling */
-    .item-img { max-width: 100%; max-height: 250px; border-radius: 12px; display: block; margin: 10px 0; }
+    /* Media Grid for items */
+    .items-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; margin-top: 10px; }
+    .item-card { border: 1px solid #e2ecea; border-radius: 15px; padding: 10px; text-align: center; background: #fff; }
+    .item-img { max-width: 100%; height: 120px; object-fit: cover; border-radius: 8px; display: block; margin: 5px auto; }
+    .large-img { max-width: 100%; max-height: 250px; border-radius: 12px; display: block; margin: 10px 0; }
     
-    /* Reinstated Original Green Donation Button Style */
+    /* Button & Link Styles */
     .donate-btn { display: inline-block; padding: 14px 28px; background-color: #78a198; color: white; text-decoration: none; border-radius: 25px; font-weight: bold; margin-top: 15px; border: none; cursor: pointer; transition: background 0.2s; }
     .donate-btn:hover { background-color: #5e827a; }
-    
-    /* Pin Links & Info Styles */
     .pin-link { display: inline-flex; align-items: center; gap: 5px; color: #916bbf; font-weight: bold; text-decoration: none; margin-top: 5px; }
     .pin-link:hover { text-decoration: underline; }
     .info-line { margin: 10px 0; font-size: 1.1em; color: #444; }
@@ -38,7 +40,6 @@
 </head>
 <body>
 
-  <!-- Header Section with Logo and Tagline -->
   <div class="shep-header">
     <img src="https://drive.google.com/thumbnail?id=1jotHfaZhBe9jKnjWK7Ldz_MXl5Pb6Loe&sz=w500" class="shep-logo" alt="SHEP Logo">
     <div class="shep-tagline">PROMOTING SELF CARE AND HYGIENE FOR THE VULNERABLE</div>
@@ -66,7 +67,10 @@
       "CONTACT SHEP": ["CONTACT SHEP"]
     };
 
-    fetch(scriptUrl).then(r => r.json()).then(data => {
+    fetch(scriptUrl).then(r => r.json()).then(response => {
+      const data = response.mainContent;
+      const testimonialData = response.testimonials;
+      
       var container = document.getElementById('tabs');
       var contentArea = document.getElementById('content-area');
       
@@ -83,21 +87,20 @@
           panel.classList.add('active');
           
           if(panel.innerHTML === "") {
-             // 1. Handle special hardcoded block for MONETARY DONATIONS
+             // 1. MONETARY DONATIONS SPECIAL BLOCK
              if (tName === "MONETARY DONATIONS") {
                 let targetUrl = 'https://tinyurl.com/SHEPDonation'; 
                 if (data && data.length > 0) {
                   let foundRow = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === 'DONATIONFORMURL');
                   if (foundRow && foundRow[1]) targetUrl = foundRow[1].toString().trim();
                 }
-
                 panel.innerHTML = `
                   <h3>MONETARY DONATIONS</h3>
                   <div class="commentary-box">
                     <h3>Your Impact Matters</h3>
                     <p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p>
                   </div>
-                  <div class="info-line" style="text-align: center;"><span>Account: JESSICA LEIGH POOLEY</span></div>
+                  <div class="info-line" style="text-align: center;"><span>Account: Jessica Leigh Pooley</span></div>
                   <div class="info-line" style="text-align: center;"><span>BSB: 306821 / Acct: 6706014</span></div>
                   <center>
                     <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="donate-btn">Complete Donation & Get Receipt</a>
@@ -106,7 +109,65 @@
                 return;
              }
 
-             // 2. Default dynamic rendering loop for all other tabs
+             // 2. DEDICATED SHEET LOADER FOR TESTIMONIALS
+             if (tName === "TESTIMONIALS") {
+                let html = "<h3>TESTIMONIALS</h3>";
+                if (!testimonialData || testimonialData.length <= 1) {
+                   panel.innerHTML = html + '<div class="content-box"><p>Coming soon...</p></div>';
+                   return;
+                }
+                testimonialData.forEach((row, index) => {
+                   if (index === 0) return; // Skip headers
+                   let name = row[1] || "";
+                   let imgLink = row[2] || "";
+                   let quote = row[3] || "";
+                   if (name || quote) {
+                      html += `<div class="content-box">`;
+                      if (quote) html += `<p style="font-style: italic; font-size: 1.1em;">"${quote}"</p>`;
+                      if (imgLink && imgLink.startsWith("http")) html += `<img src="${imgLink}" class="large-img">`;
+                      if (name) html += `<p style="text-align: right; font-weight: bold; color: #78a198;">- ${name}</p>`;
+                      html += `</div>`;
+                   }
+                });
+                panel.innerHTML = html;
+                return;
+             }
+
+             // 3. SPECIFIC CATEGORY GRID FOR "WHAT DO WE COLLECT"
+             if (tName === "WHAT DO WE COLLECT") {
+                let html = "<h3>WHAT DO WE COLLECT</h3>";
+                let sections = { "WOMEN": [], "MEN": [], "UNASSIGNED": [] };
+                
+                data.forEach(it => {
+                   if (it[0] && it[0].toString().trim() === "WHAT DO WE COLLECT") {
+                      let subCat = it[1] ? it[1].toString().trim().toUpperCase() : "UNASSIGNED";
+                      let itemName = it[2] || "";
+                      let imgUrl = it[3] || "";
+                      if (itemName) {
+                         if (!sections[subCat]) sections[subCat] = [];
+                         sections[subCat].push({ name: itemName, img: imgUrl });
+                      }
+                   }
+                });
+
+                let totalItems = 0;
+                ["WOMEN", "MEN", "UNASSIGNED"].forEach(gender => {
+                   if (sections[gender].length > 0) {
+                      totalItems += sections[gender].length;
+                      html += `<h4>${gender} ITEMS</h4><div class="items-grid">`;
+                      sections[gender].forEach(item => {
+                         html += `<div class="item-card">`;
+                         if (item.img) html += `<img src="${item.img}" class="item-img">`;
+                         html += `<p style="font-weight:bold; font-size:0.9em; margin-top:5px;">${item.name}</p></div>`;
+                      });
+                      html += `</div><br>`;
+                   }
+                });
+                panel.innerHTML = totalItems > 0 ? html : html + '<div class="content-box"><p>Coming soon...</p></div>';
+                return;
+             }
+
+             // 4. STANDARD FLOW FOR ALL OTHER TABS (Expaned to scan up to 5 Columns)
              let html = "<h3>" + tName + "</h3>";
              let currentCat = "";
              let count = 0;
@@ -118,11 +179,13 @@
                 }
                 
                 if (tabMap[tName].includes(currentCat)) {
-                   let colB = it[1] ? it[1].toString().trim() : "";
-                   let colC = it[2] ? it[2].toString().trim() : "";
-                   let colD = it[3] ? it[3].toString().trim() : "";
+                   // Pull all remaining columns from B through E
+                   let cols = [];
+                   for (let c = 1; c < 5; c++) {
+                      if (it[c]) cols.push(it[c].toString().trim());
+                   }
                    
-                   if (!colB && !colC && !colD && currentCat === tName) return;
+                   if (cols.length === 0 && currentCat === tName) return;
 
                    count++;
                    html += `<div class="content-box">`;
@@ -131,19 +194,20 @@
                        html += `<h4>${cellA}</h4>`;
                    }
 
-                   [colB, colC, colD].forEach(val => {
+                   // Loop items to distinguish text descriptions from media assets
+                   cols.forEach(val => {
                       if (!val) return;
                       if (val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com") || val.includes("postimg.cc") || val.includes("imgur.com"))) {
-                         // Support single image cells or multiple image strings split by commas
                          val.split(',').forEach(imgUrl => {
-                            html += `<img src="${imgUrl.trim()}" class="item-img" alt="SHEP Asset">`;
+                            html += `<img src="${imgUrl.trim()}" class="large-img" alt="SHEP Asset">`;
                          });
                       } else if (!val.startsWith("http")) {
                          html += `<p>${val}</p>`;
                       }
                    });
 
-                   let finalLink = [colB, colC, colD].find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg"));
+                   // Check all elements to safely isolate functional web redirects
+                   let finalLink = cols.find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg"));
                    
                    if (finalLink) {
                       if (tName === "DONATION POINTS") {
@@ -152,11 +216,9 @@
                          html += `<br><a href="${finalLink}" target="_blank" class="pin-link">Click here for more</a>`;
                       }
                    }
-                   
                    html += `</div>`;
                 }
              });
-             
              panel.innerHTML = count > 0 ? html : html + '<div class="content-box"><p>Coming soon...</p></div>';
           }
         };
