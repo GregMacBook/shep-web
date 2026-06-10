@@ -72,7 +72,6 @@
       "CONTACT SHEP": ["CONTACT SHEP"]
     };
 
-    // Global sanitation engine for handling absolute resource addresses
     function cleanUrlFormat(url) {
       if (!url) return "";
       let src = url.toString().trim();
@@ -80,7 +79,6 @@
         let id = src.split("/file/d/")[1].split("/")[0];
         return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
       }
-      // UNIVERSAL IMGUR PATCH: Forces any variation of imgur.com straight to the direct CDN assets address
       if (src.includes("imgur.com") && !src.includes("i.imgur.com")) {
         return src.replace("imgur.com", "i.imgur.com");
       }
@@ -151,35 +149,30 @@
                   return;
                }
 
-   if (tName === "TESTIMONIALS" || tName === "Testimonials") {
+               // TESTIMONIAL DISPLAY LOOP (MAPPED TO READ CHANNELS 0, 1, AND 2)
+               if (tName === "TESTIMONIALS" || tName === "Testimonials") {
                   let html = "<h3>TESTIMONIALS</h3>";
-                  if (testimonialData.length <= 1) {
-                     panel.innerHTML = html + '<div class="content-box"><p>Database Syncing...</p></div>';
-                     return;
-                  }
-                  testimonialData.forEach((row, index) => {
-                     if (index === 0) return; 
-                     let labelName = row[1] ? row[1].toString().trim() : ""; 
-                     let imgLink = row[2] ? row[2].toString().trim() : "";   
-                     let quote = row[3] ? row[3].toString().trim() : "";     
+                  let count = 0;
+                  
+                  testimonialData.forEach((row, idx) => {
+                     if (idx === 0) return; // Skip headers
+                     let awardName = row[0] || "";
+                     let imgLink = row[1] || "";
+                     let storyTxt = row[2] || "";
                      
-                     if (labelName || quote || imgLink) {
+                     if (awardName || imgLink || storyTxt) {
+                        count++;
                         html += `<div class="content-box">`;
-                        if (quote) html += `<p style="font-size: 1.05em; line-height: 1.5; margin-bottom: 15px;">${quote}</p>`;
+                        if (awardName) html += `<h4 style="font-size: 1.2em; color: #916bbf; border: none; margin-bottom: 10px;">${awardName}</h4>`;
+                        if (storyTxt) html += `<p style="font-size: 1.05em; line-height: 1.5; margin-bottom: 15px;">${storyTxt}</p>`;
                         
-                        if (imgLink && imgLink.startsWith("http")) {
-                           if (imgLink.includes("drive.google.com")) {
-                              html += `<p><a href="${imgLink}" target="_blank" class="pin-link">🎥 Click to view attached media</a></p>`;
-                           } else {
-                              let processedImg = cleanUrlFormat(imgLink);
-                              html += `<img src="${processedImg}" class="large-img">`;
-                           }
+                        if (imgLink && imgLink.toString().trim().startsWith("http")) {
+                           html += `<img src="${cleanUrlFormat(imgLink)}" class="large-img">`;
                         }
-                        if (labelName) html += `<p style="text-align: right; font-weight: bold; color: #78a198; margin-top: 10px;">- ${labelName}</p>`;
                         html += `</div>`;
                      }
                   });
-                  panel.innerHTML = html;
+                  panel.innerHTML = count > 0 ? html : html + '<div class="content-box"><p>Database Syncing...</p></div>';
                   return;
                }
 
