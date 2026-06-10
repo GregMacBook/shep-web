@@ -93,7 +93,49 @@
               `;
               return;
             }
+if (tName === "ANNUAL APPEALS") {
+              let appealsRows = data.filter(row => row[0] && row[0].toString().toUpperCase().trim() === "ANNUAL APPEALS");
+              
+              if (appealsRows.length > 0) {
+                appealsRows.forEach(row => {
+                  let textLines = [];
+                  let imageLinks = [];
+                  
+                  // Scan the row for text (Cols B & C) and poster images (Cols D & E)
+                  for (let c = 1; c < row.length; c++) {
+                    let val = row[c] ? row[c].toString().trim() : "";
+                    if (!val) continue;
+                    
+                    if (val.startsWith("http")) {
+                      imageLinks.push(getImgUrl(val));
+                    } else {
+                      textLines.push(val);
+                    }
+                  }
 
+                  // Treat the first text item as the Header (e.g., "Mother's Day")
+                  let title = textLines.length > 0 ? textLines[0] : "Special Appeal";
+                  let details = textLines.slice(1).join('<br>');
+
+                  display.innerHTML += `
+                    <div style="background: white; border-top: 5px solid #ac8ad4; border-radius: 15px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
+                      <h2 style="color: #916bbf; margin-top: 0; margin-bottom: 10px; font-size: 1.8em; text-transform: uppercase;">
+                        ${formatBold(title)}
+                      </h2>
+                      ${details ? `<p style="font-size: 1.2em; color: #4a4e69; margin-bottom: 25px;">${formatBold(details)}</p>` : ''}
+                      
+                      <!-- Posters side-by-side flexbox -->
+                      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+                        ${imageLinks.map(img => `<img src="${img}" style="max-height: 400px; width: auto; object-fit: contain; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">`).join('')}
+                      </div>
+                    </div>
+                  `;
+                });
+              } else {
+                display.innerHTML = '<div class="commentary-box"><p>Database syncing or tab is currently clear.</p></div>';
+              }
+              return;
+            }
             if (tName === "OUR MISSION") {
               let missionRow = data.find(row => row[0] && row[0].toString().toUpperCase().trim() === "OUR MISSION");
               if (missionRow) {
