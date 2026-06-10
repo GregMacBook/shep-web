@@ -72,15 +72,14 @@
       "CONTACT SHEP": ["CONTACT SHEP"]
     };
 
-    // Automatically sanitizes file structures for web rendering
-    function cleanDriveUrl(url) {
+    // Global sanitation engine for Google Drive resources & Imgur wrappers
+    function cleanUrlFormat(url) {
+      if (!url) return "";
       let src = url.toString().trim();
-      // Fix Google Drive links
       if (src.includes("drive.google.com/file/d/")) {
         let id = src.split("/file/d/")[1].split("/")[0];
         return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
       }
-      // Fix Imgur website page wrapper links into direct file streams
       if (src.includes("imgur.com/") && !src.includes("i.imgur.com")) {
         return src.replace("imgur.com/", "i.imgur.com/");
       }
@@ -151,6 +150,7 @@
                   return;
                }
 
+               // FIXED TESTIMONIAL ENGINE TO PROPERLY INTERCEPT CONVERTED URLS
                if (tName === "TESTIMONIALS") {
                   let html = "<h3>TESTIMONIALS</h3>";
                   if (testimonialData.length <= 1) {
@@ -166,11 +166,14 @@
                      if (labelName || quote || imgLink) {
                         html += `<div class="content-box">`;
                         if (quote) html += `<p style="font-size: 1.05em; line-height: 1.5; margin-bottom: 15px;">${quote}</p>`;
+                        
                         if (imgLink && imgLink.startsWith("http")) {
                            if (imgLink.includes("drive.google.com")) {
                               html += `<p><a href="${imgLink}" target="_blank" class="pin-link">🎥 Click to view attached media</a></p>`;
                            } else {
-                              html += `<img src="${cleanDriveUrl(imgLink)}" class="large-img">`;
+                              // We explicitly run the cleaning filter here inside the template builder
+                              let processedImg = cleanUrlFormat(imgLink);
+                              html += `<img src="${processedImg}" class="large-img">`;
                            }
                         }
                         if (labelName) html += `<p style="text-align: right; font-weight: bold; color: #78a198; margin-top: 10px;">- ${labelName}</p>`;
@@ -193,7 +196,7 @@
                         html += `<div class="content-box">`;
                         if (txtItem) html += `<p style="font-size: 1.1em; font-weight: bold;">${txtItem}</p>`;
                         if (imgLink && imgLink.toString().trim().startsWith("http")) {
-                           html += `<img src="${cleanDriveUrl(imgLink)}" class="large-img">`;
+                           html += `<img src="${cleanUrlFormat(imgLink)}" class="large-img">`;
                         }
                         html += `</div>`;
                      }
@@ -213,7 +216,7 @@
                      let imgUrl = it[3] || "";
                      if (itemName) {
                         if (!sections[subCat]) sections[subCat] = [];
-                        sections[subCat].push({ name: itemName, img: cleanDriveUrl(imgUrl) });
+                        sections[subCat].push({ name: itemName, img: cleanUrlFormat(imgUrl) });
                      }
                   });
 
@@ -262,7 +265,7 @@
                         
                         if (isImg) {
                            val.split(',').forEach(imgUrl => {
-                              html += `<img src="${cleanDriveUrl(imgUrl)}" class="large-img">`;
+                              html += `<img src="${cleanUrlFormat(imgUrl)}" class="large-img">`;
                            });
                         } else if (!isNormalLink) {
                            if (tName === "ANNUAL APPEALS" && val === it[1]) return;
