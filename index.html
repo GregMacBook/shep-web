@@ -124,6 +124,18 @@
             panel.classList.add('active');
             
             if(panel.innerHTML === "") {
+              if (tName === "OUR MISSION") {
+                  let missionText = "PROMOTING SELF CARE AND HYGIENE FOR THE VULNERABLE";
+                  panel.innerHTML = `
+                    <h3>OUR MISSION</h3>
+                    <div class="content-box">
+                      <p style="font-size: 1.2em; font-weight: bold; color: #916bbf; text-align: center; line-height: 1.6;">
+                        ${missionText}
+                      </p>
+                    </div>
+                  `;
+                  return;
+               }
                if (tName === "MONETARY DONATIONS") {
                   let targetUrl = 'https://tinyurl.com/SHEPDonation'; 
                   if (data && data.length > 0) {
