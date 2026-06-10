@@ -50,13 +50,16 @@
       return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
     }
 
- function getImgUrl(url) {
+function getImgUrl(url) {
       if (!url) return "";
       var str = url.toString().trim();
-      // If it's already a direct Google content link, return it as-is
-      if (str.includes('lh3.googleusercontent.com') || str.includes('googleusercontent.com')) return str;
       
-      // Otherwise, process as a standard Drive file link
+      // If it's a Googleusercontent link, ensure it has the correct display parameter
+      if (str.includes('googleusercontent.com')) {
+         return str + "?usp=sharing";
+      }
+      
+      // Handle standard Drive links
       if (str.includes('/file/d/')) {
         var id = str.split('/file/d/')[1].split('/')[0];
         return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
