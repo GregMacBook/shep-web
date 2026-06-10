@@ -59,7 +59,7 @@
     const tabMap = {
       "OUR MISSION": ["OUR MISSION"], 
       "ABOUT US": ["ABOUT US"],
-      "ANNUAL APPEALS": ["ANNUAL APPEALS"],
+      "ANNUAL APPEALS": ["ANNUAL APPEALS", "SPECIAL DRIVES"],
       "WHAT DO WE COLLECT": ["WHAT DO WE COLLECT"],
       "WHAT WE CAN'T ACCEPT": ["WHAT WE CAN'T ACCEPT"],
       "WHO WE HELP": ["WHO WE HELP", "WHO DO WE HELP"],
@@ -67,7 +67,7 @@
       "DONATION POINTS": ["DONATION POINTS", "DONATION POINT"],
       "SCHOOL DONORS": ["SCHOOL DONORS"],
       "REGISTRATION": ["REGISTRATION"],
-      "TESTIMONIALS": ["TESTIMONIALS"],
+      "TESTIMONIALS": ["TESTIMONIALS", "Testimonials"],
       "MONETARY DONATIONS": ["MONETARY DONATIONS"],
       "CONTACT SHEP": ["CONTACT SHEP"]
     };
@@ -78,9 +78,6 @@
       if (src.includes("drive.google.com/file/d/")) {
         let id = src.split("/file/d/")[1].split("/")[0];
         return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
-      }
-      if (src.includes("imgur.com") && !src.includes("i.imgur.com")) {
-        return src.replace("imgur.com", "i.imgur.com");
       }
       return src;
     }
@@ -94,8 +91,7 @@
             <div class="maintenance-box">
               <h2>🛠️ Portal Under Maintenance</h2>
               <p style="font-size: 1.1em; line-height: 1.6; text-align: center;">
-                The SHEP Portal is currently undergoing updates to improve our data sync and display systems. 
-                We will be back operational shortly! Thank you for your patience.
+                The SHEP Portal is currently undergoing updates. We will be back operational shortly!
               </p>
             </div>
           `;
@@ -149,23 +145,19 @@
                   return;
                }
 
-               // TESTIMONIAL DISPLAY LOOP (MAPPED TO READ CHANNELS 0, 1, AND 2)
-               if (tName === "TESTIMONIALS" || tName === "Testimonials") {
+               if (tName === "TESTIMONIALS") {
                   let html = "<h3>TESTIMONIALS</h3>";
                   let count = 0;
-                  
                   testimonialData.forEach((row, idx) => {
-                     if (idx === 0) return; // Skip headers
+                     if (idx === 0) return;
                      let awardName = row[0] || "";
                      let imgLink = row[1] || "";
                      let storyTxt = row[2] || "";
-                     
                      if (awardName || imgLink || storyTxt) {
                         count++;
                         html += `<div class="content-box">`;
                         if (awardName) html += `<h4 style="font-size: 1.2em; color: #916bbf; border: none; margin-bottom: 10px;">${awardName}</h4>`;
                         if (storyTxt) html += `<p style="font-size: 1.05em; line-height: 1.5; margin-bottom: 15px;">${storyTxt}</p>`;
-                        
                         if (imgLink && imgLink.toString().trim().startsWith("http")) {
                            html += `<img src="${cleanUrlFormat(imgLink)}" class="large-img">`;
                         }
@@ -182,7 +174,7 @@
                   cantAcceptData.forEach((row, idx) => {
                      if (idx === 0) return;
                      let txtItem = row[1] || "";
-                     let imgLink = row[2] || "";
+                     let imgLink = row[3] || row[2] || ""; // Robust backup fallback for Column D or C
                      if (txtItem || imgLink) {
                         count++;
                         html += `<div class="content-box">`;
@@ -200,22 +192,22 @@
                if (tName === "WHAT DO WE COLLECT") {
                   let html = "<h3>WHAT DO WE COLLECT</h3>";
                   let sections = { "WOMEN": [], "MEN": [], "UNASSIGNED": [] };
+                  let totalItems = 0;
                   
                   collectData.forEach((it, idx) => {
                      if (idx === 0) return;
-                     let subCat = it[1] ? it[1].toString().trim().toUpperCase() : "UNASSIGNED";
-                     let itemName = it[2] || "";
-                     let imgUrl = it[3] || "";
+                     let subCat = it[0] ? it[0].toString().trim().toUpperCase() : "UNASSIGNED";
+                     let itemName = it[1] || "";
+                     let imgUrl = it[3] || it[2] || ""; // Pulls the clean Share URL column
                      if (itemName) {
+                        totalItems++;
                         if (!sections[subCat]) sections[subCat] = [];
                         sections[subCat].push({ name: itemName, img: cleanUrlFormat(imgUrl) });
                      }
                   });
 
-                  let totalItems = 0;
                   ["WOMEN", "MEN", "UNASSIGNED"].forEach(gender => {
                      if (sections[gender] && sections[gender].length > 0) {
-                        totalItems += sections[gender].length;
                         html += `<h4>${gender} ITEMS</h4><div class="items-grid">`;
                         sections[gender].forEach(item => {
                            html += `<div class="item-card">`;
@@ -235,7 +227,7 @@
                data.forEach((it, rIdx) => {
                   if (rIdx === 0) return; 
                   let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
-                  let matchesTab = tabMap[tName].map(k => k.toUpperCase()).includes(colA);
+                  let matchesTab = tabMap[tName].map(k => k.toUpperCase()).some(k => colA.includes(k));
                   
                   if (matchesTab) {
                      let cols = [];
@@ -267,7 +259,7 @@
 
                      let finalLink = cols.find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg") && !val.includes("drive.google.com"));
                      if (finalLink) {
-                        if (tName === "DONATION POINTS" || colA === "DONATION POINT" || colA === "DONATION POINTS") {
+                        if (tName === "DONATION POINTS" || colA.includes("DONATION POINT")) {
                            html += `<a href="${finalLink}" target="_blank" class="pin-link">📍 Click for Map Location</a>`;
                         } else {
                            html += `<br><a href="${finalLink}" target="_blank" class="pin-link">Click here for more</a>`;
