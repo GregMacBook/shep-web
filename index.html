@@ -72,11 +72,17 @@
       "CONTACT SHEP": ["CONTACT SHEP"]
     };
 
+    // Automatically sanitizes file structures for web rendering
     function cleanDriveUrl(url) {
       let src = url.toString().trim();
+      // Fix Google Drive links
       if (src.includes("drive.google.com/file/d/")) {
         let id = src.split("/file/d/")[1].split("/")[0];
         return `https://drive.google.com/thumbnail?id=${id}&sz=w1000`;
+      }
+      // Fix Imgur website page wrapper links into direct file streams
+      if (src.includes("imgur.com/") && !src.includes("i.imgur.com")) {
+        return src.replace("imgur.com/", "i.imgur.com/");
       }
       return src;
     }
@@ -164,7 +170,7 @@
                            if (imgLink.includes("drive.google.com")) {
                               html += `<p><a href="${imgLink}" target="_blank" class="pin-link">🎥 Click to view attached media</a></p>`;
                            } else {
-                              html += `<img src="${imgLink}" class="large-img">`;
+                              html += `<img src="${cleanDriveUrl(imgLink)}" class="large-img">`;
                            }
                         }
                         if (labelName) html += `<p style="text-align: right; font-weight: bold; color: #78a198; margin-top: 10px;">- ${labelName}</p>`;
