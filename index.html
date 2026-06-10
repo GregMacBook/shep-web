@@ -57,9 +57,9 @@
       "ANNUAL APPEALS": ["ANNUAL APPEALS"],
       "WHAT DO WE COLLECT": ["WHAT DO WE COLLECT"],
       "WHAT WE CAN'T ACCEPT": ["WHAT WE CAN'T ACCEPT"],
-      "WHO WE HELP": ["WHO WE HELP"],
+      "WHO WE HELP": ["WHO WE HELP", "WHO DO WE HELP"],
       "WAYS YOU CAN HELP": ["WAYS YOU CAN HELP"],
-      "DONATION POINTS": ["DONATION POINTS"],
+      "DONATION POINTS": ["DONATION POINTS", "DONATION POINT"],
       "SCHOOL DONORS": ["SCHOOL DONORS"],
       "REGISTRATION": ["REGISTRATION"],
       "TESTIMONIALS": ["TESTIMONIALS"],
@@ -87,7 +87,6 @@
           panel.classList.add('active');
           
           if(panel.innerHTML === "") {
-             // 1. MONETARY DONATIONS SPECIAL BLOCK
              if (tName === "MONETARY DONATIONS") {
                 let targetUrl = 'https://tinyurl.com/SHEPDonation'; 
                 if (data && data.length > 0) {
@@ -109,7 +108,6 @@
                 return;
              }
 
-             // 2. DEDICATED SHEET LOADER FOR TESTIMONIALS (Reads from Testimonials Tab)
              if (tName === "TESTIMONIALS") {
                 let html = "<h3>TESTIMONIALS</h3>";
                 if (!testimonialData || testimonialData.length <= 1) {
@@ -117,7 +115,8 @@
                    return;
                 }
                 testimonialData.forEach((row, index) => {
-                   if (index === 0) return; 
+                   // Skip header row AND skip row if it's the template label row
+                   if (index === 0 || (row[1] && row[1].toString().includes("Label Name"))) return; 
                    let labelName = row[1] || "";
                    let imgLink = row[2] || "";
                    let quote = row[3] || "";
@@ -133,7 +132,6 @@
                 return;
              }
 
-             // 3. WHAT DO WE COLLECT GRID SECTION
              if (tName === "WHAT DO WE COLLECT") {
                 let html = "<h3>WHAT DO WE COLLECT</h3>";
                 let sections = { "WOMEN": [], "MEN": [], "UNASSIGNED": [] };
@@ -168,7 +166,6 @@
                 return;
              }
 
-             // 4. CLEAN STANDARD LOOP MATCHING COLUMN A EXACTLY
              let html = "<h3>" + tName + "</h3>";
              let count = 0;
              
@@ -176,9 +173,9 @@
                 if (rIdx === 0) return; 
                 
                 let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
-                let targetMatch = tabMap[tName][0].toUpperCase();
+                let matchesTab = tabMap[tName].map(k => k.toUpperCase()).includes(colA);
                 
-                if (colA === targetMatch) {
+                if (matchesTab) {
                    let cols = [];
                    for (let c = 1; c <= 4; c++) {
                       if (it[c] && it[c].toString().trim() !== "") {
@@ -211,7 +208,7 @@
                    let finalLink = cols.find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg"));
                    
                    if (finalLink) {
-                      if (tName === "DONATION POINTS") {
+                      if (tName === "DONATION POINTS" || colA === "DONATION POINT" || colA === "DONATION POINTS") {
                          html += `<a href="${finalLink}" target="_blank" class="pin-link">📍 Click for Map Location</a>`;
                       } else {
                          html += `<br><a href="${finalLink}" target="_blank" class="pin-link">Click here for more</a>`;
