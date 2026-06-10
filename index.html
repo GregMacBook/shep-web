@@ -54,7 +54,7 @@
     const tabMap = {
       "OUR MISSION": ["OUR MISSION"], 
       "ABOUT US": ["ABOUT US"],
-      "ANNUAL APPEALS": ["Mothers' Day", "Fathers' Day", "Easter", "Christmas", "Winter", "Hamper", "ANNUAL APPEALS"],
+      "ANNUAL APPEALS": ["ANNUAL APPEALS"],
       "WHAT DO WE COLLECT": ["WHAT DO WE COLLECT"],
       "WHAT WE CAN'T ACCEPT": ["WHAT WE CAN'T ACCEPT"],
       "WHO WE HELP": ["WHO WE HELP"],
@@ -139,8 +139,8 @@
                 let sections = { "WOMEN": [], "MEN": [], "UNASSIGNED": [] };
                 
                 data.forEach(it => {
-                   let rowStr = it.join(" ").toUpperCase();
-                   if (rowStr.includes("WHAT DO WE COLLECT")) {
+                   let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
+                   if (colA === "WHAT DO WE COLLECT") {
                       let subCat = it[1] ? it[1].toString().trim().toUpperCase() : "UNASSIGNED";
                       let itemName = it[2] || "";
                       let imgUrl = it[3] || "";
@@ -168,49 +168,37 @@
                 return;
              }
 
-             // 4. RESILIENT OVERLAP MATCHER FOR ALL REMAINING SECTIONS
+             // 4. CLEAN STANDARD LOOP MATCHING COLUMN A EXACTLY
              let html = "<h3>" + tName + "</h3>";
              let count = 0;
              
              data.forEach((it, rIdx) => {
-                if (rIdx === 0) return; // Skip title headers
+                if (rIdx === 0) return; // Skip row headers
                 
-                // Check if ANY cell in this row mentions a keyword from our tab map
-                let matchesTab = false;
-                let rowKeywords = tabMap[tName];
+                let colA = it[0] ? it[0].toString().trim().toUpperCase() : "";
+                let targetMatch = tabMap[tName][0].toUpperCase();
                 
-                for (let c = 0; c < it.length; c++) {
-                   let cellVal = it[c] ? it[c].toString().trim().toUpperCase() : "";
-                   if (cellVal !== "" && rowKeywords.some(k => cellVal === k.toUpperCase())) {
-                      matchesTab = true;
-                      break;
-                   }
-                }
-                
-                // If this row belongs to our active tab, grab columns B through E
-                if (matchesTab) {
+                if (colA === targetMatch) {
                    let cols = [];
-                   // Pull columns B, C, D, E
+                   // Grab columns B, C, D, E
                    for (let c = 1; c <= 4; c++) {
                       if (it[c] && it[c].toString().trim() !== "") {
                          cols.push(it[c].toString().trim());
                       }
                    }
                    
-                   // Ignore row entries that simply duplicate the main tab header string
-                   if (cols.length === 1 && rowKeywords.some(k => cols[0].toUpperCase() === k.toUpperCase())) return;
                    if (cols.length === 0) return;
-
                    count++;
                    html += `<div class="content-box">`;
                    
-                   // Print row subheadings if they exist in Column A (e.g., Mothers' Day)
-                   let colA = it[0] ? it[0].toString().trim() : "";
-                   if (colA !== "" && colA !== tName && !rowKeywords.some(k => colA.toUpperCase() === k.toUpperCase())) {
-                      html += `<h4>${colA}</h4>`;
+                   // Special check for Annual Appeals to add sub-headers for the distinct events
+                   if (tName === "ANNUAL APPEALS" && it[1]) {
+                      html += `<h4>${it[1]}</h4>`;
+                      // Filter out the event title from the paragraph generator so it doesn't repeat
+                      cols = cols.filter(val => val !== it[1]);
                    }
 
-                   // Output media elements vs raw commentary
+                   // Output text and images securely
                    cols.forEach(val => {
                       if (val.startsWith("http") && (val.includes(".jpg") || val.includes(".png") || val.includes(".jpeg") || val.includes("googleusercontent.com") || val.includes("postimg.cc") || val.includes("imgur.com"))) {
                          val.split(',').forEach(imgUrl => {
@@ -221,7 +209,7 @@
                       }
                    });
 
-                   // Isolate tracking map endpoints securely
+                   // Isolate tracking endpoints for redirect buttons
                    let finalLink = cols.find(val => val && val.startsWith("http") && !val.includes("googleusercontent.com") && !val.includes("postimg.cc") && !val.includes("imgur.com") && !val.includes(".jpg") && !val.includes(".png") && !val.includes(".jpeg"));
                    
                    if (finalLink) {
