@@ -4,29 +4,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SHEP Portal</title>
   <style>
-    /* Add your existing CSS styling here */
-    body { font-family: sans-serif; background: #fcfaff; margin: 0; }
-    #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; }
-    .tab { padding: 10px 15px; color: white; cursor: pointer; font-weight: bold; }
+    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #fcfaff; }
+    #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; position: sticky; top: 0; }
+    .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.85em; text-transform: uppercase; }
     .tab.active { background: #ac8ad4; border-radius: 5px; }
-    .info-line { background: white; padding: 15px; margin: 10px; border-radius: 8px; }
+    #content { padding: 20px; max-width: 900px; margin: auto; }
+    .info-line { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin-top: 10px; }
   </style>
 </head>
 <body>
   <div id="tabs"></div>
-  <div id="content">Loading content...</div>
+  <div id="content">Loading...</div>
 
   <script>
-    // This tells the browser to look for the data file in the same folder as index.html
     fetch('data.json')
       .then(response => response.json())
       .then(data => {
         const display = document.getElementById('content');
         const tabContainer = document.getElementById('tabs');
         
-        // This processes your JSON data array
-        // (Ensure your JSON structure is an array of arrays if you use this logic)
-        const categories = [...new Set(data.map(r => r[0]))].filter(Boolean);
+        // Extract unique category names from the first key of each object
+        const categories = [...new Set(data.map(r => r["OUR MISSION"]))].filter(cat => cat !== "DONATIONFORMURL");
         
         categories.forEach(cat => {
             let btn = document.createElement('div');
@@ -35,19 +34,32 @@
                 document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 btn.classList.add('active');
                 display.innerHTML = `<h1>${cat}</h1>`;
-                data.filter(r => r[0] === cat).forEach(row => {
+                
+                data.filter(r => r["OUR MISSION"] === cat).forEach(row => {
                     let div = document.createElement('div'); div.className = 'info-line';
-                    div.innerHTML = `<strong>${row[1] || ''}</strong><p>${row[2] || ''}</p>`;
+                    let keys = Object.keys(row);
+                    
+                    // Main Title/Text
+                    div.innerHTML = `<strong>${row[keys[1]] || ''}</strong><p>${row[keys[2]] || ''}</p>`;
+                    
+                    // Button Logic
+                    let link = row[keys[2]];
+                    if (link && link.startsWith('http') && !link.includes('drive.google.com')) {
+                        div.innerHTML += `<br><a href="${link}" target="_blank" class="action-link-btn">View Resource</a>`;
+                    }
+                    
+                    // Image Logic
+                    let img = row[keys[0]]; // Checks the URL column
+                    if (img && img.startsWith('http')) {
+                        div.innerHTML += `<br><img src="${img}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
+                    }
+                    
                     display.appendChild(div);
                 });
             };
             tabContainer.appendChild(btn);
         });
         tabContainer.firstChild.click();
-      })
-      .catch(err => {
-        document.getElementById('content').innerText = "Error loading data. Please check if data.json exists.";
-        console.error(err);
       });
   </script>
 </body>
