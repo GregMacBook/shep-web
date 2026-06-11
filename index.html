@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SHEP Portal</title>
   <style>
+    /* Add your CSS here */
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fcfaff; }
     body { display: flex; flex-direction: row; }
     .sidebar { width: 280px; min-width: 280px; background: #916bbf; display: flex; flex-direction: column; height: 100vh; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 20; overflow-y: auto; }
@@ -18,7 +19,6 @@
     .large-gallery-img { max-width: 100%; margin-top: 20px; border-radius: 10px; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     .mission-layout { display: flex; flex-direction: row; gap: 40px; align-items: flex-start; }
     .mission-text { flex: 1; font-weight: bold; }
-    .mission-img { flex: 1; max-width: 400px; }
   </style>
 </head>
 <body>
@@ -32,6 +32,9 @@
     <div id="content">Loading content...</div>
   </div>
   <script>
+    // REPLACE THIS URL WITH YOUR ACTUAL WEB APP URL
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbytnwWkCghLzTF6EUn7k3NQciE2-9Dk4-Y5i92n5ZjJspNkgVaXXfnBo7dlhuhn7ven/exec"; 
+
     const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
     const menuMap = {
         "OUR MISSION": "OUR MISSION", "ABOUT US": "ABOUT US", "ANNUAL APPEALS": "ANNUAL APPEALS", "WHAT DO WE COLLECT": "WHAT DO WE COLLECT",
@@ -43,53 +46,56 @@
 
     function formatBold(text) { return text ? text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : ""; }
     
-    // Load data directly from Apps Script getData() function
-    google.script.run.withSuccessHandler(data => {
-        var tabContainer = document.getElementById('tabs');
-        var display = document.getElementById('content');
-        cleanMenuKeys.forEach(tName => {
-          var btn = document.createElement('div');
-          btn.className = 'tab'; btn.innerText = tName;
-          btn.onclick = function() {
-            document.getElementById('tab-title').innerText = tName;
-            display.innerHTML = "";
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
+    // Fetch data via the URL instead of google.script.run
+    fetch(webAppUrl)
+        .then(response => response.json())
+        .then(data => {
+            var tabContainer = document.getElementById('tabs');
+            var display = document.getElementById('content');
+            cleanMenuKeys.forEach(tName => {
+                var btn = document.createElement('div');
+                btn.className = 'tab'; btn.innerText = tName;
+                btn.onclick = function() {
+                    document.getElementById('tab-title').innerText = tName;
+                    display.innerHTML = "";
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
 
-            data.filter(r => r[0] && menuMap[r[0]] === tName).forEach(row => {
-              let card = document.createElement('div'); card.className = 'info-line';
-              
-              if (tName === "OUR MISSION") {
-                  card.className += ' mission-layout';
-                  card.innerHTML = `<div class="mission-text"><strong>${row[1].replace(/\n/g, '<br>')}</strong></div>`;
-                  if (row[2]) card.innerHTML += `<div class="mission-img"><img src="${row[2]}" class="large-gallery-img" style="margin-top:0;"></div>`;
-              } else if (tName === "ANNUAL APPEALS") {
-                  card.innerHTML = `<h3>${row[1]}</h3><p>${formatBold(row[2])}</p>`;
-                  if (row[3] && row[3].toString().startsWith('http')) {
-                      card.innerHTML += `<a href="${row[3]}" class="action-link-btn" target="_blank">🔗 View Poster</a>`;
-                  }
-              } else {
-                  if(row[1]) card.innerHTML += `<p>${formatBold(row[1].replace(/\n/g, '<br>'))}</p>`;
-                  [2, 3, 4, 5].forEach(i => {
-                      let val = row[i];
-                      if(!val) return;
-                      let str = val.toString().trim();
-                      if (str.match(/\.(jpg|jpeg|png|gif|webp)$/i) || str.includes('drive.google.com')) {
-                          card.innerHTML += `<img src="${str}" class="large-gallery-img">`;
-                      } else if (str.startsWith('http')) {
-                          card.innerHTML += `<br><a href="${str}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
-                      } else {
-                          card.innerHTML += `<p>${formatBold(str.replace(/\n/g, '<br>'))}</p>`;
-                      }
-                  });
-              }
-              display.appendChild(card);
+                    data.filter(r => r[0] && menuMap[r[0]] === tName).forEach(row => {
+                        let card = document.createElement('div'); card.className = 'info-line';
+                        
+                        // Rendering logic...
+                        if (tName === "OUR MISSION") {
+                            card.className += ' mission-layout';
+                            card.innerHTML = `<div class="mission-text"><strong>${row[1].replace(/\n/g, '<br>')}</strong></div>`;
+                            if (row[2]) card.innerHTML += `<div class="mission-img"><img src="${row[2]}" class="large-gallery-img" style="margin-top:0;"></div>`;
+                        } else if (tName === "ANNUAL APPEALS") {
+                            card.innerHTML = `<h3>${row[1]}</h3><p>${formatBold(row[2])}</p>`;
+                            if (row[3] && row[3].toString().startsWith('http')) {
+                                card.innerHTML += `<a href="${row[3]}" class="action-link-btn" target="_blank">🔗 View Poster</a>`;
+                            }
+                        } else {
+                            if(row[1]) card.innerHTML += `<p>${formatBold(row[1].replace(/\n/g, '<br>'))}</p>`;
+                            [2, 3, 4].forEach(i => {
+                                let val = row[i];
+                                if(!val) return;
+                                let str = val.toString().trim();
+                                if (str.match(/\.(jpg|jpeg|png|gif|webp)$/i) || str.includes('drive.google.com')) {
+                                    card.innerHTML += `<img src="${str}" class="large-gallery-img">`;
+                                } else if (str.startsWith('http')) {
+                                    card.innerHTML += `<br><a href="${str}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
+                                } else {
+                                    card.innerHTML += `<p>${formatBold(str.replace(/\n/g, '<br>'))}</p>`;
+                                }
+                            });
+                        }
+                        display.appendChild(card);
+                    });
+                };
+                tabContainer.appendChild(btn);
             });
-          };
-          tabContainer.appendChild(btn);
+            tabContainer.firstChild.click();
         });
-        tabContainer.firstChild.click();
-    }).getData();
   </script>
 </body>
 </html>
