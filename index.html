@@ -14,20 +14,89 @@
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; min-width: 0; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     .info-line { margin-bottom: 20px; padding: 25px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; line-height: 1.7; }
+    .action-link-btn { display: inline-block; padding: 8px 16px; background: #ac8ad4; color: white; text-decoration: none; border-radius: 6px; font-size: 0.85em; font-weight: bold; margin: 10px 10px 0 0; }
+    .large-gallery-img { max-width: 100%; margin-top: 15px; border-radius: 10px; display: block; }
   </style>
 </head>
 <body>
   <div class="sidebar">
-    <div class="logo-header">SHEP LOGO</div>
+    <div class="logo-header"><img src="https://drive.google.com/thumbnail?id=1jotHfaZhBe9jKnjWK7Ldz_MXl5Pb6Loe&sz=w300" width="140" alt="SHEP Logo"></div>
     <div id="tabs"></div>
   </div>
   <div class="main-container">
     <h1 id="tab-title">SHEP Portal</h1>
     <div class="divider"></div>
-    <div id="content">Testing V2...</div>
+    <div id="content">Loading database...</div>
   </div>
   <script>
-    document.getElementById('content').innerText = "V2 code is running successfully.";
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
+    const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
+
+    function formatBold(text) { return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); }
+
+    function getProxyUrl(url) {
+        if (!url) return "";
+        let str = url.toString().trim();
+        if (str.includes('drive.google.com')) {
+            let id = str.split('/d/')[1].split('/')[0];
+            return 'https://images.weserv.nl/?url=https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
+        }
+        return str;
+    }
+
+    fetch(scriptUrl).then(r => r.json()).then(data => {
+        var tabContainer = document.getElementById('tabs');
+        var display = document.getElementById('content');
+        display.innerHTML = "";
+        
+        cleanMenuKeys.forEach(function(tName) {
+          var btn = document.createElement('div');
+          btn.className = 'tab'; btn.innerText = tName;
+          btn.onclick = function() {
+            document.getElementById('tab-title').innerText = tName;
+            display.innerHTML = "";
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (tName === "OUR MISSION") {
+              let row = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === "OUR MISSION");
+              if(row) {
+                 let text = row[1] || "";
+                 let img = row[2] ? getProxyUrl(row[2]) : "";
+                 display.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:30px; background:white; padding:30px; border-radius:15px; box-shadow:0 4px 15px rgba(0,0,0,0.05); align-items:center;">
+                    <div style="flex:1; min-width:300px;"><p style="font-size:1.4em; font-weight:bold; line-height:1.6;">${text.replace(/\n/g, '<br>')}</p></div>
+                    ${img ? `<div style="flex:1; min-width:300px;"><img src="${img}" style="width:100%; border-radius:12px;"></div>` : ''}
+                 </div>`;
+              }
+              return;
+            }
+
+            data.forEach(row => {
+              if (row[0] && row[0].toString().trim().toUpperCase() === tName) {
+                let textLines = [], imgs = [], links = [];
+                for(let c=1; c<row.length; c++) {
+                  let v = row[c] ? row[c].toString().trim() : "";
+                  if(!v) continue;
+                  if(v.match(/\.(jpg|jpeg|png|gif)$/i)) {
+                    imgs.push(getProxyUrl(v));
+                  } else if(v.startsWith("http")) {
+                    links.push(v);
+                  } else {
+                    textLines.push(`<p style="margin-bottom:15px;">${formatBold(v)}</p>`);
+                  }
+                }
+                let card = document.createElement('div'); card.className = 'info-line';
+                card.innerHTML = textLines.join('');
+                links.forEach(l => card.innerHTML += `<br><a href="${l}" class="action-link-btn" target="_blank">🔗 View Resource</a>`);
+                imgs.forEach(i => card.innerHTML += `<img src="${i}" class="large-gallery-img">`);
+                display.appendChild(card);
+              }
+            });
+          };
+          tabContainer.appendChild(btn);
+        });
+        tabContainer.firstChild.click();
+    });
   </script>
 </body>
 </html>
