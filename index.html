@@ -47,6 +47,8 @@
     fetch(scriptUrl).then(r => r.json()).then(data => {
         var tabContainer = document.getElementById('tabs');
         var display = document.getElementById('content');
+        display.innerHTML = ""; // Clear "syncing" text
+        
         cleanMenuKeys.forEach(function(tName) {
           var btn = document.createElement('div');
           btn.className = 'tab'; btn.innerText = tName;
@@ -69,10 +71,8 @@
               return;
             }
 
-            let found = false;
             data.forEach(row => {
               if (row[0] && row[0].toString().trim().toUpperCase() === tName) {
-                found = true;
                 let text = [], imgs = [], links = [];
                 for(let c=1; c<row.length; c++) {
                   let v = row[c] ? row[c].toString().trim() : "";
@@ -82,11 +82,12 @@
                   } else if(v.startsWith("http")) {
                     links.push(v);
                   } else {
-                    text.push(formatBold(v));
+                    // Fix: Wrap each text cell in a paragraph tag for spacing
+                    text.push(`<p>${formatBold(v)}</p>`);
                   }
                 }
                 let card = document.createElement('div'); card.className = 'info-line';
-                card.innerHTML = text.join('<br><br>');
+                card.innerHTML = text.join('');
                 links.forEach(l => card.innerHTML += `<br><a href="${l}" class="action-link-btn" target="_blank">🔗 View Resource</a>`);
                 imgs.forEach(i => card.innerHTML += `<img src="${i}" class="large-gallery-img">`);
                 display.appendChild(card);
