@@ -15,7 +15,7 @@
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     .info-line { margin-bottom: 12px; padding: 18px 22px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; }
     .donate-btn { display: inline-block; margin-top: 20px; padding: 18px 45px; background: #84a59d; color: white; border-radius: 35px; font-weight: bold; cursor: pointer; text-decoration: none; border: none; text-transform: uppercase; font-size: 1.1em; }
-    .action-link-btn { display: inline-block; padding: 6px 12px; background: #ac8ad4; color: white; text-decoration: none; border-radius: 6px; font-size: 0.85em; font-weight: bold; margin-top: 5px; }
+    .action-link-btn { display: inline-block; padding: 6px 12px; background: #ac8ad4; color: white; text-decoration: none; border-radius: 6px; font-size: 0.85em; font-weight: bold; margin-top: 10px; margin-right: 10px; }
   </style>
 </head>
 <body>
@@ -32,9 +32,7 @@
     const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
     const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
-    function formatBold(text) { 
-      return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
-    }
+    function formatBold(text) { return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); }
 
     fetch(scriptUrl).then(r => r.json()).then(data => {
         var tabContainer = document.getElementById('tabs');
@@ -48,30 +46,26 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
 
-            if (tName === "MONETARY DONATIONS") {
-              display.innerHTML = `<div class="info-line"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community.</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span><br><span>BSB: 306821 / Acct: 6706014</span></div><center><button class="donate-btn" onclick="window.open('https://tinyurl.com/SHEPDonation', '_blank')">Complete Donation & Get Receipt</button></center>`;
-              return;
-            }
-
-            if (tName === "OUR MISSION") {
-              let row = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === "OUR MISSION");
-              if(row) {
-                 let text = row[1] || "";
-                 let img = row[2] || "";
-                 display.innerHTML = `<div style="display:flex; align-items:center; gap:30px; background:white; padding:30px; border-radius:15px; box-shadow:0 4px 15px rgba(0,0,0,0.05);"><div style="flex:1;"><p style="font-size:1.5em; font-weight:bold;">${text.replace(/\n/g, '<br>')}</p></div>${img ? `<div style="flex:1;"><img src="${img}" style="max-width:100%; border-radius:12px;"></div>` : ''}</div>`;
-              }
-              return;
-            }
-
             if (tName === "ANNUAL APPEALS") {
               let rows = data.filter(r => r[0] && r[0].toString().toUpperCase().trim() === "ANNUAL APPEALS");
               rows.forEach(r => {
-                let title = r[1] || "", details = r[2] || "";
-                display.innerHTML += `<div class="info-line"><h2>${formatBold(title)}</h2><p>${formatBold(details.replace(/\n/g, '<br>'))}</p></div>`;
+                let text = [], links = [];
+                for(let c=1; c<r.length; c++) {
+                  let v = r[c] ? r[c].toString().trim() : "";
+                  if(!v) continue;
+                  if(v.startsWith("http")) links.push(v);
+                  else text.push(formatBold(v));
+                }
+                let appealCard = document.createElement('div');
+                appealCard.className = 'info-line';
+                appealCard.innerHTML = `<h2>${text[0] || "Appeal"}</h2><p>${text.slice(1).join('<br>')}</p>`;
+                links.forEach(l => appealCard.innerHTML += `<a href="${l}" class="action-link-btn" target="_blank">🔗 View Resource</a>`);
+                display.appendChild(appealCard);
               });
               return;
             }
 
+            // Standard tab logic remains the same
             let found = false;
             data.forEach(row => {
               if (row[0] && row[0].toString().trim().toUpperCase() === tName) {
