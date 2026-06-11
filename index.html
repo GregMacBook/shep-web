@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SHEP Portal</title>
   <style>
-    /* Add your CSS here */
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fcfaff; }
     body { display: flex; flex-direction: row; }
     .sidebar { width: 280px; min-width: 280px; background: #916bbf; display: flex; flex-direction: column; height: 100vh; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 20; overflow-y: auto; }
@@ -32,7 +31,7 @@
     <div id="content">Loading content...</div>
   </div>
   <script>
-    // REPLACE THIS URL WITH YOUR ACTUAL WEB APP URL
+    // REPLACE THIS URL WITH YOUR ACTUAL WEB APP URL (ending in /exec)
     const webAppUrl = "https://script.google.com/macros/s/AKfycbytnwWkCghLzTF6EUn7k3NQciE2-9Dk4-Y5i92n5ZjJspNkgVaXXfnBo7dlhuhn7ven/exec"; 
 
     const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
@@ -46,8 +45,8 @@
 
     function formatBold(text) { return text ? text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : ""; }
     
-    // Fetch data via the URL instead of google.script.run
-    fetch(webAppUrl)
+    // Proxy added here to fix the CORS error
+    fetch('https://corsproxy.io/?' + encodeURIComponent(webAppUrl))
         .then(response => response.json())
         .then(data => {
             var tabContainer = document.getElementById('tabs');
@@ -64,7 +63,6 @@
                     data.filter(r => r[0] && menuMap[r[0]] === tName).forEach(row => {
                         let card = document.createElement('div'); card.className = 'info-line';
                         
-                        // Rendering logic...
                         if (tName === "OUR MISSION") {
                             card.className += ' mission-layout';
                             card.innerHTML = `<div class="mission-text"><strong>${row[1].replace(/\n/g, '<br>')}</strong></div>`;
