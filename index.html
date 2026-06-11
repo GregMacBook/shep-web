@@ -1,51 +1,24 @@
-<script>
-    fetch('data.json')
-      .then(response => response.json())
-      .then(data => {
-        const display = document.getElementById('content');
-        const tabContainer = document.getElementById('tabs');
-        
-        // Get unique categories (first key of each object)
-        const categories = [...new Set(data.map(r => r["OUR MISSION"]))].filter(Boolean);
-        
-        categories.forEach(cat => {
-            let btn = document.createElement('div');
-            btn.className = 'tab'; btn.innerText = cat;
-            btn.onclick = () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                btn.classList.add('active');
-                display.innerHTML = `<h1>${cat}</h1>`;
-                
-                data.filter(r => r["OUR MISSION"] === cat).forEach(row => {
-                    let div = document.createElement('div'); div.className = 'info-line';
-                    
-                    // Main Title/Text
-                    let title = row["SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE"] || '';
-                    let subText = Object.values(row)[2] || ''; // This is your Column D link/text
-                    
-                    div.innerHTML = `<strong>${title}</strong><p>${subText}</p>`;
-                    
-                    // Image Logic: Checks Column D (links) and Column E (empty/links)
-                    // We look for imgur or drive links in the row
-                    let rowString = JSON.stringify(row);
-                    let imgMatch = rowString.match(/https:\/\/(i\.imgur\.com|drive\.google\.com)\/[^\s"']+/);
-                    
-                    if (imgMatch) {
-                        let url = imgMatch[0];
-                        // If it's a Drive link, convert it to an image embed
-                        if (url.includes('drive.google.com')) {
-                             let fileId = url.split('/d/')[1].split('/')[0];
-                             div.innerHTML += `<br><img src="https://drive.google.com/uc?export=view&id=${fileId}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
-                        } else {
-                             div.innerHTML += `<br><img src="${url}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
-                        }
-                    }
-                    
-                    display.appendChild(div);
-                });
-            };
-            tabContainer.appendChild(btn);
-        });
-        tabContainer.firstChild.click();
-      });
-</script>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+</head>
+<body>
+    <h1 id="test">Loading...</h1>
+    <script>
+        fetch('data.json')
+            .then(response => {
+                if (!response.ok) throw new Error("Could not find data.json");
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('test').innerText = "Data loaded! Found " + data.length + " items.";
+                console.log(data);
+            })
+            .catch(err => {
+                document.getElementById('test').innerText = "Error: " + err.message;
+                console.error(err);
+            });
+    </script>
+</body>
+</html>
