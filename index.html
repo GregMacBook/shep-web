@@ -14,7 +14,7 @@
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     .info-line { margin-bottom: 20px; padding: 25px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; line-height: 1.7; }
-    .action-link-btn { display: inline-block; padding: 12px 24px; background: #84a59d; color: white; text-decoration: none; border-radius: 35px; font-weight: bold; margin-top: 15px; font-size: 0.9em; text-transform: uppercase; }
+    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin: 5px; }
     .large-gallery-img { max-width: 100%; margin-top: 20px; border-radius: 10px; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
   </style>
 </head>
@@ -26,19 +26,50 @@
   <div class="main-container">
     <h1 id="tab-title">SHEP Portal</h1>
     <div class="divider"></div>
-    <div id="content">Loading content...</div>
+    <div id="content">Loading...</div>
   </div>
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
-    const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
+    
+    // Map sheet category names to menu names
+    const menuMap = {
+        "OUR MISSION": "OUR MISSION",
+        "ABOUT US": "ABOUT US",
+        "ANNUAL APPEALS": "ANNUAL APPEALS",
+        "WHAT DO WE COLLECT": "WHAT DO WE COLLECT",
+        "Some things just aren't suitable for us,\nincluding opened packages;\nthings you wouldn't give your family or friends.": "WHAT WE CAN'T ACCEPT",
+        "WHO WE HELP": "WHO WE HELP",
+        "WAYS YOU CAN HELP": "WAYS YOU CAN HELP",
+        "DONATION POINTS": "DONATION POINTS",
+        "SCHOOL DONORS": "SCHOOL DONORS",
+        "PICTURES": "PICTURES",
+        "REGISTRATION": "REGISTRATION",
+        "TESTIMONIALS": "TESTIMONIALS",
+        "MONETARY DONATIONS": "MONETARY DONATIONS",
+        "CONTACT SHEP": "CONTACT SHEP"
+    };
 
-    function formatBold(text) { return text ? text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : ""; }
+    const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
+
+    function renderItem(val, card) {
+      if (!val) return;
+      let str = val.toString().trim();
+      if (str.includes('drive.google.com')) {
+          let id = str.includes('/d/') ? str.split('/d/')[1].split('/')[0] : "";
+          if(id) card.innerHTML += `<img src="https://images.weserv.nl/?url=https://drive.google.com/thumbnail?id=${id}&sz=w800" class="large-gallery-img">`;
+      } else if (str.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        card.innerHTML += `<img src="${str}" class="large-gallery-img">`;
+      } else if (str.startsWith('http')) {
+        card.innerHTML += `<br><a href="${str}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
+      } else {
+        card.innerHTML += `<p>${str.replace(/\n/g, '<br>')}</p>`;
+      }
+    }
 
     fetch(scriptUrl).then(r => r.json()).then(data => {
         var tabContainer = document.getElementById('tabs');
         var display = document.getElementById('content');
-        
-        cleanMenuKeys.forEach(function(tName) {
+        cleanMenuKeys.forEach(tName => {
           var btn = document.createElement('div');
           btn.className = 'tab'; btn.innerText = tName;
           btn.onclick = function() {
@@ -47,33 +78,14 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
 
-            data.filter(r => r[0] && r[0].toString().trim().toUpperCase() === tName).forEach(row => {
-              let col1 = row[1] || ""; // Main Text
-              let col2 = row[2] || ""; // Sub-text or Link
-              let col3 = row[3] || ""; // Link or Image
-              
-              let card = document.createElement('div');
-              card.className = 'info-line';
-              
-              // 1. Add Main Text
-              if(col1) card.innerHTML += `<p style="margin:0;">${formatBold(col1.replace(/\n/g, '<br>'))}</p>`;
-              
-              // 2. Add sub-text or Link if it's NOT a URL
-              if(col2 && !col2.startsWith('http')) {
-                  card.innerHTML += `<div style="font-weight:bold; margin-top:5px;">${formatBold(col2)}</div>`;
+            data.filter(r => r[0] && menuMap[r[0]] === tName).forEach(row => {
+              let card = document.createElement('div'); card.className = 'info-line';
+              // Special case: School Donors split
+              if(tName === "SCHOOL DONORS" && row[2].includes(',')) {
+                 row[2].split(',').forEach(part => renderItem(part, card));
+              } else {
+                 [1, 2, 3, 4].forEach(i => renderItem(row[i], card));
               }
-              
-              // 3. Smart Link/Image Logic
-              [col2, col3].forEach(val => {
-                  if(val && val.startsWith('http')) {
-                      if(val.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-                          card.innerHTML += `<img src="${val}" class="large-gallery-img">`;
-                      } else {
-                          card.innerHTML += `<br><a href="${val}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
-                      }
-                  }
-              });
-              
               display.appendChild(card);
             });
           };
