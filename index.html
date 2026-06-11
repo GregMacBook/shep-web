@@ -1,31 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SHEP Portal</title>
-  <style>
-    body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #fcfaff; }
-    #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; position: sticky; top: 0; }
-    .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.85em; text-transform: uppercase; }
-    .tab.active { background: #ac8ad4; border-radius: 5px; }
-    #content { padding: 20px; max-width: 900px; margin: auto; }
-    .info-line { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin-top: 10px; }
-  </style>
-</head>
-<body>
-  <div id="tabs"></div>
-  <div id="content">Loading...</div>
-
-  <script>
+<script>
     fetch('data.json')
       .then(response => response.json())
       .then(data => {
         const display = document.getElementById('content');
         const tabContainer = document.getElementById('tabs');
         
-        // Extract unique category names from the first key of each object
-        const categories = [...new Set(data.map(r => r["OUR MISSION"]))].filter(cat => cat !== "DONATIONFORMURL");
+        // Get unique categories (first key of each object)
+        const categories = [...new Set(data.map(r => r["OUR MISSION"]))].filter(Boolean);
         
         categories.forEach(cat => {
             let btn = document.createElement('div');
@@ -37,21 +18,27 @@
                 
                 data.filter(r => r["OUR MISSION"] === cat).forEach(row => {
                     let div = document.createElement('div'); div.className = 'info-line';
-                    let keys = Object.keys(row);
                     
                     // Main Title/Text
-                    div.innerHTML = `<strong>${row[keys[1]] || ''}</strong><p>${row[keys[2]] || ''}</p>`;
+                    let title = row["SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE"] || '';
+                    let subText = Object.values(row)[2] || ''; // This is your Column D link/text
                     
-                    // Button Logic
-                    let link = row[keys[2]];
-                    if (link && link.startsWith('http') && !link.includes('drive.google.com')) {
-                        div.innerHTML += `<br><a href="${link}" target="_blank" class="action-link-btn">View Resource</a>`;
-                    }
+                    div.innerHTML = `<strong>${title}</strong><p>${subText}</p>`;
                     
-                    // Image Logic
-                    let img = row[keys[0]]; // Checks the URL column
-                    if (img && img.startsWith('http')) {
-                        div.innerHTML += `<br><img src="${img}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
+                    // Image Logic: Checks Column D (links) and Column E (empty/links)
+                    // We look for imgur or drive links in the row
+                    let rowString = JSON.stringify(row);
+                    let imgMatch = rowString.match(/https:\/\/(i\.imgur\.com|drive\.google\.com)\/[^\s"']+/);
+                    
+                    if (imgMatch) {
+                        let url = imgMatch[0];
+                        // If it's a Drive link, convert it to an image embed
+                        if (url.includes('drive.google.com')) {
+                             let fileId = url.split('/d/')[1].split('/')[0];
+                             div.innerHTML += `<br><img src="https://drive.google.com/uc?export=view&id=${fileId}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
+                        } else {
+                             div.innerHTML += `<br><img src="${url}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
+                        }
                     }
                     
                     display.appendChild(div);
@@ -61,6 +48,4 @@
         });
         tabContainer.firstChild.click();
       });
-  </script>
-</body>
-</html>
+</script>
