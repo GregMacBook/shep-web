@@ -34,16 +34,6 @@
 
     function formatBold(text) { return text ? text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : ""; }
 
-    // Helper to decide if a link is an Image or a Button
-    function renderMedia(url) {
-      if (!url) return "";
-      if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
-        return `<img src="${url}" class="large-gallery-img">`;
-      } else {
-        return `<br><a href="${url}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
-      }
-    }
-
     fetch(scriptUrl).then(r => r.json()).then(data => {
         var tabContainer = document.getElementById('tabs');
         var display = document.getElementById('content');
@@ -57,18 +47,32 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
 
-            // Render every matching row as a card
             data.filter(r => r[0] && r[0].toString().trim().toUpperCase() === tName).forEach(row => {
-              let text = row[1] || "";
-              let link = row[2] || ""; // Column 2 (usually link/button)
-              let media = row[3] || ""; // Column 3 (usually image/poster)
+              let col1 = row[1] || ""; // Main Text
+              let col2 = row[2] || ""; // Sub-text or Link
+              let col3 = row[3] || ""; // Link or Image
               
               let card = document.createElement('div');
               card.className = 'info-line';
               
-              if(text) card.innerHTML += `<p style="margin:0;">${formatBold(text.replace(/\n/g, '<br>'))}</p>`;
-              if(link) card.innerHTML += renderMedia(link);
-              if(media) card.innerHTML += renderMedia(media);
+              // 1. Add Main Text
+              if(col1) card.innerHTML += `<p style="margin:0;">${formatBold(col1.replace(/\n/g, '<br>'))}</p>`;
+              
+              // 2. Add sub-text or Link if it's NOT a URL
+              if(col2 && !col2.startsWith('http')) {
+                  card.innerHTML += `<div style="font-weight:bold; margin-top:5px;">${formatBold(col2)}</div>`;
+              }
+              
+              // 3. Smart Link/Image Logic
+              [col2, col3].forEach(val => {
+                  if(val && val.startsWith('http')) {
+                      if(val.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                          card.innerHTML += `<img src="${val}" class="large-gallery-img">`;
+                      } else {
+                          card.innerHTML += `<br><a href="${val}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
+                      }
+                  }
+              });
               
               display.appendChild(card);
             });
