@@ -17,7 +17,7 @@
     .action-link-btn { display: inline-block; padding: 12px 24px; background: #84a59d; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; margin-top: 15px; }
     .large-gallery-img { max-width: 100%; margin-top: 20px; border-radius: 10px; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     .mission-layout { display: flex; flex-direction: row; gap: 40px; align-items: flex-start; }
-    .mission-text { flex: 1; font-weight: bold; } /* Added bold here */
+    .mission-text { flex: 1; font-weight: bold; }
     .mission-img { flex: 1; max-width: 400px; }
   </style>
 </head>
@@ -32,9 +32,7 @@
     <div id="content">Loading content...</div>
   </div>
   <script>
-    // Force browser to fetch fresh data with timestamp
     const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec?cache=" + new Date().getTime();
-    
     const menuMap = {
         "OUR MISSION": "OUR MISSION", "ABOUT US": "ABOUT US", "ANNUAL APPEALS": "ANNUAL APPEALS",
         "WHAT DO WE COLLECT": "WHAT DO WE COLLECT",
@@ -70,12 +68,12 @@
               
               if (tName === "OUR MISSION") {
                   card.className += ' mission-layout';
-                  card.innerHTML = `<div class="mission-text"><p>${formatBold(row[1].replace(/\n/g, '<br>'))}</p></div>`;
+                  card.innerHTML = `<div class="mission-text"><strong>${row[1].replace(/\n/g, '<br>')}</strong></div>`;
                   if (row[2]) card.innerHTML += `<div class="mission-img"><img src="${getThumb(row[2])}" class="large-gallery-img" style="margin-top:0;"></div>`;
               } else if (tName === "ANNUAL APPEALS") {
+                  console.log("Appeal Row:", row); // Debug: Check if the link (row[3]) is here
                   card.innerHTML = `<h3>${row[1]}</h3><p>${formatBold(row[2])}</p>`;
-                  // Force render button if URL exists in column 3
-                  if (row[3] && row[3].toString().startsWith('http')) {
+                  if (row[3]) {
                       card.innerHTML += `<a href="${row[3]}" class="action-link-btn" target="_blank">🔗 View Poster</a>`;
                   }
               } else {
