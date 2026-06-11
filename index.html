@@ -68,34 +68,29 @@
               return;
             }
 
-            // 2. DYNAMIC TAB GENERATOR
+     // 2. DYNAMIC TAB GENERATOR
             data.forEach(row => {
               if (row[0] && row[0].toString().trim().toUpperCase() === tName) {
                 let text = [], imgs = [], links = [];
                 for(let c=1; c<row.length; c++) {
                   let v = row[c] ? row[c].toString().trim() : "";
                   if(!v) continue;
-                  // If it ends in image extension or is a known image link
                   if(v.match(/\.(jpg|jpeg|png|gif)$/i)) {
                     imgs.push(getProxyUrl(v));
                   } else if(v.startsWith("http")) {
                     links.push(v);
                   } else {
-                    text.push(formatBold(v));
+                    // This creates a distinct paragraph for every non-empty cell in the row
+                    text.push(`<p style="margin: 0 0 15px 0;">${formatBold(v)}</p>`);
                   }
                 }
                 let card = document.createElement('div'); card.className = 'info-line';
-                card.innerHTML = text.join('<br>');
-                links.forEach(l => card.innerHTML += `<br><a href="${l}" class="action-link-btn" target="_blank">🔗 View Resource</a>`);
+                card.innerHTML = text.join(''); // Joins paragraphs with their own bottom margins
+                links.forEach(l => card.innerHTML += `<a href="${l}" class="action-link-btn" target="_blank">🔗 View Resource</a>`);
                 imgs.forEach(i => card.innerHTML += `<img src="${i}" class="large-gallery-img">`);
                 display.appendChild(card);
               }
             });
-          };
-          tabContainer.appendChild(btn);
-        });
-        tabContainer.firstChild.click();
-    });
   </script>
 </body>
 </html>
