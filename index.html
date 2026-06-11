@@ -1,54 +1,72 @@
-<script>
-    fetch('data.json')
-      .then(response => response.json())
-      .then(data => {
-        const display = document.getElementById('content');
-        const tabContainer = document.getElementById('tabs');
-        
-        // 1. Get Categories
-        const categories = [...new Set(data.map(r => r["OUR MISSION"]))].filter(Boolean);
-        
-        // 2. Build Tabs
-        categories.forEach(cat => {
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHEP Portal</title>
+  <style>
+    body { font-family: sans-serif; background: #fcfaff; margin: 0; }
+    #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; position: sticky; top: 0; z-index: 100; }
+    .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
+    .tab.active { background: #ac8ad4; border-radius: 5px; }
+    #content { padding: 20px; max-width: 900px; margin: auto; }
+    .info-line { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="tabs"></div>
+  <div id="content"></div>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      fetch('data.json')
+        .then(response => response.json())
+        .then(data => {
+          const display = document.getElementById('content');
+          const tabContainer = document.getElementById('tabs');
+          
+          if (!display || !tabContainer) {
+            console.error("HTML elements missing!");
+            return;
+          }
+
+          // Use the key found in your JSON objects
+          const catKey = "OUR MISSION";
+          const catMap = "SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE";
+          const categories = [...new Set(data.map(r => r[catKey]))].filter(Boolean);
+          
+          categories.forEach(cat => {
             let btn = document.createElement('div');
             btn.className = 'tab'; btn.innerText = cat;
             btn.onclick = () => {
-                // Highlight active tab
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                btn.classList.add('active');
+              document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+              btn.classList.add('active');
+              display.innerHTML = `<h1>${cat}</h1>`;
+              
+              data.filter(r => r[catKey] === cat).forEach(row => {
+                let div = document.createElement('div'); div.className = 'info-line';
+                div.innerHTML = `<strong>${row[catMap] || ''}</strong>`;
                 
-                // Clear and build content
-                display.innerHTML = `<h1>${cat}</h1>`;
-                
-                // Filter rows for this category
-                data.filter(r => r["OUR MISSION"] === cat).forEach(row => {
-                    let div = document.createElement('div'); div.className = 'info-line';
-                    
-                    // Access fields by specific keys based on your JSON structure
-                    let title = row["SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE"] || '';
-                    let body = Object.values(row)[2] || ''; // This captures the description/link field
-                    
-                    div.innerHTML = `<strong>${title}</strong><p>${body}</p>`;
-                    
-                    // Display images if available (Looking for http in the row values)
-                    Object.values(row).forEach(val => {
-                        if (typeof val === 'string' && val.startsWith('http') && (val.includes('imgur') || val.includes('drive'))) {
-                            let imgUrl = val.includes('drive.google.com') ? 
-                                         val.replace('/view?usp=sharing', '/uc?export=view') : val;
-                            div.innerHTML += `<br><img src="${imgUrl}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
-                        }
-                    });
-                    
-                    display.appendChild(div);
+                // Check all fields for links/images
+                Object.values(row).forEach(val => {
+                  if (typeof val === 'string' && val.startsWith('http')) {
+                    if (val.includes('imgur') || val.includes('drive')) {
+                      let imgUrl = val.includes('drive.google.com') ? val.replace('/view?usp=sharing', '/uc?export=view') : val;
+                      div.innerHTML += `<br><img src="${imgUrl}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
+                    } else if (!val.includes('drive.google.com')) {
+                      div.innerHTML += `<br><a href="${val}" target="_blank" class="action-link-btn">View Resource</a>`;
+                    }
+                  }
                 });
+                display.appendChild(div);
+              });
             };
             tabContainer.appendChild(btn);
+          });
+          if(tabContainer.firstChild) tabContainer.firstChild.click();
         });
-        
-        // 3. Trigger first tab
-        if(tabContainer.firstChild) tabContainer.firstChild.click();
-      })
-      .catch(err => {
-        console.error("Rendering error:", err);
-      });
-</script>
+    });
+  </script>
+</body>
+</html>
