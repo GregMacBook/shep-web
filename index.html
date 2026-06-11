@@ -1,24 +1,47 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Test Page</title>
-</head>
-<body>
-    <h1 id="test">Loading...</h1>
-    <script>
-        fetch('data.json')
-            .then(response => {
-                if (!response.ok) throw new Error("Could not find data.json");
-                return response.json();
-            })
-            .then(data => {
-                document.getElementById('test').innerText = "Data loaded! Found " + data.length + " items.";
-                console.log(data);
-            })
-            .catch(err => {
-                document.getElementById('test').innerText = "Error: " + err.message;
-                console.error(err);
+<script>
+    fetch('data.json')
+        .then(response => response.json())
+        .then(data => {
+            const display = document.getElementById('content');
+            const tabContainer = document.getElementById('tabs');
+            
+            // Get unique category names from the first key of each object
+            const categories = [...new Set(data.map(r => r["OUR MISSION"]))].filter(Boolean);
+            
+            categories.forEach(cat => {
+                let btn = document.createElement('div');
+                btn.className = 'tab'; btn.innerText = cat;
+                btn.onclick = () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    btn.classList.add('active');
+                    display.innerHTML = `<h1>${cat}</h1>`;
+                    
+                    // Filter and render rows for this category
+                    data.filter(r => r["OUR MISSION"] === cat).forEach(row => {
+                        let div = document.createElement('div'); div.className = 'info-line';
+                        let keys = Object.keys(row);
+                        
+                        // row[keys[1]] is Title, row[keys[2]] is Description
+                        div.innerHTML = `<strong>${row[keys[1]] || ''}</strong><p>${row[keys[2]] || ''}</p>`;
+                        
+                        // Column D logic (Links/Posters)
+                        let link = row[keys[2]];
+                        if (link && link.startsWith('http') && !link.includes('drive.google.com')) {
+                            div.innerHTML += `<br><a href="${link}" target="_blank" class="action-link-btn">View Resource</a>`;
+                        }
+                        
+                        // Column E logic (Images)
+                        let img = row[keys[0]];
+                        if (img && img.startsWith('http')) {
+                            div.innerHTML += `<br><img src="${img}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
+                        }
+                        
+                        display.appendChild(div);
+                    });
+                };
+                tabContainer.appendChild(btn);
             });
-    </script>
-</body>
-</html>
+            // Automatically click the first tab to show content
+            if (tabContainer.firstChild) tabContainer.firstChild.click();
+        });
+</script>
