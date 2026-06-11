@@ -14,9 +14,8 @@
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     .info-line { margin-bottom: 20px; padding: 25px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; line-height: 1.7; }
-    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin: 5px; }
+    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin: 10px 5px 0 5px; }
     .large-gallery-img { max-width: 100%; margin-top: 20px; border-radius: 10px; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    /* Side-by-side Mission style */
     .mission-layout { display: flex; flex-direction: row; gap: 40px; align-items: flex-start; }
     .mission-text { flex: 1; }
     .mission-img { flex: 1; max-width: 400px; }
@@ -34,24 +33,16 @@
   </div>
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
+    const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
     const menuMap = {
-        "OUR MISSION": "OUR MISSION", "ABOUT US": "ABOUT US", "ANNUAL APPEALS": "ANNUAL APPEALS",
-        "WHAT DO WE COLLECT": "WHAT DO WE COLLECT",
+        "OUR MISSION": "OUR MISSION", "ABOUT US": "ABOUT US", "ANNUAL APPEALS": "ANNUAL APPEALS", "WHAT DO WE COLLECT": "WHAT DO WE COLLECT",
         "Some things just aren't suitable for us,\nincluding opened packages;\nthings you wouldn't give your family or friends.": "WHAT WE CAN'T ACCEPT",
         "WHO WE HELP": "WHO WE HELP", "WAYS YOU CAN HELP": "WAYS YOU CAN HELP",
-        "DONATION POINTS": "DONATION POINTS", "SCHOOL DONORS": "SCHOOL DONORS",
-        "PICTURES": "PICTURES", "REGISTRATION": "REGISTRATION", "TESTIMONIALS": "TESTIMONIALS",
-        "MONETARY DONATIONS": "MONETARY DONATIONS", "CONTACT SHEP": "CONTACT SHEP"
+        "DONATION POINTS": "DONATION POINTS", "SCHOOL DONORS": "SCHOOL DONORS", "PICTURES": "PICTURES",
+        "REGISTRATION": "REGISTRATION", "TESTIMONIALS": "TESTIMONIALS", "MONETARY DONATIONS": "MONETARY DONATIONS", "CONTACT SHEP": "CONTACT SHEP"
     };
-    const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
     function formatBold(text) { return text ? text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : ""; }
-
-    function getThumb(url) {
-      if (!url || !url.toString().includes('drive.google.com')) return url;
-      let id = url.split('/d/')[1].split('/')[0];
-      return `https://images.weserv.nl/?url=https://drive.google.com/thumbnail?id=${id}&sz=w800`;
-    }
 
     fetch(scriptUrl).then(r => r.json()).then(data => {
         var tabContainer = document.getElementById('tabs');
@@ -65,33 +56,33 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
 
-            // Handle OUR MISSION specially for side-by-side
-            if (tName === "OUR MISSION") {
-                let card = document.createElement('div'); card.className = 'info-line mission-layout';
-                let row = data.find(r => r[0] && menuMap[r[0]] === "OUR MISSION");
-                if (row) {
-                    card.innerHTML = `<div class="mission-text"><p>${formatBold(row[1].replace(/\n/g, '<br>'))}</p></div>`;
-                    if (row[2]) card.innerHTML += `<div class="mission-img"><img src="${getThumb(row[2])}" class="large-gallery-img" style="margin-top:0;"></div>`;
-                }
-                display.appendChild(card);
-            } else {
-                // Default rendering
-                data.filter(r => r[0] && menuMap[r[0]] === tName).forEach(row => {
-                  let card = document.createElement('div'); card.className = 'info-line';
+            // Render logic
+            data.filter(r => r[0] && menuMap[r[0]] === tName).forEach(row => {
+              let card = document.createElement('div'); card.className = 'info-line';
+              
+              if (tName === "OUR MISSION") {
+                  card.className += ' mission-layout';
+                  card.innerHTML = `<div class="mission-text"><p>${formatBold(row[1].replace(/\n/g, '<br>'))}</p></div>`;
+                  if (row[2]) card.innerHTML += `<div class="mission-img"><img src="${row[2]}" class="large-gallery-img" style="margin-top:0;"></div>`;
+              } else if (tName === "ANNUAL APPEALS") {
+                  card.innerHTML = `<h3>${row[1]}</h3><p>${formatBold(row[2])}</p>`;
+                  if (row[3]) card.innerHTML += `<a href="${row[3]}" class="action-link-btn" target="_blank">🔗 View Poster</a>`;
+              } else {
+                  // Standard loop for other tabs
                   for (let i = 1; i <= 4; i++) {
                     let val = row[i] ? row[i].toString().trim() : "";
                     if (!val) continue;
                     if (val.match(/\.(jpg|jpeg|png|gif|webp)$/i) || val.includes('drive.google.com')) {
-                        card.innerHTML += `<img src="${getThumb(val)}" class="large-gallery-img">`;
+                        card.innerHTML += `<img src="${val.includes('drive.google.com') ? 'https://images.weserv.nl/?url=https://drive.google.com/thumbnail?id='+val.split('/d/')[1].split('/')[0]+'&sz=w800' : val}" class="large-gallery-img">`;
                     } else if (val.startsWith('http')) {
                         card.innerHTML += `<br><a href="${val}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
                     } else {
                         card.innerHTML += `<p style="margin:0;">${formatBold(val.replace(/\n/g, '<br>'))}</p>`;
                     }
                   }
-                  display.appendChild(card);
-                });
-            }
+              }
+              display.appendChild(card);
+            });
           };
           tabContainer.appendChild(btn);
         });
