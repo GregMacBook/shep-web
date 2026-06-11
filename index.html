@@ -1,99 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <base target="_top">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SHEP Portal</title>
+  <title>SHEP - Safe Haven Essential Packs</title>
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fcfaff; }
-    body { display: flex; flex-direction: row; }
-    .sidebar { width: 280px; min-width: 280px; background: #916bbf; display: flex; flex-direction: column; height: 100vh; box-shadow: 4px 0 15px rgba(0,0,0,0.1); z-index: 20; overflow-y: auto; }
-    .logo-header { padding: 15px; text-align: center; background: white; border-bottom: 3px solid #ac8ad4; position: sticky; top: 0; }
-    .tab { padding: 16px 20px; margin: 6px 0 6px 15px; background: #ac8ad4; border-radius: 25px 0 0 25px; cursor: pointer; transition: 0.3s; font-weight: 600; color: #fff; text-transform: uppercase; font-size: 0.72em; letter-spacing: 1px; }
-    .tab.active { background: #fcfaff; color: #4a4e69; margin-right: -1px; }
-    .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; }
-    .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
-    .info-line { margin-bottom: 20px; padding: 25px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; line-height: 1.7; }
-    .action-link-btn { display: inline-block; padding: 12px 24px; background: #84a59d; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; margin-top: 15px; }
-    .large-gallery-img { max-width: 100%; margin-top: 20px; border-radius: 10px; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .mission-layout { display: flex; flex-direction: row; gap: 40px; align-items: flex-start; }
-    .mission-text { flex: 1; font-weight: bold; }
+    body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; }
+    iframe { width: 100%; height: 100%; border: none; }
   </style>
 </head>
 <body>
-  <div class="sidebar">
-    <div class="logo-header"><img src="https://drive.google.com/thumbnail?id=1jotHfaZhBe9jKnjWK7Ldz_MXl5Pb6Loe&sz=w300" width="140" alt="SHEP Logo"></div>
-    <div id="tabs"></div>
-  </div>
-  <div class="main-container">
-    <h1 id="tab-title">SHEP Portal</h1>
-    <div class="divider"></div>
-    <div id="content">Loading content...</div>
-  </div>
-  <script>
-    // REPLACE THIS URL WITH YOUR ACTUAL WEB APP URL (ending in /exec)
-    const webAppUrl = "https://script.google.com/macros/s/AKfycbytnwWkCghLzTF6EUn7k3NQciE2-9Dk4-Y5i92n5ZjJspNkgVaXXfnBo7dlhuhn7ven/exec"; 
-
-    const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
-    const menuMap = {
-        "OUR MISSION": "OUR MISSION", "ABOUT US": "ABOUT US", "ANNUAL APPEALS": "ANNUAL APPEALS", "WHAT DO WE COLLECT": "WHAT DO WE COLLECT",
-        "Some things just aren't suitable for us,\nincluding opened packages;\nthings you wouldn't give your family or friends.": "WHAT WE CAN'T ACCEPT",
-        "WHO WE HELP": "WHO WE HELP", "WAYS YOU CAN HELP": "WAYS YOU CAN HELP",
-        "DONATION POINTS": "DONATION POINTS", "SCHOOL DONORS": "SCHOOL DONORS", "PICTURES": "PICTURES",
-        "REGISTRATION": "REGISTRATION", "TESTIMONIALS": "TESTIMONIALS", "MONETARY DONATIONS": "MONETARY DONATIONS", "CONTACT SHEP": "CONTACT SHEP"
-    };
-
-    function formatBold(text) { return text ? text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : ""; }
-    
-    // Proxy added here to fix the CORS error
-    fetch('https://corsproxy.io/?' + encodeURIComponent(webAppUrl))
-        .then(response => response.json())
-        .then(data => {
-            var tabContainer = document.getElementById('tabs');
-            var display = document.getElementById('content');
-            cleanMenuKeys.forEach(tName => {
-                var btn = document.createElement('div');
-                btn.className = 'tab'; btn.innerText = tName;
-                btn.onclick = function() {
-                    document.getElementById('tab-title').innerText = tName;
-                    display.innerHTML = "";
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    btn.classList.add('active');
-
-                    data.filter(r => r[0] && menuMap[r[0]] === tName).forEach(row => {
-                        let card = document.createElement('div'); card.className = 'info-line';
-                        
-                        if (tName === "OUR MISSION") {
-                            card.className += ' mission-layout';
-                            card.innerHTML = `<div class="mission-text"><strong>${row[1].replace(/\n/g, '<br>')}</strong></div>`;
-                            if (row[2]) card.innerHTML += `<div class="mission-img"><img src="${row[2]}" class="large-gallery-img" style="margin-top:0;"></div>`;
-                        } else if (tName === "ANNUAL APPEALS") {
-                            card.innerHTML = `<h3>${row[1]}</h3><p>${formatBold(row[2])}</p>`;
-                            if (row[3] && row[3].toString().startsWith('http')) {
-                                card.innerHTML += `<a href="${row[3]}" class="action-link-btn" target="_blank">🔗 View Poster</a>`;
-                            }
-                        } else {
-                            if(row[1]) card.innerHTML += `<p>${formatBold(row[1].replace(/\n/g, '<br>'))}</p>`;
-                            [2, 3, 4].forEach(i => {
-                                let val = row[i];
-                                if(!val) return;
-                                let str = val.toString().trim();
-                                if (str.match(/\.(jpg|jpeg|png|gif|webp)$/i) || str.includes('drive.google.com')) {
-                                    card.innerHTML += `<img src="${str}" class="large-gallery-img">`;
-                                } else if (str.startsWith('http')) {
-                                    card.innerHTML += `<br><a href="${str}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
-                                } else {
-                                    card.innerHTML += `<p>${formatBold(str.replace(/\n/g, '<br>'))}</p>`;
-                                }
-                            });
-                        }
-                        display.appendChild(card);
-                    });
-                };
-                tabContainer.appendChild(btn);
-            });
-            tabContainer.firstChild.click();
-        });
-  </script>
+  <iframe src="https://script.google.com/macros/s/AKfycbytnwWkCghLzTF6EUn7k3NQciE2-9Dk4-Y5i92n5ZjJspNkgVaXXfnBo7dlhuhn7ven/exec"></iframe>
 </body>
 </html>
