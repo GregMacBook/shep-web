@@ -3,7 +3,7 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SHEP Portal - Final</title>
+  <title>SHEP Portal</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fcfaff; }
     body { display: flex; flex-direction: row; }
@@ -14,7 +14,8 @@
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     .info-line { margin-bottom: 20px; padding: 25px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; line-height: 1.7; }
-    .action-link-btn { display: inline-block; padding: 8px 16px; background: #ac8ad4; color: white; text-decoration: none; border-radius: 6px; font-size: 0.85em; font-weight: bold; margin-top: 10px; }
+    .action-link-btn { display: inline-block; padding: 12px 24px; background: #84a59d; color: white; text-decoration: none; border-radius: 35px; font-weight: bold; margin-top: 15px; font-size: 0.9em; text-transform: uppercase; }
+    .large-gallery-img { max-width: 100%; margin-top: 20px; border-radius: 10px; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
@@ -25,13 +26,23 @@
   <div class="main-container">
     <h1 id="tab-title">SHEP Portal</h1>
     <div class="divider"></div>
-    <div id="content">Loading...</div>
+    <div id="content">Loading content...</div>
   </div>
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
     const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
     function formatBold(text) { return text ? text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : ""; }
+
+    // Helper to decide if a link is an Image or a Button
+    function renderMedia(url) {
+      if (!url) return "";
+      if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        return `<img src="${url}" class="large-gallery-img">`;
+      } else {
+        return `<br><a href="${url}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
+      }
+    }
 
     fetch(scriptUrl).then(r => r.json()).then(data => {
         var tabContainer = document.getElementById('tabs');
@@ -46,19 +57,18 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
 
-            // Find all rows for this tab and display them consistently
+            // Render every matching row as a card
             data.filter(r => r[0] && r[0].toString().trim().toUpperCase() === tName).forEach(row => {
               let text = row[1] || "";
-              let meta = row[2] || ""; 
-              let link = row[3] || ""; 
+              let link = row[2] || ""; // Column 2 (usually link/button)
+              let media = row[3] || ""; // Column 3 (usually image/poster)
               
               let card = document.createElement('div');
               card.className = 'info-line';
               
-              // Standard rendering for every row
               if(text) card.innerHTML += `<p style="margin:0;">${formatBold(text.replace(/\n/g, '<br>'))}</p>`;
-              if(meta) card.innerHTML += `<div style="font-weight:bold; margin-top:5px;">${formatBold(meta)}</div>`;
-              if(link) card.innerHTML += `<br><a href="${link}" class="action-link-btn" target="_blank">🔗 Link/View</a>`;
+              if(link) card.innerHTML += renderMedia(link);
+              if(media) card.innerHTML += renderMedia(media);
               
               display.appendChild(card);
             });
