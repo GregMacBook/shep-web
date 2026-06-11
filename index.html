@@ -74,14 +74,20 @@
             if (tName === "ANNUAL APPEALS") {
               let rows = data.filter(r => r[0] && r[0].toString().toUpperCase().trim() === "ANNUAL APPEALS");
               rows.forEach(r => {
-                let text = [], imgs = [];
-                for(let c=1; c<=5; c++) {
-                  let v = r[c] ? r[c].toString().trim() : "";
-                  if(!v) continue;
-                  if(v.startsWith("http")) imgs.push(parseImg(v));
-                  else text.push(v);
-                }
-                display.innerHTML += `<div style="background: white; border-top: 5px solid #ac8ad4; border-radius: 15px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;"><h2 style="color: #916bbf; margin-top:0;">${formatBold(text[0] || "")}</h2><p>${text.slice(1).join('<br>')}</p><div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">${imgs.map(i => `<img src="${i}" style="max-height:400px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">`).join('')}</div></div>`;
+                let title = r[1] || "Special Appeal";
+                let details = r[2] || "";
+                let poster1 = r[3] || ""; // Column D
+                let poster2 = r[4] || ""; // Column E
+                
+                display.innerHTML += `
+                  <div style="background: white; border-top: 5px solid #ac8ad4; border-radius: 15px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
+                    <h2 style="color: #916bbf; margin-top:0;">${formatBold(title)}</h2>
+                    <p>${formatBold(details)}</p>
+                    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+                      ${poster1 ? `<img src="${poster1}" style="max-height: 400px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">` : ''}
+                      ${poster2 ? `<img src="${poster2}" style="max-height: 400px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">` : ''}
+                    </div>
+                  </div>`;
               });
               return;
             }
