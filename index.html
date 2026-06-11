@@ -33,16 +33,23 @@
   </div>
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
-    const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
     const menuMap = {
-        "OUR MISSION": "OUR MISSION", "ABOUT US": "ABOUT US", "ANNUAL APPEALS": "ANNUAL APPEALS", "WHAT DO WE COLLECT": "WHAT DO WE COLLECT",
+        "OUR MISSION": "OUR MISSION", "ABOUT US": "ABOUT US", "ANNUAL APPEALS": "ANNUAL APPEALS",
+        "WHAT DO WE COLLECT": "WHAT DO WE COLLECT",
         "Some things just aren't suitable for us,\nincluding opened packages;\nthings you wouldn't give your family or friends.": "WHAT WE CAN'T ACCEPT",
         "WHO WE HELP": "WHO WE HELP", "WAYS YOU CAN HELP": "WAYS YOU CAN HELP",
         "DONATION POINTS": "DONATION POINTS", "SCHOOL DONORS": "SCHOOL DONORS", "PICTURES": "PICTURES",
         "REGISTRATION": "REGISTRATION", "TESTIMONIALS": "TESTIMONIALS", "MONETARY DONATIONS": "MONETARY DONATIONS", "CONTACT SHEP": "CONTACT SHEP"
     };
+    const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
     function formatBold(text) { return text ? text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : ""; }
+    
+    function getThumb(url) {
+      if (!url || !url.toString().includes('drive.google.com')) return url;
+      let id = url.split('/d/')[1].split('/')[0];
+      return `https://images.weserv.nl/?url=https://drive.google.com/thumbnail?id=${id}&sz=w800`;
+    }
 
     fetch(scriptUrl).then(r => r.json()).then(data => {
         var tabContainer = document.getElementById('tabs');
@@ -56,30 +63,28 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
 
-            // Render logic
             data.filter(r => r[0] && menuMap[r[0]] === tName).forEach(row => {
               let card = document.createElement('div'); card.className = 'info-line';
               
               if (tName === "OUR MISSION") {
                   card.className += ' mission-layout';
                   card.innerHTML = `<div class="mission-text"><p>${formatBold(row[1].replace(/\n/g, '<br>'))}</p></div>`;
-                  if (row[2]) card.innerHTML += `<div class="mission-img"><img src="${row[2]}" class="large-gallery-img" style="margin-top:0;"></div>`;
-              } else if (tName === "ANNUAL APPEALS") {
-                  card.innerHTML = `<h3>${row[1]}</h3><p>${formatBold(row[2])}</p>`;
-                  if (row[3]) card.innerHTML += `<a href="${row[3]}" class="action-link-btn" target="_blank">🔗 View Poster</a>`;
+                  if (row[2]) card.innerHTML += `<div class="mission-img"><img src="${getThumb(row[2])}" class="large-gallery-img" style="margin-top:0;"></div>`;
               } else {
-                  // Standard loop for other tabs
-                  for (let i = 1; i <= 4; i++) {
-                    let val = row[i] ? row[i].toString().trim() : "";
-                    if (!val) continue;
-                    if (val.match(/\.(jpg|jpeg|png|gif|webp)$/i) || val.includes('drive.google.com')) {
-                        card.innerHTML += `<img src="${val.includes('drive.google.com') ? 'https://images.weserv.nl/?url=https://drive.google.com/thumbnail?id='+val.split('/d/')[1].split('/')[0]+'&sz=w800' : val}" class="large-gallery-img">`;
-                    } else if (val.startsWith('http')) {
-                        card.innerHTML += `<br><a href="${val}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
-                    } else {
-                        card.innerHTML += `<p style="margin:0;">${formatBold(val.replace(/\n/g, '<br>'))}</p>`;
-                    }
-                  }
+                  // Standardized rendering: Check Columns 1 through 4 for images/links
+                  if(row[1]) card.innerHTML += `<p>${formatBold(row[1].replace(/\n/g, '<br>'))}</p>`;
+                  [2, 3, 4].forEach(i => {
+                      let val = row[i];
+                      if(!val) return;
+                      let str = val.toString().trim();
+                      if (str.match(/\.(jpg|jpeg|png|gif|webp)$/i) || str.includes('drive.google.com')) {
+                          card.innerHTML += `<img src="${getThumb(str)}" class="large-gallery-img">`;
+                      } else if (str.startsWith('http')) {
+                          card.innerHTML += `<br><a href="${str}" class="action-link-btn" target="_blank">🔗 View Poster</a>`;
+                      } else {
+                          card.innerHTML += `<p>${formatBold(str)}</p>`;
+                      }
+                  });
               }
               display.appendChild(card);
             });
