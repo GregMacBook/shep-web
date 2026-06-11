@@ -14,10 +14,10 @@
     .main-container { flex-grow: 1; padding: 40px; box-sizing: border-box; overflow-y: auto; height: 100vh; }
     .divider { height: 4px; width: 60px; background: #84a59d; margin: 15px 0 30px 0; border-radius: 2px; }
     .info-line { margin-bottom: 20px; padding: 25px; border-left: 8px solid #84a59d; background: white; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: #4a4e69; max-width: 900px; line-height: 1.7; }
-    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin: 10px 5px 0 5px; }
+    .action-link-btn { display: inline-block; padding: 12px 24px; background: #84a59d; color: white; text-decoration: none; border-radius: 30px; font-weight: bold; margin-top: 15px; }
     .large-gallery-img { max-width: 100%; margin-top: 20px; border-radius: 10px; display: block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     .mission-layout { display: flex; flex-direction: row; gap: 40px; align-items: flex-start; }
-    .mission-text { flex: 1; }
+    .mission-text { flex: 1; font-weight: bold; } /* Added bold here */
     .mission-img { flex: 1; max-width: 400px; }
   </style>
 </head>
@@ -29,20 +29,21 @@
   <div class="main-container">
     <h1 id="tab-title">SHEP Portal</h1>
     <div class="divider"></div>
-    <div id="content">Loading...</div>
+    <div id="content">Loading content...</div>
   </div>
   <script>
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
-    const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
+    // Force browser to fetch fresh data with timestamp
+    const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec?cache=" + new Date().getTime();
     
-    // Updated menu mapping for category text consistency
     const menuMap = {
-        "OUR MISSION": "OUR MISSION", "ABOUT US": "ABOUT US", "ANNUAL APPEALS": "ANNUAL APPEALS", "WHAT DO WE COLLECT": "WHAT DO WE COLLECT",
+        "OUR MISSION": "OUR MISSION", "ABOUT US": "ABOUT US", "ANNUAL APPEALS": "ANNUAL APPEALS",
+        "WHAT DO WE COLLECT": "WHAT DO WE COLLECT",
         "Some things just aren't suitable for us,\nincluding opened packages;\nthings you wouldn't give your family or friends.": "WHAT WE CAN'T ACCEPT",
         "WHO WE HELP": "WHO WE HELP", "WAYS YOU CAN HELP": "WAYS YOU CAN HELP",
         "DONATION POINTS": "DONATION POINTS", "SCHOOL DONORS": "SCHOOL DONORS", "PICTURES": "PICTURES",
         "REGISTRATION": "REGISTRATION", "TESTIMONIALS": "TESTIMONIALS", "MONETARY DONATIONS": "MONETARY DONATIONS", "CONTACT SHEP": "CONTACT SHEP"
     };
+    const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
     function formatBold(text) { return text ? text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') : ""; }
     
@@ -73,9 +74,11 @@
                   if (row[2]) card.innerHTML += `<div class="mission-img"><img src="${getThumb(row[2])}" class="large-gallery-img" style="margin-top:0;"></div>`;
               } else if (tName === "ANNUAL APPEALS") {
                   card.innerHTML = `<h3>${row[1]}</h3><p>${formatBold(row[2])}</p>`;
-                  if (row[3]) card.innerHTML += `<a href="${row[3]}" class="action-link-btn" target="_blank">🔗 View Poster</a>`;
+                  // Force render button if URL exists in column 3
+                  if (row[3] && row[3].toString().startsWith('http')) {
+                      card.innerHTML += `<a href="${row[3]}" class="action-link-btn" target="_blank">🔗 View Poster</a>`;
+                  }
               } else {
-                  // Standardized rendering for all other tabs
                   if(row[1]) card.innerHTML += `<p>${formatBold(row[1].replace(/\n/g, '<br>'))}</p>`;
                   [2, 3, 4].forEach(i => {
                       let val = row[i];
