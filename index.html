@@ -24,28 +24,35 @@
   </style>
 </head>
 <body>
-
   <div class="sidebar">
     <div class="logo-header"><img src="https://drive.google.com/thumbnail?id=1jotHfaZhBe9jKnjWK7Ldz_MXl5Pb6Loe&sz=w300" width="140" alt="SHEP Logo"></div>
     <div id="tabs"></div>
   </div>
-
   <div class="main-container">
     <h1 id="tab-title">SHEP Portal</h1>
     <div class="divider"></div>
     <div id="content">Connecting to database stream...</div>
   </div>
-
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
     const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
     function formatBold(text) { return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); }
 
+    // THE MAGIC TRANSLATOR: Handles both Drive File IDs and Raw Image Links
+    function parseImg(url) {
+      if (!url) return "";
+      let str = url.toString().trim();
+      if (str.includes('/file/d/')) {
+        let id = str.split('/file/d/')[1].split('/')[0];
+        return 'https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
+      }
+      return str; 
+    }
+
     fetch(scriptUrl)
       .then(r => r.json())
-      .then(rawData => {
-        const data = Array.isArray(rawData) ? rawData : [];
+      .then(data => {
         var tabContainer = document.getElementById('tabs');
         var display = document.getElementById('content');
         tabContainer.innerHTML = "";
@@ -65,24 +72,17 @@
             }
 
             if (tName === "ANNUAL APPEALS") {
-              let appealsRows = data.filter(row => row[0] && row[0].toString().toUpperCase().trim() === "ANNUAL APPEALS");
-              if (appealsRows.length > 0) {
-                appealsRows.forEach(row => {
-                  let textLines = [];
-                  let imageLinks = [];
-                  for (let c = 1; c <= 5; c++) {
-                    let val = row[c] ? row[c].toString().trim() : "";
-                    if (!val) continue;
-                    if (val.match(/\.(jpg|jpeg|png|gif)$/i) || val.includes("imgur.com") || val.includes("googleusercontent.com")) {
-                      imageLinks.push(val);
-                    } else {
-                      textLines.push(val);
-                    }
-                  }
-                  let title = textLines[0] || "Special Appeal";
-                  display.innerHTML += `<div style="background: white; border-top: 5px solid #ac8ad4; border-radius: 15px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;"><h2 style="color: #916bbf; margin-top:0;">${formatBold(title)}</h2><p>${textLines.slice(1).join('<br>')}</p><div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">${imageLinks.map(img => `<img src="${img}" style="max-height: 400px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">`).join('')}</div></div>`;
-                });
-              }
+              let rows = data.filter(r => r[0] && r[0].toString().toUpperCase().trim() === "ANNUAL APPEALS");
+              rows.forEach(r => {
+                let text = [], imgs = [];
+                for(let c=1; c<=5; c++) {
+                  let v = r[c] ? r[c].toString().trim() : "";
+                  if(!v) continue;
+                  if(v.startsWith("http")) imgs.push(parseImg(v));
+                  else text.push(v);
+                }
+                display.innerHTML += `<div style="background: white; border-top: 5px solid #ac8ad4; border-radius: 15px; padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;"><h2 style="color: #916bbf; margin-top:0;">${formatBold(text[0] || "")}</h2><p>${text.slice(1).join('<br>')}</p><div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">${imgs.map(i => `<img src="${i}" style="max-height:400px; border-radius:12px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">`).join('')}</div></div>`;
+              });
               return;
             }
 
@@ -90,7 +90,7 @@
               let row = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === "OUR MISSION");
               if(row) {
                  let text = row[1] || "";
-                 let img = row[2] && (row[2].match(/\.(jpg|jpeg|png|gif)$/i) || row[2].includes("usercontent")) ? row[2] : "";
+                 let img = row[2] ? parseImg(row[2]) : "";
                  display.innerHTML = `<div style="display:flex; align-items:center; gap:30px; background:white; padding:30px; border-radius:15px; box-shadow:0 4px 15px rgba(0,0,0,0.05);"><div style="flex:1;"><p style="font-size:1.5em; font-weight:bold;">${text.replace(/\n/g, '<br>')}</p></div>${img ? `<div style="flex:1;"><img src="${img}" style="max-width:100%; border-radius:12px;"></div>` : ''}</div>`;
               }
               return;
@@ -104,9 +104,10 @@
                 for(let c=1; c<row.length; c++) {
                   let v = row[c] ? row[c].toString().trim() : "";
                   if(!v) continue;
-                  if(v.match(/\.(jpg|jpeg|png|gif)$/i) || v.includes("usercontent")) imgs.push(v);
-                  else if(v.startsWith("http")) links.push(v);
-                  else text.push(v);
+                  if(v.startsWith("http")) {
+                    if(v.includes("jpg") || v.includes("png") || v.includes("jpeg") || v.includes("googleusercontent")) imgs.push(parseImg(v));
+                    else links.push(v);
+                  } else text.push(v);
                 }
                 let card = document.createElement('div'); card.className = 'info-line';
                 card.innerHTML = `<span>${formatBold(text.join('<br>'))}</span>`;
