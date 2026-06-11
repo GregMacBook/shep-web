@@ -3,7 +3,7 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SHEP Portal - V3</title>
+  <title>SHEP Portal</title>
   <style>
     html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: 'Segoe UI', sans-serif; background-color: #fcfaff; }
     body { display: flex; flex-direction: row; }
@@ -23,9 +23,9 @@
     <div id="tabs"></div>
   </div>
   <div class="main-container">
-    <h1 id="tab-title">SHEP Portal - V3</h1>
+    <h1 id="tab-title">SHEP Portal</h1>
     <div class="divider"></div>
-    <div id="content">Loading content...</div>
+    <div id="content">Loading database...</div>
   </div>
   <script>
     const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
@@ -36,7 +36,6 @@
     fetch(scriptUrl).then(r => r.json()).then(data => {
         var tabContainer = document.getElementById('tabs');
         var display = document.getElementById('content');
-        display.innerHTML = "";
         
         cleanMenuKeys.forEach(function(tName) {
           var btn = document.createElement('div');
@@ -47,26 +46,38 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
 
-            // Find all rows for this tab
-            let rows = data.filter(r => r[0] && r[0].toString().trim().toUpperCase() === tName);
-            
-            rows.forEach(row => {
-              let text = row[1] || "";
-              let meta = row[2] || ""; // Usually a secondary title or sub-note
-              let link = row[3] || ""; // The link/URL
-              
+            // 1. OUR MISSION (Special Layout)
+            if (tName === "OUR MISSION") {
+              let row = data.find(r => r[0] && r[0].toString().trim().toUpperCase() === "OUR MISSION");
+              if(row) {
+                 display.innerHTML = `<div class="info-line" style="display:flex; flex-wrap:wrap; gap:20px; align-items:center;">
+                    <div style="flex:1; min-width:300px;"><p style="font-size:1.2em; font-weight:bold;">${formatBold(row[1].replace(/\n/g, '<br>'))}</p></div>
+                    ${row[2] ? `<div style="flex:1; min-width:300px;"><img src="${row[2]}" style="width:100%; border-radius:12px;"></div>` : ''}
+                 </div>`;
+              }
+              return;
+            }
+
+            // 2. ANNUAL APPEALS (Poster Link Layout)
+            if (tName === "ANNUAL APPEALS") {
+              data.filter(r => r[0] && r[0].toString().trim().toUpperCase() === "ANNUAL APPEALS").forEach(row => {
+                let card = document.createElement('div');
+                card.className = 'info-line';
+                card.innerHTML = `<h3>${formatBold(row[1] || "Appeal")}</h3>`;
+                if(row[2]) card.innerHTML += `<p>${formatBold(row[2])}</p>`;
+                if(row[3]) card.innerHTML += `<a href="${row[3]}" class="action-link-btn" target="_blank">🔗 View Poster</a>`;
+                display.appendChild(card);
+              });
+              return;
+            }
+
+            // 3. STANDARD LAYOUT (For everything else)
+            data.filter(r => r[0] && r[0].toString().trim().toUpperCase() === tName).forEach(row => {
               let card = document.createElement('div');
               card.className = 'info-line';
-              
-              // Add paragraph content
-              if(text) card.innerHTML += `<p style="margin:0;">${formatBold(text.replace(/\n/g, '<br>'))}</p>`;
-              
-              // Add secondary meta text
-              if(meta) card.innerHTML += `<div style="font-weight:bold; margin-top:5px;">${formatBold(meta)}</div>`;
-              
-              // Add link button
-              if(link) card.innerHTML += `<br><a href="${link}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
-              
+              if(row[1]) card.innerHTML += `<p style="margin:0 0 15px 0;">${formatBold(row[1].replace(/\n/g, '<br>'))}</p>`;
+              if(row[2]) card.innerHTML += `<div>${formatBold(row[2])}</div>`;
+              if(row[3]) card.innerHTML += `<br><a href="${row[3]}" class="action-link-btn" target="_blank">🔗 View Resource</a>`;
               display.appendChild(card);
             });
           };
