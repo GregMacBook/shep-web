@@ -1,47 +1,54 @@
 <script>
     fetch('data.json')
-        .then(response => response.json())
-        .then(data => {
-            const display = document.getElementById('content');
-            const tabContainer = document.getElementById('tabs');
-            
-            // Get unique category names from the first key of each object
-            const categories = [...new Set(data.map(r => r["OUR MISSION"]))].filter(Boolean);
-            
-            categories.forEach(cat => {
-                let btn = document.createElement('div');
-                btn.className = 'tab'; btn.innerText = cat;
-                btn.onclick = () => {
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    btn.classList.add('active');
-                    display.innerHTML = `<h1>${cat}</h1>`;
+      .then(response => response.json())
+      .then(data => {
+        const display = document.getElementById('content');
+        const tabContainer = document.getElementById('tabs');
+        
+        // 1. Get Categories
+        const categories = [...new Set(data.map(r => r["OUR MISSION"]))].filter(Boolean);
+        
+        // 2. Build Tabs
+        categories.forEach(cat => {
+            let btn = document.createElement('div');
+            btn.className = 'tab'; btn.innerText = cat;
+            btn.onclick = () => {
+                // Highlight active tab
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Clear and build content
+                display.innerHTML = `<h1>${cat}</h1>`;
+                
+                // Filter rows for this category
+                data.filter(r => r["OUR MISSION"] === cat).forEach(row => {
+                    let div = document.createElement('div'); div.className = 'info-line';
                     
-                    // Filter and render rows for this category
-                    data.filter(r => r["OUR MISSION"] === cat).forEach(row => {
-                        let div = document.createElement('div'); div.className = 'info-line';
-                        let keys = Object.keys(row);
-                        
-                        // row[keys[1]] is Title, row[keys[2]] is Description
-                        div.innerHTML = `<strong>${row[keys[1]] || ''}</strong><p>${row[keys[2]] || ''}</p>`;
-                        
-                        // Column D logic (Links/Posters)
-                        let link = row[keys[2]];
-                        if (link && link.startsWith('http') && !link.includes('drive.google.com')) {
-                            div.innerHTML += `<br><a href="${link}" target="_blank" class="action-link-btn">View Resource</a>`;
+                    // Access fields by specific keys based on your JSON structure
+                    let title = row["SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE"] || '';
+                    let body = Object.values(row)[2] || ''; // This captures the description/link field
+                    
+                    div.innerHTML = `<strong>${title}</strong><p>${body}</p>`;
+                    
+                    // Display images if available (Looking for http in the row values)
+                    Object.values(row).forEach(val => {
+                        if (typeof val === 'string' && val.startsWith('http') && (val.includes('imgur') || val.includes('drive'))) {
+                            let imgUrl = val.includes('drive.google.com') ? 
+                                         val.replace('/view?usp=sharing', '/uc?export=view') : val;
+                            div.innerHTML += `<br><img src="${imgUrl}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
                         }
-                        
-                        // Column E logic (Images)
-                        let img = row[keys[0]];
-                        if (img && img.startsWith('http')) {
-                            div.innerHTML += `<br><img src="${img}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
-                        }
-                        
-                        display.appendChild(div);
                     });
-                };
-                tabContainer.appendChild(btn);
-            });
-            // Automatically click the first tab to show content
-            if (tabContainer.firstChild) tabContainer.firstChild.click();
+                    
+                    display.appendChild(div);
+                });
+            };
+            tabContainer.appendChild(btn);
         });
+        
+        // 3. Trigger first tab
+        if(tabContainer.firstChild) tabContainer.firstChild.click();
+      })
+      .catch(err => {
+        console.error("Rendering error:", err);
+      });
 </script>
