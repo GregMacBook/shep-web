@@ -32,17 +32,8 @@
     const scriptUrl = "https://script.google.com/macros/s/AKfycbww5xEpevxJK-nB8fAvY6gzc-_81QG98l9PT86vsCxA_JK7OZf0uvlOPrspQjadPGGH/exec";
     const cleanMenuKeys = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T ACCEPT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
-    // Converts **text** to <strong>text</strong> and removes asterisks
     function formatBold(text) { 
       return text.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); 
-    }
-
-    function getProxyUrl(url) {
-        if (url.includes('drive.google.com')) {
-            let id = url.split('/d/')[1].split('/')[0];
-            return 'https://images.weserv.nl/?url=https://drive.google.com/thumbnail?id=' + id + '&sz=w1000';
-        }
-        return url;
     }
 
     fetch(scriptUrl).then(r => r.json()).then(data => {
@@ -57,18 +48,26 @@
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             btn.classList.add('active');
 
+            if (tName === "MONETARY DONATIONS") {
+              display.innerHTML = `<div class="info-line"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community.</p></div><div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span><br><span>BSB: 306821 / Acct: 6706014</span></div><center><button class="donate-btn" onclick="window.open('https://tinyurl.com/SHEPDonation', '_blank')">Complete Donation & Get Receipt</button></center>`;
+              return;
+            }
+
+            if (tName === "OUR MISSION") {
+              let row = data.find(r => r[0] && r[0].toString().toUpperCase().trim() === "OUR MISSION");
+              if(row) {
+                 let text = row[1] || "";
+                 let img = row[2] || "";
+                 display.innerHTML = `<div style="display:flex; align-items:center; gap:30px; background:white; padding:30px; border-radius:15px; box-shadow:0 4px 15px rgba(0,0,0,0.05);"><div style="flex:1;"><p style="font-size:1.5em; font-weight:bold;">${text.replace(/\n/g, '<br>')}</p></div>${img ? `<div style="flex:1;"><img src="${img}" style="max-width:100%; border-radius:12px;"></div>` : ''}</div>`;
+              }
+              return;
+            }
+
             if (tName === "ANNUAL APPEALS") {
               let rows = data.filter(r => r[0] && r[0].toString().toUpperCase().trim() === "ANNUAL APPEALS");
               rows.forEach(r => {
-                let title = formatBold(r[1] || ""), details = formatBold(r[2] || ""), p1 = r[3] || "", p2 = r[4] || "";
-                display.innerHTML += `<div style="background:white; border-top:5px solid #ac8ad4; padding:20px; margin-bottom:20px; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1); text-align:center;">
-                  <h2 style="color:#916bbf; margin:0;">${title}</h2>
-                  <p>${details}</p>
-                  <div style="display:flex; justify-content:center; gap:20px;">
-                    ${p1 ? `<img src="${getProxyUrl(p1)}" style="max-height:300px; border-radius:10px;">` : ''}
-                    ${p2 ? `<img src="${getProxyUrl(p2)}" style="max-height:300px; border-radius:10px;">` : ''}
-                  </div>
-                </div>`;
+                let title = r[1] || "", details = r[2] || "";
+                display.innerHTML += `<div class="info-line"><h2>${formatBold(title)}</h2><p>${formatBold(details.replace(/\n/g, '<br>'))}</p></div>`;
               });
               return;
             }
@@ -77,16 +76,23 @@
             data.forEach(row => {
               if (row[0] && row[0].toString().trim().toUpperCase() === tName) {
                 found = true;
-                let text = [], imgs = [];
+                let text = [], imgs = [], links = [];
                 for(let c=1; c<row.length; c++) {
                   let v = row[c] ? row[c].toString().trim() : "";
                   if(!v) continue;
-                  if(v.startsWith("http")) imgs.push(getProxyUrl(v));
-                  else text.push(formatBold(v));
+                  if(v.startsWith("http")) {
+                    if(v.includes("jpg") || v.includes("png") || v.includes("jpeg") || v.includes("googleusercontent")) imgs.push(v);
+                    else links.push(v);
+                  } else text.push(formatBold(v));
                 }
-                display.innerHTML += `<div class="info-line"><span>${text.join('<br>')}</span>${imgs.map(i => `<img src="${i}" style="max-width:100%; margin-top:10px; border-radius:10px;">`).join('')}</div>`;
+                let card = document.createElement('div'); card.className = 'info-line';
+                card.innerHTML = `<span>${text.join('<br>')}</span>`;
+                links.forEach(l => card.innerHTML += `<a href="${l}" class="action-link-btn" target="_blank">🔗 Link</a>`);
+                imgs.forEach(i => card.innerHTML += `<img src="${i}" style="max-width:100%; margin-top:10px; border-radius:10px;">`);
+                display.appendChild(card);
               }
             });
+            if (!found) display.innerHTML = '<div class="info-line">Database syncing...</div>';
           };
           tabContainer.appendChild(btn);
         });
