@@ -18,7 +18,7 @@
   <div id="content"></div>
   <script>
     async function loadData() {
-      // Ensure this matches the file name exactly as uploaded to GitHub
+      // Fetch the CSV
       const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
       const text = await res.text();
       
@@ -26,25 +26,32 @@
       const tabContainer = document.getElementById('tabs');
       let tabs = {};
       
-      // Split into rows and ignore empty ones immediately
+      // Split by lines and filter empty ones
       const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
       let currentCat = "";
 
       lines.forEach((line, index) => {
         if (index === 0) return; // Skip Header
         
-        // Split by comma. This handles standard CSV. 
-        let parts = line.split(',').map(p => p.replace(/^"|"$/g, '').trim());
+        // This regex splits by comma, but ignores commas inside quotes
+        let parts = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+        if (!parts) return;
         
-        // Update category if the first column has data
+        // Clean up quotes from parts
+        parts = parts.map(p => p.replace(/^"|"$/g, '').trim());
+        
+        // Col 0 = Category
         if (parts[0] && parts[0] !== "") {
           currentCat = parts[0];
         }
         
-        // Add content if Category is valid
-        if (currentCat && (parts[1] || parts[2])) {
+        // Col 1 = Text, Col 3 = Link (Based on your latest structure)
+        let textContent = parts[1] || "";
+        let linkContent = parts[3] || ""; 
+        
+        if (currentCat && (textContent || linkContent)) {
           if (!tabs[currentCat]) tabs[currentCat] = [];
-          tabs[currentCat].push({ text: parts[1], link: parts[2] });
+          tabs[currentCat].push({ text: textContent, link: linkContent });
         }
       });
 
