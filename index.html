@@ -20,61 +20,62 @@
 
 <script>
     window.addEventListener('DOMContentLoaded', () => {
-      fetch('data.json')
-        .then(response => response.json())
-        .then(data => {
-          const display = document.getElementById('content');
-          const tabContainer = document.getElementById('tabs');
-          
-          // Get unique categories from Column A (Index 0)
-          let categories = [...new Set(data.map(r => Object.values(r)[0]))].filter(cat => cat && cat !== "DONATIONFORMURL");
-          categories.sort((a, b) => a === "OUR MISSION" ? -1 : (b === "OUR MISSION" ? 1 : 0));
-          
-          categories.forEach((cat, index) => {
-            let btn = document.createElement('div');
-            btn.className = 'tab'; btn.innerText = cat;
-            btn.onclick = () => {
-              document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-              btn.classList.add('active');
-              
-              if (cat === "MONETARY DONATIONS") {
-                display.innerHTML = `
-                  <div class="commentary-box"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p></div>
-                  <div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div>
-                  <div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div>
-                  <center><button class="action-link-btn" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScuk3Pg3a4wVbkR60Pe6ni3EUNsMdLySbCuNF-mzXvXy8JwpQ/viewform', '_blank')">Complete Donation & Get Receipt</button></center>
-                `;
-              } else {
-                display.innerHTML = `<h1>${cat}</h1>`;
-                let div = document.createElement('div'); div.className = 'info-line';
-                
-                // Collect all text and images for this category
-                let allText = [];
-                let allImages = [];
-                
-                data.filter(r => Object.values(r)[0] === cat).forEach(row => {
-                  let vals = Object.values(row);
-                  if (vals[1] && vals[1].length > 1) allText.push(vals[1]);
-                  if (vals[2] && vals[2].startsWith('http')) allImages.push(vals[2]);
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                const display = document.getElementById('content');
+                const tabContainer = document.getElementById('tabs');
+
+                // 1. Group data by Category (Column 0)
+                const groupedData = data.reduce((acc, row) => {
+                    let vals = Object.values(row);
+                    let cat = vals[0];
+                    if (cat && cat !== "DONATIONFORMURL") {
+                        if (!acc[cat]) acc[cat] = { text: [], imgs: [] };
+                        if (vals[1]) acc[cat].text.push(vals[1]); // Column B text
+                        if (vals[2] && vals[2].startsWith('http')) acc[cat].imgs.push(vals[2]); // Column C image
+                    }
+                    return acc;
+                }, {});
+
+                // 2. Build Tabs
+                let categories = Object.keys(groupedData);
+                categories.sort((a, b) => a === "OUR MISSION" ? -1 : (b === "OUR MISSION" ? 1 : 0));
+
+                categories.forEach((cat, index) => {
+                    let btn = document.createElement('div');
+                    btn.className = 'tab'; btn.innerText = cat;
+                    btn.onclick = () => {
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        btn.classList.add('active');
+                        display.innerHTML = `<h1>${cat}</h1>`;
+
+                        if (cat === "MONETARY DONATIONS") {
+                            display.innerHTML = `
+                                <div class="commentary-box"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p></div>
+                                <div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div>
+                                <div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div>
+                                <center><button class="action-link-btn" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScuk3Pg3a4wVbkR60Pe6ni3EUNsMdLySbCuNF-mzXvXy8JwpQ/viewform', '_blank')">Complete Donation & Get Receipt</button></center>
+                            `;
+                        } else {
+                            let contentDiv = document.createElement('div');
+                            contentDiv.className = 'info-line';
+                            // Join all text rows found for this category
+                            contentDiv.innerHTML = `<strong>${groupedData[cat].text.join('<br><br>')}</strong>`;
+                            
+                            // Add images
+                            groupedData[cat].imgs.forEach(img => {
+                                let imgUrl = img.includes('drive.google.com') ? img.replace('/view?usp=sharing', '/uc?export=view') : img;
+                                let size = (cat === "OUR MISSION") ? "50%" : "100%";
+                                contentDiv.innerHTML += `<br><img src="${imgUrl}" style="max-width:${size}; border-radius:8px; margin-top:10px;">`;
+                            });
+                            display.appendChild(contentDiv);
+                        }
+                    };
+                    tabContainer.appendChild(btn);
+                    if (index === 0) btn.click();
                 });
-                
-                // Render all collected text
-                div.innerHTML = `<strong>${allText.join('<br><br>')}</strong>`;
-                
-                // Render all collected images
-                allImages.forEach(img => {
-                  let imgUrl = img.includes('drive.google.com') ? img.replace('/view?usp=sharing', '/uc?export=view') : img;
-                  let size = (cat === "OUR MISSION") ? "50%" : "100%";
-                  div.innerHTML += `<br><img src="${imgUrl}" style="max-width:${size}; border-radius:8px; margin-top:10px;">`;
-                });
-                
-                display.appendChild(div);
-              }
-            };
-            tabContainer.appendChild(btn);
-            if (index === 0) btn.click();
-          });
-        });
+            });
     });
 </script>
 </body>
