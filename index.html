@@ -1,23 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>SHEP Portal</title>
-  <style>
-    body { font-family: sans-serif; background: #fcfaff; margin: 0; }
-    #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; position: sticky; top: 0; z-index: 100; }
-    .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
-    .tab.active { background: #ac8ad4; border-radius: 5px; }
-    #content { padding: 20px; max-width: 900px; margin: auto; }
-    .info-line { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin-top: 10px; cursor: pointer; border: none; }
-  </style>
-</head>
-<body>
-  <div id="tabs"></div>
-  <div id="content"></div>
-
-  <script>
+<script>
     fetch('data.json?t=' + new Date().getTime())
       .then(res => res.json())
       .then(data => {
@@ -27,27 +8,26 @@
         let tabs = {};
         let currentCat = null;
 
-        // Group everything by the first column
         data.forEach(row => {
           let vals = Object.values(row);
+          // 1. Column A (vals[0]) is the Tab Category
           if (vals[0] && vals[0].trim() !== "" && vals[0] !== "DONATIONFORMURL") {
             currentCat = vals[0];
-            if (!tabs[currentCat]) tabs[currentCat] = { text: [], imgs: [] };
+            if (!tabs[currentCat]) tabs[currentCat] = [];
           }
           
           if (currentCat) {
-            // Text from column B (index 1)
-            if (vals[1] && vals[1].length > 1 && !vals[1].includes("SUPPORTING PEOPLE")) {
-              tabs[currentCat].text.push(vals[1]);
-            }
-            // Image from column C (index 2)
-            if (vals[2] && vals[2].startsWith('http')) {
-              tabs[currentCat].imgs.push(vals[2]);
+            // 2. Loop through ALL columns from Index 1 onwards (B, C, D...)
+            for (let i = 1; i < vals.length; i++) {
+              let val = vals[i];
+              if (val && val.toString().trim() !== "" && val !== "SUPPORTING PEOPLE") {
+                tabs[currentCat].push(val);
+              }
             }
           }
         });
 
-        // Build the tabs
+        // 3. Build the tabs and display
         Object.keys(tabs).forEach(catName => {
           let btn = document.createElement('div');
           btn.className = 'tab'; btn.innerText = catName;
@@ -57,11 +37,15 @@
             display.innerHTML = `<h1>${catName}</h1>`;
             
             let div = document.createElement('div'); div.className = 'info-line';
-            div.innerHTML = `<strong>${tabs[catName].text.join('<br><br>')}</strong>`;
-            
-            tabs[catName].imgs.forEach(imgUrl => {
-              let url = imgUrl.replace('/view?usp=sharing', '/uc?export=view');
-              div.innerHTML += `<br><br><img src="${url}" style="max-width:100%; border-radius:8px;">`;
+            tabs[catName].forEach(item => {
+              // Check if it's an image link
+              if (item.startsWith('http')) {
+                let url = item.replace('/view?usp=sharing', '/uc?export=view');
+                div.innerHTML += `<br><br><img src="${url}" style="max-width:100%; border-radius:8px;">`;
+              } else {
+                // Otherwise, treat it as text
+                div.innerHTML += `<strong>${item}</strong><br><br>`;
+              }
             });
             display.appendChild(div);
           };
@@ -69,6 +53,4 @@
         });
         if(tabContainer.firstChild) tabContainer.firstChild.click();
       });
-  </script>
-</body>
-</html>
+</script>
