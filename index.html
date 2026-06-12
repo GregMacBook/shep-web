@@ -3,22 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <title>SHEP Portal</title>
+  <style>
+    body { font-family: sans-serif; background: #fcfaff; margin: 0; }
+    #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; position: sticky; top: 0; z-index: 100; }
+    .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
+    .tab.active { background: #ac8ad4; border-radius: 5px; }
+    #content { padding: 20px; max-width: 900px; margin: auto; }
+    .info-line { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin-top: 10px; cursor: pointer; border: none; }
+  </style>
 </head>
 <body>
-  <h1 id="msg">Loading...</h1>
+  <div id="tabs"></div>
+  <div id="content"></div>
+
   <script>
-    async function loadData() {
-      try {
-        const response = await fetch('data.json?t=' + new Date().getTime());
-        if (!response.ok) throw new Error("Could not find data.json");
-        const data = await response.json();
-        document.getElementById('msg').innerText = "Data loaded successfully! Row count: " + data.length;
-        console.log(data);
-      } catch (err) {
-        document.getElementById('msg').innerText = "ERROR: " + err.message;
-      }
-    }
-    loadData();
+    fetch('data.json?t=' + new Date().getTime())
+      .then(res => res.json())
+      .then(data => {
+        const display = document.getElementById('content');
+        const tabContainer = document.getElementById('tabs');
+        
+        let lastCat = "";
+        let categories = [];
+        let grouped = {};
+
+        // 1. Group data properly
+        data.forEach(row => {
+          let vals = Object.values(row);
+          if (vals[0] && vals[0].trim() !== "") lastCat = vals[0];
+          
+          if (!grouped[lastCat]) {
+            grouped[lastCat] = [];
+            categories.push(lastCat);
+          }
+          grouped[lastCat].push(vals);
+        });
+
+        // 2. Build tabs
+        categories.forEach(cat => {
+          if (cat === "DONATIONFORMURL") return;
+          let btn = document.createElement('div');
+          btn.className = 'tab'; btn.innerText = cat;
+          btn.onclick = () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            display.innerHTML = `<h1>${cat}</h1>`;
+            
+            grouped[cat].forEach(v => {
+              // v[1] is text, v[2] is image
+              if (v[1] && v[1].length > 1 && v[1] !== "SUPPORTING PEOPLE") {
+                let div = document.createElement('div'); div.className = 'info-line';
+                div.innerHTML = `<strong>${v[1]}</strong>`;
+                if (v[2] && v[2].startsWith('http')) {
+                  div.innerHTML += `<br><img src="${v[2].replace('/view?usp=sharing', '/uc?export=view')}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
+                }
+                display.appendChild(div);
+              }
+            });
+          };
+          tabContainer.appendChild(btn);
+        });
+        if(tabContainer.firstChild) tabContainer.firstChild.click();
+      });
   </script>
 </body>
 </html>
