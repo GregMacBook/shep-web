@@ -30,7 +30,8 @@
           const catKey = "OUR MISSION";
           const titleKey = "SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE";
           
-          const categories = [...new Set(data.map(r => r[catKey]))].filter(cat => cat !== "DONATIONFORMURL" && cat);
+          let categories = [...new Set(data.map(r => r[catKey]))].filter(cat => cat !== "DONATIONFORMURL" && cat);
+          categories.sort((a, b) => a === "OUR MISSION" ? -1 : (b === "OUR MISSION" ? 1 : 0));
           
           categories.forEach((cat, index) => {
             let btn = document.createElement('div');
@@ -53,13 +54,20 @@
                 display.innerHTML = `<h1>${cat}</h1>`;
                 data.filter(r => r[catKey] === cat).forEach(row => {
                   let div = document.createElement('div'); div.className = 'info-line';
-                  div.innerHTML = `<strong>${row[titleKey] || ''}</strong>`;
+                  
+                  // Handle Mission text formatting
+                  if (cat === "OUR MISSION") {
+                    div.innerHTML = `<div style="white-space: pre-line; font-weight: bold;">${row[titleKey]}</div>`;
+                  } else {
+                    div.innerHTML = `<strong>${row[titleKey] || ''}</strong>`;
+                  }
                   
                   Object.values(row).forEach(val => {
                     if (typeof val === 'string' && val.startsWith('http')) {
                       if (val.includes('imgur') || val.includes('drive')) {
                         let imgUrl = val.includes('drive.google.com') ? val.replace('/view?usp=sharing', '/uc?export=view') : val;
-                        div.innerHTML += `<br><img src="${imgUrl}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
+                        let imgSize = cat === "OUR MISSION" ? "50%" : "100%";
+                        div.innerHTML += `<br><img src="${imgUrl}" style="max-width:${imgSize}; border-radius:8px; margin-top:10px;">`;
                       } else {
                         div.innerHTML += `<br><a href="${val}" target="_blank" class="action-link-btn">View Resource</a>`;
                       }
