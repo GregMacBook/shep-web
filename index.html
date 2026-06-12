@@ -11,77 +11,55 @@
     #content { padding: 20px; max-width: 900px; margin: auto; }
     .info-line { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
     .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin-top: 10px; cursor: pointer; border: none; }
-    .commentary-box { background: #f0e6ff; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ac8ad4; }
   </style>
 </head>
 <body>
   <div id="tabs"></div>
   <div id="content"></div>
 
-<script>
-    window.addEventListener('DOMContentLoaded', () => {
-      fetch('data.json')
-        .then(response => response.json())
-        .then(data => {
-          const display = document.getElementById('content');
-          const tabContainer = document.getElementById('tabs');
-          
-          // 1. Pre-process to fill in blank Categories (Column 0)
-          let currentCat = "";
-          data.forEach(r => {
-            let rowVals = Object.values(r);
-            if (rowVals[0] && rowVals[0].trim() !== "") currentCat = rowVals[0];
-            else r["auto_cat"] = currentCat;
-          });
+  <script>
+    // CACHE BUSTER: Adding a timestamp to the fetch URL
+    const cacheBuster = "?v=" + new Date().getTime();
+    fetch('data.json' + cacheBuster)
+      .then(response => response.json())
+      .then(data => {
+        const display = document.getElementById('content');
+        const tabContainer = document.getElementById('tabs');
 
-          // 2. Get unique categories
-          let categories = [...new Set(data.map(r => r["auto_cat"] || Object.values(r)[0]))].filter(c => c && c !== "DONATIONFORMURL");
-          categories.sort((a, b) => a === "OUR MISSION" ? -1 : (b === "OUR MISSION" ? 1 : 0));
+        // Simple function to build the page from the RAW data array
+        data.forEach((row, rowIndex) => {
+          let vals = Object.values(row);
+          let cat = vals[0];
           
-          categories.forEach((cat, index) => {
+          // Only create tab if it's a new category
+          if (cat && cat !== "DONATIONFORMURL" && !document.getElementById('tab-'+cat)) {
             let btn = document.createElement('div');
+            btn.id = 'tab-'+cat;
             btn.className = 'tab'; btn.innerText = cat;
             btn.onclick = () => {
               document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
               btn.classList.add('active');
+              display.innerHTML = `<h1>${cat}</h1>`;
               
-              if (cat === "MONETARY DONATIONS") {
-                display.innerHTML = `
-                  <div class="commentary-box"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p></div>
-                  <div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div>
-                  <div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div>
-                  <center><button class="action-link-btn" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScuk3Pg3a4wVbkR60Pe6ni3EUNsMdLySbCuNF-mzXvXy8JwpQ/viewform', '_blank')">Complete Donation & Get Receipt</button></center>
-                `;
-              } else {
-                display.innerHTML = `<h1>${cat}</h1>`;
-                // Filter rows matching this category
-                data.filter(r => (r["auto_cat"] || Object.values(r)[0]) === cat).forEach(row => {
-                  let vals = Object.values(row);
+              // Find all rows for this category
+              data.filter(r => Object.values(r)[0] === cat).forEach(r => {
+                let v = Object.values(r);
+                if (v[1] && v[1] !== "SUPPORTING PEOPLE") { // Skip header rows
                   let div = document.createElement('div'); div.className = 'info-line';
-                  // Add this line inside the data.filter loop:
-                  if (vals[1] === "SUPPORTING PEOPLE") return;
-                  // Text from Column B (Index 1)
-                  if(vals[1] && vals[1].length > 0) {
-                     div.innerHTML = `<strong style="white-space: pre-line;">${vals[1]}</strong>`;
+                  div.innerHTML = `<strong style="white-space: pre-line;">${v[1]}</strong>`;
+                  if (v[2] && v[2].startsWith('http')) {
+                    div.innerHTML += `<br><img src="${v[2].replace('/view?usp=sharing', '/uc?export=view')}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
                   }
-                  
-                  // Image from Column C (Index 2)
-                  if (vals[2] && vals[2].toString().startsWith('http')) {
-                    let imgUrl = vals[2].includes('drive.google.com') ? vals[2].replace('/view?usp=sharing', '/uc?export=view') : vals[2];
-                    let size = (cat === "OUR MISSION") ? "50%" : "100%";
-                    div.innerHTML += `<br><img src="${imgUrl}" style="max-width:${size}; border-radius:8px; margin-top:10px;">`;
-                  }
-                  
-                  // Only append if there's actually content
-                  if (div.innerHTML !== "") display.appendChild(div);
-                });
-              }
+                  display.appendChild(div);
+                }
+              });
             };
             tabContainer.appendChild(btn);
-            if (index === 0) btn.click();
-          });
+          }
         });
-    });
-</script>
+        // Click first tab
+        if(tabContainer.firstChild) tabContainer.firstChild.click();
+      });
+  </script>
 </body>
 </html>
