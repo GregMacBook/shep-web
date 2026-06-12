@@ -18,56 +18,59 @@
   <div id="tabs"></div>
   <div id="content"></div>
 
-<script>
+  <script>
     window.addEventListener('DOMContentLoaded', () => {
-        fetch('data.json')
-            .then(response => response.json())
-            .then(data => {
-                const display = document.getElementById('content');
-                const tabContainer = document.getElementById('tabs');
-                
-                // 1. Find the donation form URL first
-                const donationRow = data.find(r => r["OUR MISSION"] === "DONATIONFORMURL");
-                const donationFormUrl = donationRow ? donationRow["SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE"] : "#";
+      fetch('data.json')
+        .then(response => response.json())
+        .then(data => {
+          const display = document.getElementById('content');
+          const tabContainer = document.getElementById('tabs');
+          
+          const catKey = "OUR MISSION";
+          const titleKey = "SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE";
+          
+          const donationRow = data.find(r => r[catKey] === "DONATIONFORMURL");
+          const donationFormUrl = donationRow ? donationRow[titleKey] : "#";
 
-                // 2. Build Tabs (Excluding the donation URL row itself)
-                const categories = [...new Set(data.map(r => r["OUR MISSION"]))].filter(cat => cat !== "DONATIONFORMURL" && cat);
+          const categories = [...new Set(data.map(r => r[catKey]))].filter(cat => cat !== "DONATIONFORMURL" && cat);
+          
+          categories.forEach(cat => {
+            let btn = document.createElement('div');
+            btn.className = 'tab'; btn.innerText = cat;
+            btn.onclick = () => {
+              document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+              btn.classList.add('active');
+              display.innerHTML = `<h1>${cat}</h1>`;
+              
+              data.filter(r => r[catKey] === cat).forEach(row => {
+                let div = document.createElement('div'); div.className = 'info-line';
+                div.innerHTML = `<strong>${row[titleKey] || ''}</strong>`;
                 
-                categories.forEach(cat => {
-                    let btn = document.createElement('div');
-                    btn.className = 'tab'; btn.innerText = cat;
-                    btn.onclick = () => {
-                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                        btn.classList.add('active');
-                        display.innerHTML = `<h1>${cat}</h1>`;
-                        
-                        data.filter(r => r["OUR MISSION"] === cat).forEach(row => {
-                            let div = document.createElement('div'); div.className = 'info-line';
-                            let title = row["SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE"] || '';
-                            div.innerHTML = `<strong>${title}</strong>`;
-                            
-                            // Check for image/link logic
-                            Object.values(row).forEach(val => {
-                                if (typeof val === 'string' && val.startsWith('http')) {
-                                    // If it's the Monetary Donations tab, override the button link
-                                    if (cat === "MONETARY DONATIONS" && val.includes("306821")) {
-                                        div.innerHTML += `<br><a href="${donationFormUrl}" target="_blank" class="action-link-btn">Donate Now</a>`;
-                                    } else if (val.includes('imgur') || val.includes('drive')) {
-                                        let imgUrl = val.includes('drive.google.com') ? val.replace('/view?usp=sharing', '/uc?export=view') : val;
-                                        div.innerHTML += `<br><img src="${imgUrl}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
-                                    } else {
-                                        div.innerHTML += `<br><a href="${val}" target="_blank" class="action-link-btn">View Resource</a>`;
-                                    }
-                                }
-                            });
-                            display.appendChild(div);
-                        });
-                    };
-                    tabContainer.appendChild(btn);
+                Object.keys(row).forEach(key => {
+                  let val = row[key];
+                  if (typeof val === 'string' && val.startsWith('http')) {
+                    if (cat === "MONETARY DONATIONS" && val.includes("docs.google.com/forms")) {
+                      div.innerHTML += `<br><a href="${val}" target="_blank" class="action-link-btn">Donate Now</a>`;
+                    } else if (!val.includes('imgur') && !val.includes('drive.google.com')) {
+                      div.innerHTML += `<br><a href="${val}" target="_blank" class="action-link-btn">View Resource</a>`;
+                    }
+                  }
                 });
-                if(tabContainer.firstChild) tabContainer.firstChild.click();
-            });
+                
+                Object.values(row).forEach(val => {
+                  if (typeof val === 'string' && (val.includes('imgur') || val.includes('drive'))) {
+                    let imgUrl = val.includes('drive.google.com') ? val.replace('/view?usp=sharing', '/uc?export=view') : val;
+                    div.innerHTML += `<br><img src="${imgUrl}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
+                  }
+                });
+                display.appendChild(div);
+              });
+            };
+            tabContainer.appendChild(btn);
+          });
+          if(tabContainer.firstChild) tabContainer.firstChild.click();
+        });
     });
-</script>
+  </script>
 </body>
 </html>
