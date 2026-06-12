@@ -4,13 +4,7 @@
   <meta charset="UTF-8">
   <title>SHEP Portal</title>
   <style>
-    body { font-family: sans-serif; background: #fcfaff; margin: 0; }
-    #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; position: sticky; top: 0; z-index: 100; }
-    .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
-    .tab.active { background: #ac8ad4; border-radius: 5px; }
-    #content { padding: 20px; max-width: 900px; margin: auto; }
-    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    img { max-width: 100%; border-radius: 8px; margin-top: 10px; }
+    /* ... keep your existing CSS ... */
   </style>
 </head>
 <body>
@@ -18,7 +12,6 @@
   <div id="content"></div>
   <script>
     async function loadData() {
-      // Fetch your consolidated CSV file
       const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
       const text = await res.text();
       const rows = text.split('\n');
@@ -26,22 +19,29 @@
       const display = document.getElementById('content');
       const tabContainer = document.getElementById('tabs');
       let tabs = {};
-      let currentCat = "";
+      let lastCat = ""; // Keep track of the active category
 
-      // Skip the header row (index 0)
       rows.forEach((row, index) => {
-        if (index === 0) return; 
+        if (index === 0) return; // Skip the Header Row
         
         let cols = row.split(',');
-        // Column A (0) is Category, B (1) is Text/Item, C (2) is Link (if applicable)
-        if (cols[0] && cols[0].trim() !== "") currentCat = cols[0].trim();
         
-        if (currentCat && (cols[1] || cols[2])) {
-          if (!tabs[currentCat]) tabs[currentCat] = [];
-          tabs[currentCat].push({ text: cols[1], link: cols[2] ? cols[2].trim() : "" });
+        // If Col 0 has a value, update the current category
+        if (cols[0] && cols[0].trim() !== "") {
+           lastCat = cols[0].trim();
+        }
+        
+        // Only process rows if we have a valid lastCat
+        if (lastCat && (cols[1] || cols[2])) {
+          if (!tabs[lastCat]) tabs[lastCat] = [];
+          tabs[lastCat].push({ 
+            text: cols[1] ? cols[1].trim() : "", 
+            link: cols[2] ? cols[2].trim() : "" 
+          });
         }
       });
 
+      // Render Tabs
       Object.keys(tabs).forEach(cat => {
         let btn = document.createElement('div');
         btn.className = 'tab'; btn.innerText = cat;
@@ -51,7 +51,8 @@
           display.innerHTML = `<h1>${cat}</h1>`;
           tabs[cat].forEach(item => {
             let div = document.createElement('div'); div.className = 'info-card';
-            if (item.text) div.innerHTML += `<div>${item.text}</div>`;
+            // Only add text if it's not the same as the category name
+            if (item.text && item.text !== cat) div.innerHTML += `<div>${item.text}</div>`;
             if (item.link && item.link.startsWith('http')) {
               let url = item.link.replace('/view?usp=sharing', '/uc?export=view');
               div.innerHTML += `<img src="${url}">`;
