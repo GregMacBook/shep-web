@@ -23,29 +23,33 @@
       const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
       const text = await res.text();
       
-      const rows = text.split(/\r?\n/);
+      // Professional CSV Parsing: Handles quotes and internal newlines correctly
+      const parseCSV = (str) => {
+        const result = [];
+        let row = [], col = "", inQuotes = false;
+        for (let i = 0; i < str.length; i++) {
+          let char = str[i];
+          if (char === '"') inQuotes = !inQuotes;
+          else if (char === ',' && !inQuotes) { row.push(col.trim()); col = ""; }
+          else if (char === '\n' && !inQuotes) { row.push(col.trim()); result.push(row); row = []; col = ""; }
+          else col += char;
+        }
+        return result;
+      };
+
+      const rows = parseCSV(text);
       const display = document.getElementById('content');
       const tabContainer = document.getElementById('tabs');
       let tabs = {};
       let lastCat = "OUR MISSION";
 
-      rows.forEach((row, index) => {
-        if (index === 0 || row.trim() === "") return; 
+      rows.forEach((cols, index) => {
+        if (index === 0) return; // Skip Header
+        if (validTabs.includes(cols[0])) lastCat = cols[0];
         
-        // This regex handles commas, but ignores them if they are inside quotes
-        let cols = row.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
-        
-        let col0 = cols[0] ? cols[0].replace(/"/g, '').trim() : "";
-        if (validTabs.includes(col0)) lastCat = col0;
-        
-        if (lastCat) {
+        if (lastCat && (cols[1] || cols[2])) {
           if (!tabs[lastCat]) tabs[lastCat] = [];
-          // Only pull the first 3 columns and ignore the "millions of commas"
-          let text = cols[1] ? cols[1].replace(/"/g, '').trim() : "";
-          let link = cols[2] ? cols[2].replace(/"/g, '').trim() : "";
-          if (text || link) {
-            tabs[lastCat].push({ text, link });
-          }
+          tabs[lastCat].push({ text: cols[1], link: cols[2] });
         }
       });
 
@@ -59,10 +63,10 @@
           tabs[cat].forEach(item => {
             if (item.text === cat) return;
             let div = document.createElement('div'); div.className = 'info-card';
-            if (item.text) div.innerHTML += `<div>${item.text}</div>`;
+            if (item.text) div.innerHTML += `<div>${item.text.replace(/\n/g, '<br>')}</div>`;
             if (item.link && item.link.startsWith('http')) {
-              let url = item.link.replace('/view?usp=sharing', '/uc?export=view');
-              div.innerHTML += `<img src="${url}">`;
+               let url = item.link.replace('/view?usp=sharing', '/uc?export=view');
+               div.innerHTML += `<img src="${url}">`;
             }
             display.appendChild(div);
           });
