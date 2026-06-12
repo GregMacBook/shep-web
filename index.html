@@ -18,39 +18,31 @@
   <div id="tabs"></div>
   <div id="content"></div>
   <script>
-    const validTabs = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T COLLECT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
-    // Add sub-headers that should not be cards
-    const subHeaders = ["WOMEN", "MEN", "BABY and CHILDREN", "AGE APPROPRIATE ACTIVITIES"];
-
     async function loadData() {
-      const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
+      const res = await fetch('SHEP - WebsiteContent (7).csv?t=' + new Date().getTime());
       const text = await res.text();
       
-      const parseCSV = (str) => {
-        const arr = []; let row = [], col = "", inQuotes = false;
-        for (let i = 0; i < str.length; i++) {
-          let char = str[i];
-          if (char === '"') inQuotes = !inQuotes;
-          else if (char === ',' && !inQuotes) { row.push(col.trim()); col = ""; }
-          else if (char === '\n' && !inQuotes) { row.push(col.trim()); arr.push(row); row = []; col = ""; }
-          else col += char;
-        }
-        return arr;
-      };
-
-      const rows = parseCSV(text);
       const display = document.getElementById('content');
       const tabContainer = document.getElementById('tabs');
       let tabs = {};
-      let lastCat = "OUR MISSION";
+      
+      // Split by lines, ignore empty lines
+      const lines = text.split(/\r?\n/);
+      let currentCat = "";
 
-      rows.forEach((cols, index) => {
-        if (index === 0) return;
-        if (validTabs.includes(cols[0])) lastCat = cols[0];
+      lines.forEach((line, index) => {
+        if (index === 0 || !line.trim()) return; // Skip header and blank lines 82/114
         
-        if (lastCat && (cols[1] || cols[2])) {
-          if (!tabs[lastCat]) tabs[lastCat] = [];
-          tabs[lastCat].push({ text: cols[1], link: cols[2] });
+        // Split by comma, but intelligently clean quotes
+        let parts = line.split(',').map(p => p.replace(/^"|"$/g, '').trim());
+        
+        // If the first column has data, it's a category
+        if (parts[0]) currentCat = parts[0];
+        
+        // Build object: Category -> [ {text, link} ]
+        if (!tabs[currentCat]) tabs[currentCat] = [];
+        if (parts[1] || parts[2]) {
+           tabs[currentCat].push({ text: parts[1], link: parts[2] });
         }
       });
 
@@ -61,21 +53,14 @@
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           btn.classList.add('active');
           display.innerHTML = `<h1>${cat}</h1>`;
-          
           tabs[cat].forEach(item => {
-            if (item.text === cat) return;
-            
-            if (subHeaders.includes(item.text)) {
-              display.innerHTML += `<div class="sub-header">${item.text}</div>`;
-            } else {
-              let div = document.createElement('div'); div.className = 'info-card';
-              if (item.text) div.innerHTML += `<div>${item.text.replace(/\n/g, '<br>')}</div>`;
-              if (item.link && item.link.startsWith('http')) {
-                let url = item.link.replace('/view?usp=sharing', '/uc?export=view');
-                div.innerHTML += `<img src="${url}">`;
-              }
-              display.appendChild(div);
+            let div = document.createElement('div'); div.className = 'info-card';
+            if (item.text) div.innerHTML += `<div>${item.text}</div>`;
+            if (item.link && item.link.startsWith('http')) {
+               let url = item.link.replace('/view?usp=sharing', '/uc?export=view');
+               div.innerHTML += `<img src="${url}">`;
             }
+            display.appendChild(div);
           });
         };
         tabContainer.appendChild(btn);
