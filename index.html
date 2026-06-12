@@ -9,7 +9,8 @@
     .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; border: 1px solid #ac8ad4; margin: 2px; }
     .tab.active { background: #ac8ad4; }
     #content { padding: 20px; max-width: 900px; margin: auto; }
-    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .sub-header { font-weight: bold; color: #7b4ea6; margin-top: 20px; text-decoration: underline; }
     img { max-width: 100%; border-radius: 8px; margin-top: 10px; }
   </style>
 </head>
@@ -18,23 +19,23 @@
   <div id="content"></div>
   <script>
     const validTabs = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T COLLECT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
+    // Add sub-headers that should not be cards
+    const subHeaders = ["WOMEN", "MEN", "BABY and CHILDREN", "AGE APPROPRIATE ACTIVITIES"];
 
     async function loadData() {
       const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
       const text = await res.text();
       
-      // Professional CSV Parsing: Handles quotes and internal newlines correctly
       const parseCSV = (str) => {
-        const result = [];
-        let row = [], col = "", inQuotes = false;
+        const arr = []; let row = [], col = "", inQuotes = false;
         for (let i = 0; i < str.length; i++) {
           let char = str[i];
           if (char === '"') inQuotes = !inQuotes;
           else if (char === ',' && !inQuotes) { row.push(col.trim()); col = ""; }
-          else if (char === '\n' && !inQuotes) { row.push(col.trim()); result.push(row); row = []; col = ""; }
+          else if (char === '\n' && !inQuotes) { row.push(col.trim()); arr.push(row); row = []; col = ""; }
           else col += char;
         }
-        return result;
+        return arr;
       };
 
       const rows = parseCSV(text);
@@ -44,7 +45,7 @@
       let lastCat = "OUR MISSION";
 
       rows.forEach((cols, index) => {
-        if (index === 0) return; // Skip Header
+        if (index === 0) return;
         if (validTabs.includes(cols[0])) lastCat = cols[0];
         
         if (lastCat && (cols[1] || cols[2])) {
@@ -60,15 +61,21 @@
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           btn.classList.add('active');
           display.innerHTML = `<h1>${cat}</h1>`;
+          
           tabs[cat].forEach(item => {
             if (item.text === cat) return;
-            let div = document.createElement('div'); div.className = 'info-card';
-            if (item.text) div.innerHTML += `<div>${item.text.replace(/\n/g, '<br>')}</div>`;
-            if (item.link && item.link.startsWith('http')) {
-               let url = item.link.replace('/view?usp=sharing', '/uc?export=view');
-               div.innerHTML += `<img src="${url}">`;
+            
+            if (subHeaders.includes(item.text)) {
+              display.innerHTML += `<div class="sub-header">${item.text}</div>`;
+            } else {
+              let div = document.createElement('div'); div.className = 'info-card';
+              if (item.text) div.innerHTML += `<div>${item.text.replace(/\n/g, '<br>')}</div>`;
+              if (item.link && item.link.startsWith('http')) {
+                let url = item.link.replace('/view?usp=sharing', '/uc?export=view');
+                div.innerHTML += `<img src="${url}">`;
+              }
+              display.appendChild(div);
             }
-            display.appendChild(div);
           });
         };
         tabContainer.appendChild(btn);
