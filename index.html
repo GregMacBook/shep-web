@@ -9,55 +9,57 @@
     .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
     .tab.active { background: #ac8ad4; border-radius: 5px; }
     #content { padding: 20px; max-width: 900px; margin: auto; }
-    .info-line { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    img { max-width: 100%; border-radius: 8px; margin-top: 10px; }
   </style>
 </head>
 <body>
   <div id="tabs"></div>
   <div id="content"></div>
   <script>
-    fetch('data.json?t=' + new Date().getTime())
-      .then(res => res.json())
-      .then(data => {
-        const display = document.getElementById('content');
-        const tabContainer = document.getElementById('tabs');
-        let tabs = {};
+    async function loadData() {
+      // Fetch your consolidated CSV file
+      const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
+      const text = await res.text();
+      const rows = text.split('\n');
+      
+      const display = document.getElementById('content');
+      const tabContainer = document.getElementById('tabs');
+      let tabs = {};
+      let currentCat = "";
 
-        data.forEach(row => {
-          let vals = Object.values(row);
-          let cat = vals[0] ? vals[0].trim() : "";
-          if (cat === "" || cat === "DONATIONFORMURL") return;
-          if (!tabs[cat]) tabs[cat] = [];
-          
-          // Add every value from column B (index 1) onwards to this tab
-          for(let i=1; i<vals.length; i++) {
-            if(vals[i] && vals[i].toString().trim() !== "" && vals[i] !== cat) {
-               tabs[cat].push(vals[i]);
-            }
-          }
-        });
-
-        Object.keys(tabs).forEach(cat => {
-          let btn = document.createElement('div');
-          btn.className = 'tab'; btn.innerText = cat;
-          btn.onclick = () => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            display.innerHTML = `<h1>${cat}</h1>`;
-            tabs[cat].forEach(item => {
-              let div = document.createElement('div'); div.className = 'info-line';
-              if (item.startsWith('http')) {
-                div.innerHTML = `<img src="${item.replace('/view?usp=sharing', '/uc?export=view')}" style="max-width:100%; border-radius:8px;">`;
-              } else {
-                div.innerHTML = `<strong>${item}</strong>`;
-              }
-              display.appendChild(div);
-            });
-          };
-          tabContainer.appendChild(btn);
-        });
-        if(tabContainer.firstChild) tabContainer.firstChild.click();
+      rows.forEach(row => {
+        let cols = row.split(',');
+        // Column A (0) is Category, B (1) is Text, C (2) is Link
+        if (cols[0] && cols[0].trim() !== "") currentCat = cols[0].trim();
+        if (currentCat && (cols[1] || cols[2])) {
+          if (!tabs[currentCat]) tabs[currentCat] = [];
+          tabs[currentCat].push({ text: cols[1], link: cols[2] ? cols[2].trim() : "" });
+        }
       });
+
+      Object.keys(tabs).forEach(cat => {
+        let btn = document.createElement('div');
+        btn.className = 'tab'; btn.innerText = cat;
+        btn.onclick = () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          display.innerHTML = `<h1>${cat}</h1>`;
+          tabs[cat].forEach(item => {
+            let div = document.createElement('div'); div.className = 'info-card';
+            if (item.text) div.innerHTML += `<div>${item.text}</div>`;
+            if (item.link && item.link.startsWith('http')) {
+              let url = item.link.replace('/view?usp=sharing', '/uc?export=view');
+              div.innerHTML += `<img src="${url}">`;
+            }
+            display.appendChild(div);
+          });
+        };
+        tabContainer.appendChild(btn);
+      });
+      if(tabContainer.firstChild) tabContainer.firstChild.click();
+    }
+    loadData();
   </script>
 </body>
 </html>
