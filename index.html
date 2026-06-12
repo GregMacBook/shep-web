@@ -1,56 +1,61 @@
-<script>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SHEP Portal</title>
+</head>
+<body>
+  <div id="tabs"></div>
+  <div id="content"></div>
+  <script>
     fetch('data.json?t=' + new Date().getTime())
       .then(res => res.json())
       .then(data => {
-        const display = document.getElementById('content');
-        const tabContainer = document.getElementById('tabs');
-        
-        let tabs = {};
-        let currentCat = null;
+        try {
+          const display = document.getElementById('content');
+          const tabContainer = document.getElementById('tabs');
+          let tabs = {};
+          let currentCat = null;
 
-        data.forEach(row => {
-          let vals = Object.values(row);
-          // 1. Column A (vals[0]) is the Tab Category
-          if (vals[0] && vals[0].trim() !== "" && vals[0] !== "DONATIONFORMURL") {
-            currentCat = vals[0];
-            if (!tabs[currentCat]) tabs[currentCat] = [];
-          }
-          
-          if (currentCat) {
-            // 2. Loop through ALL columns from Index 1 onwards (B, C, D...)
-            for (let i = 1; i < vals.length; i++) {
-              let val = vals[i];
-              if (val && val.toString().trim() !== "" && val !== "SUPPORTING PEOPLE") {
-                tabs[currentCat].push(val);
+          data.forEach((row, index) => {
+            let vals = Object.values(row);
+            if (vals[0] && vals[0].trim() !== "" && vals[0] !== "DONATIONFORMURL") {
+              currentCat = vals[0];
+              if (!tabs[currentCat]) tabs[currentCat] = [];
+            }
+            
+            if (currentCat) {
+              for (let i = 1; i < vals.length; i++) {
+                if (vals[i] && vals[i].toString().trim() !== "" && !vals[i].includes("SUPPORTING PEOPLE")) {
+                  tabs[currentCat].push(vals[i]);
+                }
               }
             }
-          }
-        });
+          });
 
-        // 3. Build the tabs and display
-        Object.keys(tabs).forEach(catName => {
-          let btn = document.createElement('div');
-          btn.className = 'tab'; btn.innerText = catName;
-          btn.onclick = () => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            display.innerHTML = `<h1>${catName}</h1>`;
-            
-            let div = document.createElement('div'); div.className = 'info-line';
-            tabs[catName].forEach(item => {
-              // Check if it's an image link
-              if (item.startsWith('http')) {
-                let url = item.replace('/view?usp=sharing', '/uc?export=view');
-                div.innerHTML += `<br><br><img src="${url}" style="max-width:100%; border-radius:8px;">`;
-              } else {
-                // Otherwise, treat it as text
-                div.innerHTML += `<strong>${item}</strong><br><br>`;
-              }
-            });
-            display.appendChild(div);
-          };
-          tabContainer.appendChild(btn);
-        });
-        if(tabContainer.firstChild) tabContainer.firstChild.click();
-      });
-</script>
+          Object.keys(tabs).forEach(catName => {
+            let btn = document.createElement('div');
+            btn.innerText = catName;
+            btn.onclick = () => {
+              display.innerHTML = `<h1>${catName}</h1>`;
+              tabs[catName].forEach(item => {
+                let div = document.createElement('div');
+                if (item.startsWith('http')) {
+                  let url = item.replace('/view?usp=sharing', '/uc?export=view');
+                  div.innerHTML = `<img src="${url}" style="max-width:100%;">`;
+                } else {
+                  div.innerHTML = `<strong>${item}</strong>`;
+                }
+                display.appendChild(div);
+              });
+            };
+            tabContainer.appendChild(btn);
+          });
+        } catch(e) {
+          document.body.innerText = "Error encountered: " + e.message;
+        }
+      })
+      .catch(err => { document.body.innerText = "Fetch error: " + err; });
+  </script>
+</body>
+</html>
