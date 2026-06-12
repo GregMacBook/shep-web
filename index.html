@@ -18,7 +18,6 @@
   <div id="content"></div>
   <script>
     async function loadData() {
-      // Fetch your consolidated CSV file
       const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
       const text = await res.text();
       const rows = text.split('\n');
@@ -28,16 +27,18 @@
       let tabs = {};
       let currentCat = "";
 
-      rows.forEach(row => {
+      // ADD THIS: Skip the header row (index 0)
+      rows.forEach((row, index) => {
+        if (index === 0) return; 
+        
         let cols = row.split(',');
-        // Column A (0) is Category, B (1) is Text, C (2) is Link
         if (cols[0] && cols[0].trim() !== "") currentCat = cols[0].trim();
         if (currentCat && (cols[1] || cols[2])) {
           if (!tabs[currentCat]) tabs[currentCat] = [];
           tabs[currentCat].push({ text: cols[1], link: cols[2] ? cols[2].trim() : "" });
         }
       });
-
+  
       Object.keys(tabs).forEach(cat => {
         let btn = document.createElement('div');
         btn.className = 'tab'; btn.innerText = cat;
