@@ -3,6 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>SHEP Portal</title>
+  <style>
+    body { font-family: sans-serif; background: #fcfaff; margin: 0; }
+    #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; position: sticky; top: 0; z-index: 100; }
+    .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
+    .tab.active { background: #ac8ad4; border-radius: 5px; }
+    #content { padding: 20px; max-width: 900px; margin: auto; }
+    .info-line { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+  </style>
 </head>
 <body>
   <div id="tabs"></div>
@@ -11,51 +19,45 @@
     fetch('data.json?t=' + new Date().getTime())
       .then(res => res.json())
       .then(data => {
-        try {
-          const display = document.getElementById('content');
-          const tabContainer = document.getElementById('tabs');
-          let tabs = {};
-          let currentCat = null;
+        const display = document.getElementById('content');
+        const tabContainer = document.getElementById('tabs');
+        let tabs = {};
 
-          data.forEach((row, index) => {
-            let vals = Object.values(row);
-            if (vals[0] && vals[0].trim() !== "" && vals[0] !== "DONATIONFORMURL") {
-              currentCat = vals[0];
-              if (!tabs[currentCat]) tabs[currentCat] = [];
+        data.forEach(row => {
+          let vals = Object.values(row);
+          let cat = vals[0] ? vals[0].trim() : "";
+          if (cat === "" || cat === "DONATIONFORMURL") return;
+          if (!tabs[cat]) tabs[cat] = [];
+          
+          // Add every value from column B (index 1) onwards to this tab
+          for(let i=1; i<vals.length; i++) {
+            if(vals[i] && vals[i].toString().trim() !== "" && vals[i] !== cat) {
+               tabs[cat].push(vals[i]);
             }
-            
-            if (currentCat) {
-              for (let i = 1; i < vals.length; i++) {
-                if (vals[i] && vals[i].toString().trim() !== "" && !vals[i].includes("SUPPORTING PEOPLE")) {
-                  tabs[currentCat].push(vals[i]);
-                }
+          }
+        });
+
+        Object.keys(tabs).forEach(cat => {
+          let btn = document.createElement('div');
+          btn.className = 'tab'; btn.innerText = cat;
+          btn.onclick = () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            display.innerHTML = `<h1>${cat}</h1>`;
+            tabs[cat].forEach(item => {
+              let div = document.createElement('div'); div.className = 'info-line';
+              if (item.startsWith('http')) {
+                div.innerHTML = `<img src="${item.replace('/view?usp=sharing', '/uc?export=view')}" style="max-width:100%; border-radius:8px;">`;
+              } else {
+                div.innerHTML = `<strong>${item}</strong>`;
               }
-            }
-          });
-
-          Object.keys(tabs).forEach(catName => {
-            let btn = document.createElement('div');
-            btn.innerText = catName;
-            btn.onclick = () => {
-              display.innerHTML = `<h1>${catName}</h1>`;
-              tabs[catName].forEach(item => {
-                let div = document.createElement('div');
-                if (item.startsWith('http')) {
-                  let url = item.replace('/view?usp=sharing', '/uc?export=view');
-                  div.innerHTML = `<img src="${url}" style="max-width:100%;">`;
-                } else {
-                  div.innerHTML = `<strong>${item}</strong>`;
-                }
-                display.appendChild(div);
-              });
-            };
-            tabContainer.appendChild(btn);
-          });
-        } catch(e) {
-          document.body.innerText = "Error encountered: " + e.message;
-        }
-      })
-      .catch(err => { document.body.innerText = "Fetch error: " + err; });
+              display.appendChild(div);
+            });
+          };
+          tabContainer.appendChild(btn);
+        });
+        if(tabContainer.firstChild) tabContainer.firstChild.click();
+      });
   </script>
 </body>
 </html>
