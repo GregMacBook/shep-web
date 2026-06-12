@@ -1,23 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>SHEP Diagnostic</title>
+  <meta charset="UTF-8">
+  <title>SHEP Portal</title>
+  <style>
+    body { font-family: sans-serif; background: #fcfaff; margin: 0; }
+    #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; position: sticky; top: 0; z-index: 100; }
+    .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
+    .tab.active { background: #ac8ad4; border-radius: 5px; }
+    #content { padding: 20px; max-width: 900px; margin: auto; }
+    .info-line { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin-top: 10px; cursor: pointer; border: none; }
+  </style>
 </head>
 <body>
-    <h1 id="status">Checking connection...</h1>
-    <pre id="debug"></pre>
+  <div id="tabs"></div>
+  <div id="content"></div>
 
-    <script>
-        document.getElementById('status').innerText = "SYSTEM STATUS: ONLINE";
-        fetch('data.json?t=' + new Date().getTime())
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('debug').innerText = "I found " + data.length + " rows of data.\n\nThe first row contains: " + JSON.stringify(data[0], null, 2);
-            })
-            .catch(err => {
-                document.getElementById('debug').innerText = "Error: Could not find data.json. Check if the file is in the root folder.";
-            });
-    </script>
+  <script>
+    fetch('data.json?t=' + new Date().getTime())
+      .then(res => res.json())
+      .then(data => {
+        const display = document.getElementById('content');
+        const tabContainer = document.getElementById('tabs');
+        
+        let lastCat = "";
+        let tabs = {};
+
+        data.forEach(row => {
+          let vals = Object.values(row);
+          let cat = vals[0] && vals[0].trim() !== "" ? vals[0] : lastCat;
+          lastCat = cat;
+
+          if (cat === "OUR MISSION" || cat === "ABOUT US" || cat === "MONETARY DONATIONS") {
+            if (!tabs[cat]) {
+              tabs[cat] = document.createElement('div');
+              tabs[cat].className = 'tab'; tabs[cat].innerText = cat;
+              tabs[cat].onclick = () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tabs[cat].classList.add('active');
+                display.innerHTML = `<h1>${cat}</h1>`;
+                
+                // Show rows for this category
+                data.filter(r => (Object.values(r)[0] || lastCat) === cat).forEach(r => {
+                  let v = Object.values(r);
+                  if (v[1] && v[1] !== "SUPPORTING PEOPLE") {
+                    let div = document.createElement('div'); div.className = 'info-line';
+                    div.innerHTML = `<strong>${v[1]}</strong>`;
+                    if (v[2] && v[2].startsWith('http')) {
+                      div.innerHTML += `<br><img src="${v[2].replace('/view?usp=sharing', '/uc?export=view')}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
+                    }
+                    display.appendChild(div);
+                  }
+                });
+              };
+              tabContainer.appendChild(tabs[cat]);
+            }
+          }
+        });
+        if(tabContainer.firstChild) tabContainer.firstChild.click();
+      });
+  </script>
 </body>
 </html>
