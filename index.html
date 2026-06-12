@@ -16,57 +16,62 @@
   <div id="tabs"></div>
   <div id="content"></div>
   <script>
-    const validCategories = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T COLLECT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "PICTURES", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
+    const validCategories = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T COLLECT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
     async function loadData() {
-      const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
-      const text = await res.text();
-      const lines = text.split(/\r?\n/);
-      
-      let tabs = {};
-      let currentCat = "";
+      try {
+        const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
+        const text = await res.text();
+        // Use a more robust line-split that handles all Windows/Mac line endings
+        const lines = text.split(/\r?\n/);
+        
+        let tabs = {};
+        let currentCat = "";
 
-      lines.forEach(line => {
-        let parts = line.split(',').map(p => p.replace(/^"|"$/g, '').trim());
-        if (parts.length < 2) return;
+        lines.forEach((line, index) => {
+          if (index === 0 || line.trim() === "") return; // Skip header and empty lines
+          
+          // Split by comma, handling potential quotes
+          let parts = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(p => p.replace(/^"|"$/g, '').trim());
+          
+          if (validCategories.includes(parts[0])) {
+            currentCat = parts[0];
+          }
 
-        // ONLY update the category if the first column is in our official list
-        if (validCategories.includes(parts[0])) {
-          currentCat = parts[0];
-        }
-
-        if (currentCat) {
-          if (!tabs[currentCat]) tabs[currentCat] = [];
-          // Only add if there is actual content in the second column
-          if (parts[1] && parts[1] !== currentCat) {
+          if (currentCat && (parts[1])) {
+            if (!tabs[currentCat]) tabs[currentCat] = [];
+            // Push text (col 1) and link (col 3)
             tabs[currentCat].push({ text: parts[1], link: parts[3] });
           }
-        }
-      });
+        });
 
-      const display = document.getElementById('content');
-      const tabContainer = document.getElementById('tabs');
+        const display = document.getElementById('content');
+        const tabContainer = document.getElementById('tabs');
 
-      Object.keys(tabs).forEach(cat => {
-        let btn = document.createElement('div');
-        btn.className = 'tab'; btn.innerText = cat;
-        btn.onclick = () => {
-          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-          btn.classList.add('active');
-          display.innerHTML = `<h1>${cat}</h1>`;
-          tabs[cat].forEach(item => {
-            let div = document.createElement('div'); div.className = 'info-card';
-            div.innerHTML = `<div>${item.text}</div>`;
-            if (item.link && item.link.startsWith('http')) {
-               let url = item.link.replace('/view?usp=sharing', '/uc?export=view');
-               div.innerHTML += `<br><img src="${url}" style="max-width:100%">`;
-            }
-            display.appendChild(div);
-          });
-        };
-        tabContainer.appendChild(btn);
-      });
-      if(tabContainer.firstChild) tabContainer.firstChild.click();
+        Object.keys(tabs).forEach(cat => {
+          let btn = document.createElement('div');
+          btn.className = 'tab'; btn.innerText = cat;
+          btn.onclick = () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            display.innerHTML = `<h1>${cat}</h1>`;
+            tabs[cat].forEach(item => {
+              if (item.text === cat) return;
+              let div = document.createElement('div'); div.className = 'info-card';
+              div.innerHTML = `<div>${item.text}</div>`;
+              if (item.link && item.link.startsWith('http')) {
+                 let url = item.link.replace('/view?usp=sharing', '/uc?export=view');
+                 div.innerHTML += `<br><img src="${url}" style="max-width:100%">`;
+              }
+              display.appendChild(div);
+            });
+          };
+          tabContainer.appendChild(btn);
+        });
+        if(tabContainer.firstChild) tabContainer.firstChild.click();
+      } catch (err) {
+        document.body.innerHTML = "<h1>Error loading data</h1><p>" + err + "</p>";
+      }
     }
     loadData();
   </script>
