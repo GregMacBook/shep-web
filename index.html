@@ -1,76 +1,43 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SHEP Portal</title>
-  <style>
-    body { font-family: sans-serif; background: #fcfaff; margin: 0; }
-    #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; position: sticky; top: 0; z-index: 100; }
-    .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
-    .tab.active { background: #ac8ad4; border-radius: 5px; }
-    #content { padding: 20px; max-width: 900px; margin: auto; }
-    .info-line { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin-top: 10px; }
-  </style>
-</head>
-<body>
-  <div id="tabs"></div>
-  <div id="content"></div>
-
-  <script>
+<script>
     window.addEventListener('DOMContentLoaded', () => {
-      fetch('data.json')
-        .then(response => response.json())
-        .then(data => {
-          const display = document.getElementById('content');
-          const tabContainer = document.getElementById('tabs');
-          
-          const catKey = "OUR MISSION";
-          const titleKey = "SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE";
-          
-          const donationRow = data.find(r => r[catKey] === "DONATIONFORMURL");
-          const donationFormUrl = donationRow ? donationRow[titleKey] : "#";
-
-          const categories = [...new Set(data.map(r => r[catKey]))].filter(cat => cat !== "DONATIONFORMURL" && cat);
-          
-          categories.forEach(cat => {
-            let btn = document.createElement('div');
-            btn.className = 'tab'; btn.innerText = cat;
-            btn.onclick = () => {
-              document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-              btn.classList.add('active');
-              display.innerHTML = `<h1>${cat}</h1>`;
-              
-              data.filter(r => r[catKey] === cat).forEach(row => {
-                let div = document.createElement('div'); div.className = 'info-line';
-                div.innerHTML = `<strong>${row[titleKey] || ''}</strong>`;
+        fetch('data.json')
+            .then(response => response.json())
+            .then(data => {
+                const display = document.getElementById('content');
+                const tabContainer = document.getElementById('tabs');
                 
-                Object.keys(row).forEach(key => {
-                  let val = row[key];
-                  if (typeof val === 'string' && val.startsWith('http')) {
-                    if (cat === "MONETARY DONATIONS" && val.includes("docs.google.com/forms")) {
-                      div.innerHTML += `<br><a href="${val}" target="_blank" class="action-link-btn">Donate Now</a>`;
-                    } else if (!val.includes('imgur') && !val.includes('drive.google.com')) {
-                      div.innerHTML += `<br><a href="${val}" target="_blank" class="action-link-btn">View Resource</a>`;
-                    }
-                  }
-                });
+                const categories = [...new Set(data.map(r => r["OUR MISSION"]))].filter(cat => cat !== "DONATIONFORMURL" && cat);
                 
-                Object.values(row).forEach(val => {
-                  if (typeof val === 'string' && (val.includes('imgur') || val.includes('drive'))) {
-                    let imgUrl = val.includes('drive.google.com') ? val.replace('/view?usp=sharing', '/uc?export=view') : val;
-                    div.innerHTML += `<br><img src="${imgUrl}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
-                  }
+                categories.forEach((cat, index) => {
+                    let btn = document.createElement('div');
+                    btn.className = 'tab'; btn.innerText = cat;
+                    btn.onclick = () => {
+                        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                        btn.classList.add('active');
+                        
+                        // Custom layout for Monetary Donations
+                        if (cat === "MONETARY DONATIONS") {
+                            display.innerHTML = `
+                                <div class="info-line"><h3>Your Impact Matters</h3>
+                                <p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p></div>
+                                <div class="info-line"><span>Account: JESSICA LEIGH POOLEY</span></div>
+                                <div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div>
+                                <center><button class="action-link-btn" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScuk3Pg3a4wVbkR60Pe6ni3EUNsMdLySbCuNF-mzXvXy8JwpQ/viewform', '_blank')">Complete Donation & Get Receipt</button></center>
+                            `;
+                        } else {
+                            // Standard layout for other sections
+                            display.innerHTML = `<h1>${cat}</h1>`;
+                            data.filter(r => r["OUR MISSION"] === cat).forEach(row => {
+                                let div = document.createElement('div'); div.className = 'info-line';
+                                let title = row["SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE"] || '';
+                                div.innerHTML = `<span>${title}</span>`;
+                                display.appendChild(div);
+                            });
+                        }
+                    };
+                    tabContainer.appendChild(btn);
+                    if (index === 0) btn.click();
                 });
-                display.appendChild(div);
-              });
-            };
-            tabContainer.appendChild(btn);
-          });
-          if(tabContainer.firstChild) tabContainer.firstChild.click();
-        });
+            });
     });
-  </script>
-</body>
-</html>
+</script>
