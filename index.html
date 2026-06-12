@@ -14,33 +14,41 @@
     async function loadData() {
       const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
       const text = await res.text();
-      const rows = text.split('\n');
       
+      // Robust CSV Parser: Handles commas inside quotes automatically
+      const parseCSV = (str) => {
+        const arr = [];
+        let quote = false;
+        let row = [''];
+        for (let i = 0, col = 0; i < str.length; i++) {
+          let char = str[i], next = str[i+1];
+          if (char === '"') { quote = !quote; continue; }
+          if (char === ',' && !quote) { row[++col] = ''; }
+          else if (char === '\n' && !quote) { arr.push(row); row = ['']; col = 0; }
+          else { row[col] += char; }
+        }
+        return arr;
+      };
+
+      const rows = parseCSV(text);
       const display = document.getElementById('content');
       const tabContainer = document.getElementById('tabs');
       let tabs = {};
-      let lastCat = ""; // Keep track of the active category
+      let lastCat = "";
+      const validTabs = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T COLLECT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "SCHOOL DONORS", "PICTURES", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
-      rows.forEach((row, index) => {
-        if (index === 0) return; // Skip the Header Row
+      rows.forEach((cols, index) => {
+        if (index === 0) return; // Skip Header
+        let col0 = cols[0] ? cols[0].trim() : "";
+        if (validTabs.includes(col0)) lastCat = col0;
         
-        let cols = row.split(',');
-        
-        // If Col 0 has a value, update the current category
-        if (cols[0] && cols[0].trim() !== "") {
-           lastCat = cols[0].trim();
-        }
-        
-        // Only process rows if we have a valid lastCat
         if (lastCat && (cols[1] || cols[2])) {
           if (!tabs[lastCat]) tabs[lastCat] = [];
-          tabs[lastCat].push({ 
-            text: cols[1] ? cols[1].trim() : "", 
-            link: cols[2] ? cols[2].trim() : "" 
-          });
+          tabs[lastCat].push({ text: cols[1] ? cols[1].trim() : "", link: cols[2] ? cols[2].trim() : "" });
         }
       });
 
+      // ... rest of your existing rendering code stays the same ...
       // Render Tabs
       Object.keys(tabs).forEach(cat => {
         let btn = document.createElement('div');
