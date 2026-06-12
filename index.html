@@ -18,7 +18,7 @@
   <div id="tabs"></div>
   <div id="content"></div>
 
-  <script>
+<script>
     window.addEventListener('DOMContentLoaded', () => {
       fetch('data.json')
         .then(response => response.json())
@@ -39,32 +39,36 @@
               
               if (cat === "MONETARY DONATIONS") {
                 display.innerHTML = `
-                  <div class="commentary-box">
-                    <h3>Your Impact Matters</h3>
-                    <p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p>
-                  </div>
+                  <div class="commentary-box"><h3>Your Impact Matters</h3><p>At <strong>SHEP</strong>, every dollar donated goes toward providing hygiene essentials for those in our community. Thank you for your support.</p></div>
                   <div class="info-line"><span>Account: SAFE HAVEN ESSENTIAL PACKS</span></div>
                   <div class="info-line"><span>BSB: 306821 / Acct: 6706014</span></div>
                   <center><button class="action-link-btn" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScuk3Pg3a4wVbkR60Pe6ni3EUNsMdLySbCuNF-mzXvXy8JwpQ/viewform', '_blank')">Complete Donation & Get Receipt</button></center>
                 `;
               } else {
                 display.innerHTML = `<h1>${cat}</h1>`;
+                let div = document.createElement('div'); div.className = 'info-line';
+                
+                // Collect all text and images for this category
+                let allText = [];
+                let allImages = [];
+                
                 data.filter(r => Object.values(r)[0] === cat).forEach(row => {
                   let vals = Object.values(row);
-                  let div = document.createElement('div'); div.className = 'info-line';
-                  
-                  // Text from Column B (Index 1)
-                  div.innerHTML = `<strong style="white-space: pre-line;">${vals[1] || ''}</strong>`;
-                  
-                  // Image from Column C (Index 2)
-                  if (vals[2] && vals[2].startsWith('http')) {
-                    let imgUrl = vals[2].includes('drive.google.com') ? vals[2].replace('/view?usp=sharing', '/uc?export=view') : vals[2];
-                    let size = (cat === "OUR MISSION") ? "50%" : "100%";
-                    div.innerHTML += `<br><img src="${imgUrl}" style="max-width:${size}; border-radius:8px; margin-top:10px;">`;
-                  }
-                  
-                  display.appendChild(div);
+                  if (vals[1] && vals[1].length > 1) allText.push(vals[1]);
+                  if (vals[2] && vals[2].startsWith('http')) allImages.push(vals[2]);
                 });
+                
+                // Render all collected text
+                div.innerHTML = `<strong>${allText.join('<br><br>')}</strong>`;
+                
+                // Render all collected images
+                allImages.forEach(img => {
+                  let imgUrl = img.includes('drive.google.com') ? img.replace('/view?usp=sharing', '/uc?export=view') : img;
+                  let size = (cat === "OUR MISSION") ? "50%" : "100%";
+                  div.innerHTML += `<br><img src="${imgUrl}" style="max-width:${size}; border-radius:8px; margin-top:10px;">`;
+                });
+                
+                display.appendChild(div);
               }
             };
             tabContainer.appendChild(btn);
@@ -72,6 +76,6 @@
           });
         });
     });
-  </script>
+</script>
 </body>
 </html>
