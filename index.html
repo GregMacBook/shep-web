@@ -1,65 +1,53 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>SHEP Portal</title>
-  <style>
-    body { font-family: sans-serif; background: #fcfaff; margin: 0; }
-    #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; position: sticky; top: 0; z-index: 100; }
-    .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; }
-    .tab.active { background: #ac8ad4; border-radius: 5px; }
-    #content { padding: 20px; max-width: 900px; margin: auto; }
-    .info-line { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-    .action-link-btn { display: inline-block; padding: 10px 20px; background: #84a59d; color: white; text-decoration: none; border-radius: 20px; font-weight: bold; margin-top: 10px; cursor: pointer; border: none; }
-  </style>
-</head>
-<body>
-  <div id="tabs"></div>
-  <div id="content"></div>
-
-  <script>
+<script>
     fetch('data.json?t=' + new Date().getTime())
       .then(res => res.json())
       .then(data => {
         const display = document.getElementById('content');
         const tabContainer = document.getElementById('tabs');
         
+        // 1. Find all unique categories from Column A (Index 0)
         let lastCat = "";
-        let tabs = {};
-
+        let categories = [];
         data.forEach(row => {
-          let vals = Object.values(row);
-          let cat = vals[0] && vals[0].trim() !== "" ? vals[0] : lastCat;
-          lastCat = cat;
-
-          if (cat === "OUR MISSION" || cat === "ABOUT US" || cat === "MONETARY DONATIONS") {
-            if (!tabs[cat]) {
-              tabs[cat] = document.createElement('div');
-              tabs[cat].className = 'tab'; tabs[cat].innerText = cat;
-              tabs[cat].onclick = () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                tabs[cat].classList.add('active');
-                display.innerHTML = `<h1>${cat}</h1>`;
-                
-                // Show rows for this category
-                data.filter(r => (Object.values(r)[0] || lastCat) === cat).forEach(r => {
-                  let v = Object.values(r);
-                  if (v[1] && v[1] !== "SUPPORTING PEOPLE") {
-                    let div = document.createElement('div'); div.className = 'info-line';
-                    div.innerHTML = `<strong>${v[1]}</strong>`;
-                    if (v[2] && v[2].startsWith('http')) {
-                      div.innerHTML += `<br><img src="${v[2].replace('/view?usp=sharing', '/uc?export=view')}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
-                    }
-                    display.appendChild(div);
-                  }
-                });
-              };
-              tabContainer.appendChild(tabs[cat]);
-            }
+          let cat = Object.values(row)[0];
+          if (cat && cat.trim() !== "") {
+            if (!categories.includes(cat)) categories.push(cat);
+            lastCat = cat;
           }
         });
+
+        // 2. Build a tab for every category found
+        categories.forEach((cat) => {
+          if (cat === "DONATIONFORMURL") return; // Skip the URL row
+          
+          let btn = document.createElement('div');
+          btn.className = 'tab'; btn.innerText = cat;
+          btn.onclick = () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            display.innerHTML = `<h1>${cat}</h1>`;
+            
+            // 3. Find and display rows for this category
+            let currentCat = "";
+            data.forEach(r => {
+              let v = Object.values(r);
+              if (v[0] && v[0].trim() !== "") currentCat = v[0];
+              
+              if (currentCat === cat && v[1] && v[1] !== "SUPPORTING PEOPLE") {
+                let div = document.createElement('div'); div.className = 'info-line';
+                div.innerHTML = `<strong>${v[1]}</strong>`;
+                // Image from Column C (Index 2)
+                if (v[2] && v[2].startsWith('http')) {
+                  div.innerHTML += `<br><img src="${v[2].replace('/view?usp=sharing', '/uc?export=view')}" style="max-width:100%; border-radius:8px; margin-top:10px;">`;
+                }
+                display.appendChild(div);
+              }
+            });
+          };
+          tabContainer.appendChild(btn);
+        });
+        
+        // Click first tab automatically
         if(tabContainer.firstChild) tabContainer.firstChild.click();
       });
-  </script>
-</body>
-</html>
+</script>
