@@ -19,7 +19,7 @@
   <div id="tabs"></div>
   <div id="content"></div>
 
-  <script>
+<script>
     window.addEventListener('DOMContentLoaded', () => {
       fetch('data.json')
         .then(response => response.json())
@@ -28,10 +28,10 @@
           const tabContainer = document.getElementById('tabs');
           
           const catKey = "OUR MISSION";
-          const titleKey = "SUPPORTING PEOPLE\n\nRESTORING DIGNITY\n\nSHARING HOPE";
+          // UPDATED: This key now matches your new JSON structure
+          const titleKey = "SUPPORTING PEOPLE"; 
           
-          // Use a simpler filter to ensure all categories are caught
-          const categories = [...new Set(data.map(r => r[catKey]))].filter(cat => cat && cat !== "DONATIONFORMURL");
+          let categories = [...new Set(data.map(r => r[catKey]))].filter(cat => cat && cat !== "DONATIONFORMURL");
           categories.sort((a, b) => a === "OUR MISSION" ? -1 : (b === "OUR MISSION" ? 1 : 0));
           
           categories.forEach((cat, index) => {
@@ -55,13 +55,13 @@
                 display.innerHTML = `<h1>${cat}</h1>`;
                 data.filter(r => r[catKey] === cat).forEach(row => {
                   let div = document.createElement('div'); div.className = 'info-line';
+                  // Use the updated titleKey
                   div.innerHTML = `<strong>${row[titleKey] || ''}</strong>`;
                   
                   Object.values(row).forEach(val => {
                     if (typeof val === 'string' && val.startsWith('http')) {
                       if (val.includes('imgur') || val.includes('drive')) {
                         let imgUrl = val.includes('drive.google.com') ? val.replace('/view?usp=sharing', '/uc?export=view') : val;
-                        // Mission poster remains at 50%
                         let size = (cat === "OUR MISSION") ? "50%" : "100%";
                         div.innerHTML += `<br><img src="${imgUrl}" style="max-width:${size}; border-radius:8px; margin-top:10px;">`;
                       } else {
