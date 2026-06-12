@@ -10,50 +10,42 @@
     .tab.active { background: #ac8ad4; }
     #content { padding: 20px; max-width: 900px; margin: auto; }
     .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    img { max-width: 100%; border-radius: 8px; margin-top: 10px; }
   </style>
 </head>
 <body>
   <div id="tabs"></div>
   <div id="content"></div>
   <script>
+    const validCategories = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T COLLECT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "PICTURES", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
+
     async function loadData() {
-      // Fetch the CSV
       const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
       const text = await res.text();
+      const lines = text.split(/\r?\n/);
       
-      const display = document.getElementById('content');
-      const tabContainer = document.getElementById('tabs');
       let tabs = {};
-      
-      // Split by lines and filter empty ones
-      const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
       let currentCat = "";
 
-      lines.forEach((line, index) => {
-        if (index === 0) return; // Skip Header
-        
-        // This regex splits by comma, but ignores commas inside quotes
-        let parts = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-        if (!parts) return;
-        
-        // Clean up quotes from parts
-        parts = parts.map(p => p.replace(/^"|"$/g, '').trim());
-        
-        // Col 0 = Category
-        if (parts[0] && parts[0] !== "") {
+      lines.forEach(line => {
+        let parts = line.split(',').map(p => p.replace(/^"|"$/g, '').trim());
+        if (parts.length < 2) return;
+
+        // ONLY update the category if the first column is in our official list
+        if (validCategories.includes(parts[0])) {
           currentCat = parts[0];
         }
-        
-        // Col 1 = Text, Col 3 = Link (Based on your latest structure)
-        let textContent = parts[1] || "";
-        let linkContent = parts[3] || ""; 
-        
-        if (currentCat && (textContent || linkContent)) {
+
+        if (currentCat) {
           if (!tabs[currentCat]) tabs[currentCat] = [];
-          tabs[currentCat].push({ text: textContent, link: linkContent });
+          // Only add if there is actual content in the second column
+          if (parts[1] && parts[1] !== currentCat) {
+            tabs[currentCat].push({ text: parts[1], link: parts[3] });
+          }
         }
       });
+
+      const display = document.getElementById('content');
+      const tabContainer = document.getElementById('tabs');
 
       Object.keys(tabs).forEach(cat => {
         let btn = document.createElement('div');
@@ -63,12 +55,11 @@
           btn.classList.add('active');
           display.innerHTML = `<h1>${cat}</h1>`;
           tabs[cat].forEach(item => {
-            if (item.text === cat) return;
             let div = document.createElement('div'); div.className = 'info-card';
-            if (item.text) div.innerHTML += `<div>${item.text.replace(/\\n/g, '<br>')}</div>`;
+            div.innerHTML = `<div>${item.text}</div>`;
             if (item.link && item.link.startsWith('http')) {
                let url = item.link.replace('/view?usp=sharing', '/uc?export=view');
-               div.innerHTML += `<img src="${url}">`;
+               div.innerHTML += `<br><img src="${url}" style="max-width:100%">`;
             }
             display.appendChild(div);
           });
