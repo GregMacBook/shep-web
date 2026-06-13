@@ -63,33 +63,26 @@
           btn.classList.add('active');
           display.innerHTML = `<h1>${cat}</h1>`;
           
-        tabs[cat].forEach(item => {
-             let div = document.createElement('div'); 
-             div.className = 'info-card';
-             
-             // 1. Set up the text area
-             let textDiv = document.createElement('div');
-             if (cat === "OUR MISSION") {
-                div.classList.add('mission-container'); // Enables side-by-side flex
-                textDiv.className = 'mission-text-side mission-text';
-             } else if (cat === "ANNUAL APPEALS") {
-                textDiv.className = 'appeal-title';
-             }
-             textDiv.innerText = item.text;
-             div.appendChild(textDiv);
-
-             // 2. Handle Image/Link Logic
+// 2. Handle Image/Link Logic
              if (item.link && item.link.startsWith('http')) {
-                let isImage = /\.(jpeg|jpg|png|gif|webp)$/i.test(item.link) || item.link.includes('drive.google.com');
+                // Determine if it's an image
+                let isDriveImage = item.link.includes('drive.google.com');
+                let isStandardImage = /\.(jpeg|jpg|png|gif|webp)$/i.test(item.link);
+                let isImage = isDriveImage || isStandardImage;
                 
                 let container = document.createElement(isImage ? 'div' : 'a');
+                
                 if (isImage) {
                    container.className = (cat === "OUR MISSION") ? 'mission-img-side' : '';
                    let img = document.createElement('img');
-                   img.src = item.link.includes('drive.google.com') ? item.link.replace('/view?usp=sharing', '').replace('/file/d/', '/uc?id=') : item.link;
+                   
+                   // Apply conversion if it's a Drive link, otherwise use standard link
+                   img.src = isDriveImage ? item.link.replace('/view?usp=sharing', '').replace('/file/d/', '/uc?id=') : item.link;
+                   
                    img.style = "max-width: 100%; border-radius: 8px; margin-top: 10px; cursor: pointer;";
                    container.appendChild(img);
                 } else {
+                   // ... (Your existing button logic for non-images) ...
                    container.href = item.link;
                    container.target = "_blank";
                    container.innerText = "OPEN RESOURCE";
@@ -97,8 +90,6 @@
                 }
                 div.appendChild(container);
              }
-             display.appendChild(div);
-          });
         };
         tabContainer.appendChild(btn);
       });
