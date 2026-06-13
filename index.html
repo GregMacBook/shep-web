@@ -9,9 +9,7 @@
     .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; border: 1px solid #ac8ad4; margin: 2px; }
     .tab.active { background: #ac8ad4; }
     #content { padding: 20px; max-width: 900px; margin: auto; }
-    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: flex-start; }
-    .appeal-title { font-weight: bold; font-size: 1.2em; display: block; }
-    .card-image { max-width: 300px; border-radius: 8px; cursor: pointer; flex: 1; }
+    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
@@ -19,67 +17,38 @@
   <div id="content"></div>
   <script>
     async function loadData() {
-      try {
-        const res = await fetch('SHEP - WebsiteContent.tsv?t=' + new Date().getTime());
-        const text = await res.text();
-        const rows = text.split('\n');
-        
-        let tabs = {};
-        let currentCat = "";
-
-        rows.forEach(row => {
-          if (!row.trim()) return;
-          let cols = row.split('\t'); 
-          let col0 = cols[0] ? cols[0].trim() : "";
-          let col1 = cols[1] ? cols[1].trim() : "";
-          
-          if (col0 && col0 !== "") currentCat = col0;
-          
-          if (currentCat && col1 !== "") {
-            if (!tabs[currentCat]) tabs[currentCat] = [];
-            // Find link in any column from 2 to 10 to be safe
-            let lnk = "";
-            for(let i = 2; i < cols.length; i++) {
-               if(cols[i] && cols[i].trim().startsWith('http')) {
-                  lnk = cols[i].trim();
-                  break;
-               }
-            }
-            tabs[currentCat].push({ text: col1, link: lnk });
-          }
-        });
-
-        const display = document.getElementById('content');
-        const tabContainer = document.getElementById('tabs');
-
-        Object.keys(tabs).forEach(cat => {
-          let btn = document.createElement('div');
-          btn.className = 'tab'; btn.innerText = cat;
-          btn.onclick = () => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            display.innerHTML = `<h1>${cat}</h1>`;
-            tabs[cat].forEach(item => {
-               let card = document.createElement('div');
-               card.className = 'info-card';
-               let textSpan = document.createElement('span');
-               textSpan.innerText = item.text;
-               textSpan.style.flex = "1";
-               card.appendChild(textSpan);
-               if (item.link && item.link.length > 5) {
-                  let img = document.createElement('img');
-                  img.src = item.link.includes('drive.google.com') ? 
-                            item.link.replace('/view?usp=sharing', '').replace('/file/d/', '/uc?id=') : item.link;
-                  img.className = 'card-image';
-                  card.appendChild(img);
-               }
-               display.appendChild(card);
-            });
-          };
-          tabContainer.appendChild(btn);
-        });
-        if(tabContainer.firstChild) tabContainer.firstChild.click();
-      } catch (e) { console.error("Error loading TSV:", e); }
+      const res = await fetch('SHEP - WebsiteContent.tsv?t=' + new Date().getTime());
+      const text = await res.text();
+      const rows = text.split('\n');
+      let tabs = {};
+      let currentCat = "";
+      rows.forEach(row => {
+        let cols = row.split('\t');
+        if (cols[0] && cols[0].trim() !== "") currentCat = cols[0].trim();
+        if (currentCat && cols[1] && cols[1].trim() !== "") {
+          if (!tabs[currentCat]) tabs[currentCat] = [];
+          tabs[currentCat].push({ text: cols[1].trim() });
+        }
+      });
+      const display = document.getElementById('content');
+      const tabContainer = document.getElementById('tabs');
+      Object.keys(tabs).forEach(cat => {
+        let btn = document.createElement('div');
+        btn.className = 'tab'; btn.innerText = cat;
+        btn.onclick = () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          display.innerHTML = `<h1>${cat}</h1>`;
+          tabs[cat].forEach(item => {
+            let card = document.createElement('div');
+            card.className = 'info-card';
+            card.innerText = item.text;
+            display.appendChild(card);
+          });
+        };
+        tabContainer.appendChild(btn);
+      });
+      if(tabContainer.firstChild) tabContainer.firstChild.click();
     }
     loadData();
   </script>
