@@ -67,33 +67,35 @@
              let div = document.createElement('div'); 
              div.className = 'info-card';
              
-             // Check if it is the Mission section
+             // 1. Set up the text area
+             let textDiv = document.createElement('div');
              if (cat === "OUR MISSION") {
-                div.className += ' mission-container';
-                let textDiv = document.createElement('div');
-                textDiv.className = 'mission-text-side';
-                textDiv.classList.add('mission-text');
-                textDiv.innerText = item.text;
-                div.appendChild(textDiv);
+                div.classList.add('mission-container'); // Enables side-by-side flex
+                textDiv.className = 'mission-text-side mission-text';
+             } else if (cat === "ANNUAL APPEALS") {
+                textDiv.className = 'appeal-title';
+             }
+             textDiv.innerText = item.text;
+             div.appendChild(textDiv);
+
+             // 2. Handle Image/Link Logic
+             if (item.link && item.link.startsWith('http')) {
+                let isImage = /\.(jpeg|jpg|png|gif|webp)$/i.test(item.link) || item.link.includes('drive.google.com');
                 
-                // If there's an image, put it in the right side
-                if (item.link) {
-                   let imgDiv = document.createElement('div');
-                   imgDiv.className = 'mission-img-side';
+                let container = document.createElement(isImage ? 'div' : 'a');
+                if (isImage) {
+                   container.className = (cat === "OUR MISSION") ? 'mission-img-side' : '';
                    let img = document.createElement('img');
-                   img.src = item.link.replace('/view?usp=sharing', '').replace('/file/d/', '/uc?id=');
-                   img.style = "max-width: 100%; border-radius: 8px;";
-                   imgDiv.appendChild(img);
-                   div.appendChild(imgDiv);
-                }
-             } else {
-                // ... (existing logic for other categories) ...
-                if (cat === "ANNUAL APPEALS") {
-                   div.innerHTML = `<span class="appeal-title">${item.text}</span>`;
+                   img.src = item.link.includes('drive.google.com') ? item.link.replace('/view?usp=sharing', '').replace('/file/d/', '/uc?id=') : item.link;
+                   img.style = "max-width: 100%; border-radius: 8px; margin-top: 10px; cursor: pointer;";
+                   container.appendChild(img);
                 } else {
-                   div.innerText = item.text;
+                   container.href = item.link;
+                   container.target = "_blank";
+                   container.innerText = "OPEN RESOURCE";
+                   container.style = "display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #916bbf; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;";
                 }
-                // (Add your existing link/button logic here for non-mission categories)
+                div.appendChild(container);
              }
              display.appendChild(div);
           });
