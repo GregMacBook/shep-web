@@ -65,11 +65,18 @@
              let card = document.createElement('div'); 
              card.className = 'info-card';
              
-             // Text rendering
+           
+            // Text rendering
              let textSpan = document.createElement('span');
              textSpan.innerText = item.text;
-             if (cat === "OUR MISSION") textSpan.className = 'mission-text';
-             if (cat === "ANNUAL APPEALS") textSpan.className = 'appeal-title';
+             
+             // Apply 'appeal-title' style to both sections for consistent bolding and sizing
+             if (cat === "OUR MISSION" || cat === "ANNUAL APPEALS") {
+                textSpan.className = 'appeal-title';
+             } else if (cat === "OUR MISSION") {
+                // Keep mission-specific styling if needed, otherwise rely on appeal-title
+                textSpan.className = 'mission-text'; 
+             }
              card.appendChild(textSpan);
 
              // Image/Link rendering
