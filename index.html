@@ -4,19 +4,17 @@
   <meta charset="UTF-8">
   <title>SHEP Portal</title>
   <style>
-    .mission-container { display: flex; align-items: center; gap: 20px; }
-    .mission-text-side { flex: 2; }
-    .mission-img-side { flex: 1; max-width: 300px; }
     body { font-family: sans-serif; background: #fcfaff; margin: 0; }
     #tabs { display: flex; flex-wrap: wrap; background: #916bbf; padding: 10px; position: sticky; top: 0; z-index: 100; }
     .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; border: 1px solid #ac8ad4; margin: 2px; }
     .tab.active { background: #ac8ad4; }
     #content { padding: 20px; max-width: 900px; margin: auto; }
-    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    /* Added display: flex and gap for side-by-side layout */
+    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: center; }
     
-    /* New Styles */
-    .appeal-title { font-weight: bold; font-size: 1.2em; margin-bottom: 10px; display: block; }
-    .mission-text { font-weight: bold; font-size: 1.1em; color: #333; }
+    .appeal-title { font-weight: bold; font-size: 1.2em; display: block; }
+    .mission-text { font-weight: bold; font-size: 1.1em; color: #333; flex: 2; }
+    .card-image { max-width: 300px; border-radius: 8px; cursor: pointer; flex: 1; }
   </style>
 </head>
 <body>
@@ -63,33 +61,37 @@
           btn.classList.add('active');
           display.innerHTML = `<h1>${cat}</h1>`;
           
-// 2. Handle Image/Link Logic
+          tabs[cat].forEach(item => {
+             let card = document.createElement('div'); 
+             card.className = 'info-card';
+             
+             // Text rendering
+             let textSpan = document.createElement('span');
+             textSpan.innerText = item.text;
+             if (cat === "OUR MISSION") textSpan.className = 'mission-text';
+             if (cat === "ANNUAL APPEALS") textSpan.className = 'appeal-title';
+             card.appendChild(textSpan);
+
+             // Image/Link rendering
              if (item.link && item.link.startsWith('http')) {
-                // Determine if it's an image
-                let isDriveImage = item.link.includes('drive.google.com');
-                let isStandardImage = /\.(jpeg|jpg|png|gif|webp)$/i.test(item.link);
-                let isImage = isDriveImage || isStandardImage;
-                
+                let isImage = /\.(jpeg|jpg|png|gif|webp)$/i.test(item.link);
                 let container = document.createElement(isImage ? 'div' : 'a');
                 
                 if (isImage) {
-                   container.className = (cat === "OUR MISSION") ? 'mission-img-side' : '';
                    let img = document.createElement('img');
-                   
-                   // Apply conversion if it's a Drive link, otherwise use standard link
-                   img.src = isDriveImage ? item.link.replace('/view?usp=sharing', '').replace('/file/d/', '/uc?id=') : item.link;
-                   
-                   img.style = "max-width: 100%; border-radius: 8px; margin-top: 10px; cursor: pointer;";
+                   img.src = item.link;
+                   img.className = 'card-image';
                    container.appendChild(img);
                 } else {
-                   // ... (Your existing button logic for non-images) ...
                    container.href = item.link;
                    container.target = "_blank";
                    container.innerText = "OPEN RESOURCE";
-                   container.style = "display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #916bbf; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;";
+                   container.style = "text-decoration: none; background: #916bbf; color: white; padding: 10px; border-radius: 5px; font-weight: bold;";
                 }
-                div.appendChild(container);
+                card.appendChild(container);
              }
+             display.appendChild(card);
+          });
         };
         tabContainer.appendChild(btn);
       });
