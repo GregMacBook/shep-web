@@ -44,7 +44,6 @@
 
       const display = document.getElementById('content');
       const tabContainer = document.getElementById('tabs');
-
       Object.keys(tabs).forEach(cat => {
         let btn = document.createElement('div');
         btn.className = 'tab'; btn.innerText = cat;
@@ -56,7 +55,14 @@
              let div = document.createElement('div'); div.className = 'info-card';
              div.innerText = item.text;
              if (item.link && item.link.startsWith('http')) {
-                div.innerHTML += `<br><a href="${item.link}" target="_blank">View Item</a>`;
+                // Create a button instead of a simple text link
+                let btn = document.createElement('a');
+                btn.href = item.link;
+                btn.target = "_blank";
+                btn.style = "display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #916bbf; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;";
+                btn.innerText = "OPEN RESOURCE";
+                div.appendChild(document.createElement('br'));
+                div.appendChild(btn);
              }
              display.appendChild(div);
           });
@@ -64,8 +70,9 @@
         tabContainer.appendChild(btn);
       });
       if(tabContainer.firstChild) tabContainer.firstChild.click();
-    }
-    loadData();
+    } // Closes loadData
+    loadData(); // Calls loadData
   </script>
 </body>
 </html>
+      
