@@ -63,26 +63,21 @@
              div.innerText = item.text;
              
              if (item.link && item.link.startsWith('http')) {
-                // Check if the link ends with an image extension
                 let isImage = /\.(jpeg|jpg|png|gif|webp)$/i.test(item.link);
                 
-             if (isImage) {
-                   // Create a link that wraps the image, opening in a new tab
+                if (isImage) {
+                   // Image: clickable, opens in new tab
                    let link = document.createElement('a');
                    link.href = item.link;
                    link.target = "_blank";
-                   
                    let img = document.createElement('img');
                    img.src = item.link;
                    img.style = "display: block; max-width: 100%; margin-top: 10px; border-radius: 8px; cursor: pointer;";
-                   
                    link.appendChild(img);
                    div.appendChild(document.createElement('br'));
                    div.appendChild(link);
                 } else {
-                   // ... keep the existing button code for non-image links ...
-                }
-                   // Display button for non-image links
+                   // Non-image: show the purple button
                    let btn = document.createElement('a');
                    btn.href = item.link;
                    btn.target = "_blank";
