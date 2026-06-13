@@ -9,6 +9,7 @@
     .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; border: 1px solid #ac8ad4; margin: 2px; }
     .tab.active { background: #ac8ad4; }
     #content { padding: 20px; max-width: 900px; margin: auto; }
+    .bold-card { font-weight: bold; font-size: 1.1em; color: #333; }
     .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
   </style>
 </head>
@@ -58,30 +59,43 @@
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           btn.classList.add('active');
           display.innerHTML = `<h1>${cat}</h1>`;
-         tabs[cat].forEach(item => {
-             let div = document.createElement('div'); div.className = 'info-card';
-             div.innerText = item.text;
+     tabs[cat].forEach(item => {
+             let cleanText = item.text.replace(/^"+|"+$/g, '').trim();
+             
+             let div = document.createElement('div');
+             div.className = 'info-card';
+             
+             // Check if it is the Mission section to apply bold styling
+             if (cat === "OUR MISSION") {
+                 div.classList.add('bold-card');
+             }
+             
+             div.innerHTML = cleanText;
              
              if (item.link && item.link.startsWith('http')) {
                 let isImage = /\.(jpeg|jpg|png|gif|webp)$/i.test(item.link);
                 
+                // Special check for Google Drive Image links
+                if (item.link.includes('drive.google.com')) {
+                    isImage = true; 
+                    // Convert drive link for display
+                    item.link = item.link.replace('/view?usp=sharing', '').replace('/file/d/', '/uc?id=');
+                }
+
                 if (isImage) {
-                   // Image: clickable, opens in new tab
                    let link = document.createElement('a');
                    link.href = item.link;
                    link.target = "_blank";
                    let img = document.createElement('img');
                    img.src = item.link;
-                   img.style = "display: block; max-width: 100%; margin-top: 10px; border-radius: 8px; cursor: pointer;";
+                   img.style = "display: block; max-width: 100%; margin-top: 15px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);";
                    link.appendChild(img);
-                   div.appendChild(document.createElement('br'));
                    div.appendChild(link);
                 } else {
-                   // Non-image: show the purple button
                    let btn = document.createElement('a');
                    btn.href = item.link;
                    btn.target = "_blank";
-                   btn.style = "display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #916bbf; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;";
+                   btn.style = "display: inline-block; margin-top: 15px; padding: 10px 20px; background-color: #916bbf; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9em;";
                    btn.innerText = "OPEN RESOURCE";
                    div.appendChild(document.createElement('br'));
                    div.appendChild(btn);
