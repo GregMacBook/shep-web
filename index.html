@@ -9,12 +9,14 @@
     .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; border: 1px solid #ac8ad4; margin: 2px; }
     .tab.active { background: #ac8ad4; }
     #content { padding: 20px; max-width: 900px; margin: auto; }
-    .bold-card { font-weight: bold; font-size: 1.1em; color: #333; }
     .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    
+    /* New Styles */
+    .appeal-title { font-weight: bold; font-size: 1.2em; margin-bottom: 10px; display: block; }
+    .mission-text { font-weight: bold; font-size: 1.1em; color: #333; }
   </style>
 </head>
 <body>
-  <!-- New Logo Section -->
   <div style="text-align: center; padding: 15px; background: white;">
     <img src="https://lh3.googleusercontent.com/d/1e4-zob-zVvMrmnFElyg8ADVandNsNyVf" style="max-height: 100px;">
   </div>
@@ -23,7 +25,6 @@
   <div id="content"></div>
   
   <script>
-    // ... (Your existing script remains exactly the same) ...
     const validCategories = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T COLLECT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "PICTURES", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
     async function loadData() {
@@ -35,9 +36,7 @@
       let currentCat = "";
 
       rows.forEach(row => {
-        // CHANGED: Split by TAB character (\t) instead of comma
         let cols = row.split('\t'); 
-        
         let col0 = cols[0] ? cols[0].replace(/"/g, '').trim() : "";
         let col1 = cols[1] ? cols[1].replace(/^"+|"+$/g, '').trim() : "";
         let lnk = cols[3] ? cols[3].trim() : "";
@@ -52,6 +51,7 @@
 
       const display = document.getElementById('content');
       const tabContainer = document.getElementById('tabs');
+
       Object.keys(tabs).forEach(cat => {
         let btn = document.createElement('div');
         btn.className = 'tab'; btn.innerText = cat;
@@ -59,47 +59,37 @@
           document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
           btn.classList.add('active');
           display.innerHTML = `<h1>${cat}</h1>`;
-     tabs[cat].forEach(item => {
-             let cleanText = item.text.replace(/^"+|"+$/g, '').trim();
-             
-             let div = document.createElement('div');
+          
+          tabs[cat].forEach(item => {
+             let div = document.createElement('div'); 
              div.className = 'info-card';
              
-             // Check if it is the Mission section to apply bold styling
-             if (cat === "OUR MISSION") {
-                 div.classList.add('bold-card');
-             }
-             
-             div.innerHTML = cleanText;
-             
-             if (item.link && item.link.startsWith('http')) {
-                let isImage = /\.(jpeg|jpg|png|gif|webp)$/i.test(item.link);
-                
-                // Special check for Google Drive Image links
-                if (item.link.includes('drive.google.com')) {
-                    isImage = true; 
-                    // Convert drive link for display
-                    item.link = item.link.replace('/view?usp=sharing', '').replace('/file/d/', '/uc?id=');
-                }
+             if (cat === "OUR MISSION") div.classList.add('mission-text');
 
-                if (isImage) {
-                   let link = document.createElement('a');
-                   link.href = item.link;
-                   link.target = "_blank";
-                   let img = document.createElement('img');
-                   img.src = item.link;
-                   img.style = "display: block; max-width: 100%; margin-top: 15px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);";
-                   link.appendChild(img);
-                   div.appendChild(link);
+             if (cat === "ANNUAL APPEALS") {
+                div.innerHTML = `<span class="appeal-title">${item.text}</span>`;
+             } else {
+                div.innerText = item.text;
+             }
+
+             if (item.link && item.link.startsWith('http')) {
+                let isImage = /\.(jpeg|jpg|png|gif|webp)$/i.test(item.link) || item.link.includes('drive.google.com');
+                
+                let container = document.createElement(isImage ? 'div' : 'a');
+                if (!isImage) {
+                   container.href = item.link;
+                   container.target = "_blank";
+                   container.innerText = "OPEN RESOURCE";
+                   container.style = "display: inline-block; margin-top: 10px; padding: 10px 20px; background-color: #916bbf; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9em;";
                 } else {
-                   let btn = document.createElement('a');
-                   btn.href = item.link;
-                   btn.target = "_blank";
-                   btn.style = "display: inline-block; margin-top: 15px; padding: 10px 20px; background-color: #916bbf; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 0.9em;";
-                   btn.innerText = "OPEN RESOURCE";
-                   div.appendChild(document.createElement('br'));
-                   div.appendChild(btn);
+                   let img = document.createElement('img');
+                   // Handle Drive link conversion
+                   img.src = item.link.includes('drive.google.com') ? item.link.replace('/view?usp=sharing', '').replace('/file/d/', '/uc?id=') : item.link;
+                   img.style = "max-width: 100%; border-radius: 8px; margin-top: 10px; cursor: pointer;";
+                   container.appendChild(img);
                 }
+                div.appendChild(document.createElement('br'));
+                div.appendChild(container);
              }
              display.appendChild(div);
           });
@@ -107,9 +97,8 @@
         tabContainer.appendChild(btn);
       });
       if(tabContainer.firstChild) tabContainer.firstChild.click();
-    } // Closes loadData
-    loadData(); // Calls loadData
+    }
+    loadData();
   </script>
 </body>
 </html>
-      
