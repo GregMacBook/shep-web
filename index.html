@@ -61,8 +61,8 @@
           btn.classList.add('active');
           display.innerHTML = `<h1>${cat}</h1>`;
           
-         tabs[cat].forEach(item => {
-             // 1. Create the container card for every row of text
+        tabs[cat].forEach(item => {
+             // 1. Create the container card
              let card = document.createElement('div');
              card.className = 'info-card';
              
@@ -74,12 +74,17 @@
              }
              card.appendChild(textSpan);
 
-             // 3. Render image if the link exists in THIS row
+             // 3. Render image: Only create the image element if a link exists
              if (item.link && item.link.startsWith('http')) {
                 let img = document.createElement('img');
                 img.src = item.link;
                 img.className = 'card-image';
+                
+                // Add the image to the card
                 card.appendChild(img);
+             } else {
+                // If there is no image, ensure the text spans the full width
+                textSpan.style.flex = "1";
              }
              
              display.appendChild(card);
