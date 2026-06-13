@@ -9,7 +9,8 @@
     .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; border: 1px solid #ac8ad4; margin: 2px; }
     .tab.active { background: #ac8ad4; }
     #content { padding: 20px; max-width: 900px; margin: auto; }
-    /* Flex layout for side-by-side text and images */
+    
+    /* Info Card Layout */
     .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: flex-start; }
     
     .appeal-title { font-weight: bold; font-size: 1.2em; display: block; }
@@ -28,7 +29,8 @@
     const validCategories = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T COLLECT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "PICTURES", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
 
     async function loadData() {
-      const res = await fetch('WebsiteContent.csv?t=' + new Date().getTime());
+      // Pointing to your new .tsv file
+      const res = await fetch('SHEP - WebsiteContent.tsv?t=' + new Date().getTime());
       const text = await res.text();
       const rows = text.split(/\r?\n/);
       
@@ -40,10 +42,10 @@
         let col0 = cols[0] ? cols[0].replace(/"/g, '').trim() : "";
         let col1 = cols[1] ? cols[1].replace(/^"+|"+$/g, '').trim() : "";
         
-        // Flexible link search: scans columns 2 through 5
+        // Scan columns 2 to 5 for any link starting with http
         let lnk = "";
         for(let i = 2; i <= 5; i++) {
-           if(cols[i] && cols[i].startsWith('http')) {
+           if(cols[i] && cols[i].trim().startsWith('http')) {
               lnk = cols[i].trim();
               break;
            }
@@ -72,7 +74,6 @@
              let card = document.createElement('div');
              card.className = 'info-card';
              
-             // Render text
              let textSpan = document.createElement('span');
              textSpan.innerText = item.text;
              if (cat === "OUR MISSION" || cat === "ANNUAL APPEALS") {
@@ -80,7 +81,6 @@
              }
              card.appendChild(textSpan);
 
-             // Render image with Google Drive conversion
              if (item.link && item.link.startsWith('http')) {
                 let img = document.createElement('img');
                 if (item.link.includes('drive.google.com')) {
