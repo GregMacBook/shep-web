@@ -9,11 +9,10 @@
     .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; border: 1px solid #ac8ad4; margin: 2px; }
     .tab.active { background: #ac8ad4; }
     #content { padding: 20px; max-width: 900px; margin: auto; }
-    /* Added display: flex and gap for side-by-side layout */
-    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: center; }
+    /* Flex layout for side-by-side text and images */
+    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: flex-start; }
     
     .appeal-title { font-weight: bold; font-size: 1.2em; display: block; }
-    .mission-text { font-weight: bold; font-size: 1.1em; color: #333; flex: 2; }
     .card-image { max-width: 300px; border-radius: 8px; cursor: pointer; flex: 1; }
   </style>
 </head>
@@ -36,12 +35,12 @@
       let tabs = {};
       let currentCat = "";
 
- rows.forEach(row => {
+      rows.forEach(row => {
         let cols = row.split('\t'); 
         let col0 = cols[0] ? cols[0].replace(/"/g, '').trim() : "";
         let col1 = cols[1] ? cols[1].replace(/^"+|"+$/g, '').trim() : "";
         
-        // Find a link in any column from 2 to 5
+        // Flexible link search: scans columns 2 through 5
         let lnk = "";
         for(let i = 2; i <= 5; i++) {
            if(cols[i] && cols[i].startsWith('http')) {
@@ -69,12 +68,11 @@
           btn.classList.add('active');
           display.innerHTML = `<h1>${cat}</h1>`;
           
-        tabs[cat].forEach(item => {
-             // 1. Create the container card
+          tabs[cat].forEach(item => {
              let card = document.createElement('div');
              card.className = 'info-card';
              
-             // 2. Render text
+             // Render text
              let textSpan = document.createElement('span');
              textSpan.innerText = item.text;
              if (cat === "OUR MISSION" || cat === "ANNUAL APPEALS") {
@@ -82,16 +80,17 @@
              }
              card.appendChild(textSpan);
 
-             // 3. Render image: Only create the image element if a link exists
+             // Render image with Google Drive conversion
              if (item.link && item.link.startsWith('http')) {
                 let img = document.createElement('img');
-                img.src = item.link;
+                if (item.link.includes('drive.google.com')) {
+                    img.src = item.link.replace('/view?usp=sharing', '').replace('/view?usp=drive_link', '').replace('/file/d/', '/uc?id=');
+                } else {
+                    img.src = item.link;
+                }
                 img.className = 'card-image';
-                
-                // Add the image to the card
                 card.appendChild(img);
              } else {
-                // If there is no image, ensure the text spans the full width
                 textSpan.style.flex = "1";
              }
              
