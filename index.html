@@ -9,7 +9,9 @@
     .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; border: 1px solid #ac8ad4; margin: 2px; }
     .tab.active { background: #ac8ad4; }
     #content { padding: 20px; max-width: 900px; margin: auto; }
-    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: flex-start; }
+    .appeal-title { font-weight: bold; font-size: 1.2em; display: block; }
+    .card-image { max-width: 300px; border-radius: 8px; cursor: pointer; flex: 1; }
   </style>
 </head>
 <body>
@@ -20,18 +22,26 @@
       const res = await fetch('SHEP - WebsiteContent.tsv?t=' + new Date().getTime());
       const text = await res.text();
       const rows = text.split('\n');
-      let tabs = {};
-      let currentCat = "";
-      rows.forEach(row => {
-        let cols = row.split('\t');
-        if (cols[0] && cols[0].trim() !== "") currentCat = cols[0].trim();
-        if (currentCat && cols[1] && cols[1].trim() !== "") {
-          if (!tabs[currentCat]) tabs[currentCat] = [];
-          tabs[currentCat].push({ text: cols[1].trim() });
-        }
-      });
+      
       const display = document.getElementById('content');
       const tabContainer = document.getElementById('tabs');
+      let tabs = {};
+      let currentCat = "";
+
+      rows.forEach(row => {
+        let cols = row.split('\t').map(c => c.trim());
+        if (cols[0] && cols[0] !== "") currentCat = cols[0];
+        
+        // Check if there is actual text in column 2 (index 1)
+        if (currentCat && cols[1] && cols[1] !== "") {
+          if (!tabs[currentCat]) tabs[currentCat] = [];
+          
+          // Find the first URL in columns 3 to 10
+          let link = cols.find((c, i) => i >= 2 && c.startsWith('http'));
+          tabs[currentCat].push({ text: cols[1], link: link });
+        }
+      });
+
       Object.keys(tabs).forEach(cat => {
         let btn = document.createElement('div');
         btn.className = 'tab'; btn.innerText = cat;
@@ -42,7 +52,19 @@
           tabs[cat].forEach(item => {
             let card = document.createElement('div');
             card.className = 'info-card';
-            card.innerText = item.text;
+            let txt = document.createElement('span');
+            txt.innerText = item.text;
+            txt.style.flex = "1";
+            if (cat === "OUR MISSION" || cat === "ANNUAL APPEALS") txt.className = 'appeal-title';
+            card.appendChild(txt);
+            
+            if (item.link) {
+              let img = document.createElement('img');
+              img.src = item.link.includes('drive.google.com') ? 
+                        item.link.replace('/view?usp=sharing', '').replace('/file/d/', '/uc?id=') : item.link;
+              img.className = 'card-image';
+              card.appendChild(img);
+            }
             display.appendChild(card);
           });
         };
