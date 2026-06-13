@@ -9,95 +9,77 @@
     .tab { padding: 12px 20px; color: white; cursor: pointer; font-weight: bold; font-size: 0.8em; text-transform: uppercase; border: 1px solid #ac8ad4; margin: 2px; }
     .tab.active { background: #ac8ad4; }
     #content { padding: 20px; max-width: 900px; margin: auto; }
-    
     .info-card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; gap: 15px; align-items: flex-start; }
-    
     .appeal-title { font-weight: bold; font-size: 1.2em; display: block; }
     .card-image { max-width: 300px; border-radius: 8px; cursor: pointer; flex: 1; }
   </style>
 </head>
 <body>
-  <div style="text-align: center; padding: 15px; background: white;">
-    <img src="https://lh3.googleusercontent.com/d/1e4-zob-zVvMrmnFElyg8ADVandNsNyVf" style="max-height: 100px;">
-  </div>
-  
   <div id="tabs"></div>
   <div id="content"></div>
-  
   <script>
-    const validCategories = ["OUR MISSION", "ABOUT US", "ANNUAL APPEALS", "WHAT DO WE COLLECT", "WHAT WE CAN'T COLLECT", "WHO WE HELP", "WAYS YOU CAN HELP", "DONATION POINTS", "PICTURES", "SCHOOL DONORS", "REGISTRATION", "TESTIMONIALS", "MONETARY DONATIONS", "CONTACT SHEP"];
-
     async function loadData() {
-      const res = await fetch('SHEP - WebsiteContent.tsv?t=' + new Date().getTime());
-      const text = await res.text();
-      const rows = text.split(/\r?\n/);
-      
-      let tabs = {};
-      let currentCat = "";
-
-      rows.forEach(row => {
-        let cols = row.split('\t'); 
-        let col0 = cols[0] ? cols[0].replace(/"/g, '').trim() : "";
-        let col1 = cols[1] ? cols[1].replace(/^"+|"+$/g, '').trim() : "";
+      try {
+        const res = await fetch('SHEP - WebsiteContent.tsv?t=' + new Date().getTime());
+        const text = await res.text();
+        const rows = text.split('\n');
         
-        let lnk = "";
-        for(let i = 2; i <= 5; i++) {
-           if(cols[i] && cols[i].trim().startsWith('http')) {
-              lnk = cols[i].trim();
-              break;
-           }
-        }
+        let tabs = {};
+        let currentCat = "";
 
-        if (validCategories.includes(col0)) currentCat = col0;
-        
-        if (currentCat && col1 !== "") {
-          if (!tabs[currentCat]) tabs[currentCat] = [];
-          if (col1 !== currentCat) tabs[currentCat].push({ text: col1, link: lnk });
-        }
-      });
-
-      const display = document.getElementById('content');
-      const tabContainer = document.getElementById('tabs');
-
-      Object.keys(tabs).forEach(cat => {
-        let btn = document.createElement('div');
-        btn.className = 'tab'; btn.innerText = cat;
-        btn.onclick = () => {
-          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-          btn.classList.add('active');
-          display.innerHTML = `<h1>${cat}</h1>`;
+        rows.forEach(row => {
+          if (!row.trim()) return;
+          let cols = row.split('\t'); 
+          let col0 = cols[0] ? cols[0].trim() : "";
+          let col1 = cols[1] ? cols[1].trim() : "";
           
-          tabs[cat].forEach(item => {
-             let card = document.createElement('div');
-             card.className = 'info-card';
-             
-             let textSpan = document.createElement('span');
-             textSpan.innerText = item.text;
-             if (cat === "OUR MISSION" || cat === "ANNUAL APPEALS") {
-                textSpan.className = 'appeal-title';
-             }
-             card.appendChild(textSpan);
+          if (col0 && col0 !== "") currentCat = col0;
+          
+          if (currentCat && col1 !== "") {
+            if (!tabs[currentCat]) tabs[currentCat] = [];
+            // Find link in any column from 2 to 10 to be safe
+            let lnk = "";
+            for(let i = 2; i < cols.length; i++) {
+               if(cols[i] && cols[i].trim().startsWith('http')) {
+                  lnk = cols[i].trim();
+                  break;
+               }
+            }
+            tabs[currentCat].push({ text: col1, link: lnk });
+          }
+        });
 
-             // ONLY create the image if a valid link exists
-             if (item.link && item.link.length > 5) {
-                let img = document.createElement('img');
-                if (item.link.includes('drive.google.com')) {
-                    img.src = item.link.replace('/view?usp=sharing', '').replace('/view?usp=drive_link', '').replace('/file/d/', '/uc?id=');
-                } else {
-                    img.src = item.link;
-                }
-                img.className = 'card-image';
-                card.appendChild(img);
-             } else {
-                textSpan.style.flex = "1";
-             }
-             
-             display.appendChild(card);
-          });
-        };
-        tabContainer.appendChild(btn);
-      });
-      if(tabContainer.firstChild) tabContainer.firstChild.click();
+        const display = document.getElementById('content');
+        const tabContainer = document.getElementById('tabs');
+
+        Object.keys(tabs).forEach(cat => {
+          let btn = document.createElement('div');
+          btn.className = 'tab'; btn.innerText = cat;
+          btn.onclick = () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            display.innerHTML = `<h1>${cat}</h1>`;
+            tabs[cat].forEach(item => {
+               let card = document.createElement('div');
+               card.className = 'info-card';
+               let textSpan = document.createElement('span');
+               textSpan.innerText = item.text;
+               textSpan.style.flex = "1";
+               card.appendChild(textSpan);
+               if (item.link && item.link.length > 5) {
+                  let img = document.createElement('img');
+                  img.src = item.link.includes('drive.google.com') ? 
+                            item.link.replace('/view?usp=sharing', '').replace('/file/d/', '/uc?id=') : item.link;
+                  img.className = 'card-image';
+                  card.appendChild(img);
+               }
+               display.appendChild(card);
+            });
+          };
+          tabContainer.appendChild(btn);
+        });
+        if(tabContainer.firstChild) tabContainer.firstChild.click();
+      } catch (e) { console.error("Error loading TSV:", e); }
     }
     loadData();
   </script>
