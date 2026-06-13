@@ -36,11 +36,19 @@
       let tabs = {};
       let currentCat = "";
 
-      rows.forEach(row => {
+ rows.forEach(row => {
         let cols = row.split('\t'); 
         let col0 = cols[0] ? cols[0].replace(/"/g, '').trim() : "";
         let col1 = cols[1] ? cols[1].replace(/^"+|"+$/g, '').trim() : "";
-        let lnk = cols[3] ? cols[3].trim() : "";
+        
+        // Find a link in any column from 2 to 5
+        let lnk = "";
+        for(let i = 2; i <= 5; i++) {
+           if(cols[i] && cols[i].startsWith('http')) {
+              lnk = cols[i].trim();
+              break;
+           }
+        }
 
         if (validCategories.includes(col0)) currentCat = col0;
         
