@@ -61,38 +61,27 @@
           btn.classList.add('active');
           display.innerHTML = `<h1>${cat}</h1>`;
           
-          tabs[cat].forEach(item => {
-             let card = document.createElement('div'); 
+         tabs[cat].forEach(item => {
+             // 1. Create the container card for every row of text
+             let card = document.createElement('div');
              card.className = 'info-card';
              
-             // 1. Text rendering (Bold all in Mission)
+             // 2. Render text
              let textSpan = document.createElement('span');
              textSpan.innerText = item.text;
-             if (cat === "OUR MISSION") {
-                textSpan.className = 'mission-text';
-             } else if (cat === "ANNUAL APPEALS") {
+             if (cat === "OUR MISSION" || cat === "ANNUAL APPEALS") {
                 textSpan.className = 'appeal-title';
              }
              card.appendChild(textSpan);
 
-             // 2. Image/Link rendering (Only if a link exists for this specific row)
+             // 3. Render image if the link exists in THIS row
              if (item.link && item.link.startsWith('http')) {
-                let isImage = /\.(jpeg|jpg|png|gif|webp)$/i.test(item.link);
-                let container = document.createElement(isImage ? 'div' : 'a');
-                
-                if (isImage) {
-                   let img = document.createElement('img');
-                   img.src = item.link;
-                   img.className = 'card-image';
-                   container.appendChild(img);
-                } else {
-                   container.href = item.link;
-                   container.target = "_blank";
-                   container.innerText = "OPEN RESOURCE";
-                   container.style = "text-decoration: none; background: #916bbf; color: white; padding: 10px; border-radius: 5px; font-weight: bold;";
-                }
-                card.appendChild(container);
+                let img = document.createElement('img');
+                img.src = item.link;
+                img.className = 'card-image';
+                card.appendChild(img);
              }
+             
              display.appendChild(card);
           });
         };
